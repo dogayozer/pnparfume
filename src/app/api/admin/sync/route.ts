@@ -37,8 +37,8 @@ export async function POST(req: Request) {
       const stockQty = parseInt(row['Ürün Stok Adedi'] || '0', 10);
       
       const statusValue = row['Durum']?.toString().toLowerCase();
-      // Durum normalizasyonu: 1 veya 1001 ise active, yoksa inactive
-      const status = (statusValue === '1' || statusValue === '1001' || statusValue === 'active') ? 'active' : 'inactive';
+      // Durum normalizasyonu: 0 veya inactive değilse varsayılan olarak active yap (Excel'de sütun yoksa kaybolmasın)
+      const status = (statusValue === '0' || statusValue === 'inactive') ? 'inactive' : 'active';
 
       // Upsert mantığı: Barkod varsa güncelle, yoksa ekle
       const existingProduct = await prisma.product.findUnique({
