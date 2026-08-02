@@ -40,7 +40,7 @@ export default function Admin() {
   };
 
   return (
-    <section id="admin" className="page-section">
+    <section id="admin" className="page-section active" style={{ display: 'block', minHeight: '100vh', paddingTop: '100px' }}>
             <div className="container">
                 <div className="section-header">
                     <h2 data-i18n="adminDashboard">Yönetim Paneli</h2>
