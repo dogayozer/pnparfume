@@ -26,7 +26,7 @@ export default function Admin() {
       const data = await res.json();
       
       if (res.ok) {
-        setUploadMessage(`Başarılı! ${data.summary?.created || 0} yeni eklendi, ${data.summary?.updated || 0} güncellendi.`);
+        setUploadMessage(`Başarılı! Toplam ${data.totalProcessed || 0} satır okundu. ${data.newCount || 0} yeni eklendi, ${data.updatedCount || 0} güncellendi.`);
       } else {
         setUploadMessage(`Hata: ${data.error || 'Bilinmeyen bir hata oluştu.'}`);
       }
