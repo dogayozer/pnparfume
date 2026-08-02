@@ -11,10 +11,18 @@ import Contact from '@/components/Contact';
 import Shop from '@/components/Shop';
 import Product from '@/components/Product';
 import Cart from '@/components/Cart';
-import Admin from '@/components/Admin';
 import Footer from '@/components/Footer';
+import prisma from '@/lib/prisma';
 
-export default function Page() {
+export const dynamic = 'force-dynamic'; // Ensures we see new products immediately or we can revalidate.
+
+export default async function Page() {
+  // Fetch active products from the database
+  const products = await prisma.product.findMany({
+    where: { status: 'active' },
+    orderBy: { createdAt: 'desc' }
+  });
+
   return (
     <>
       <Header />
@@ -28,10 +36,9 @@ export default function Page() {
         <SalesChannels />
         <About />
         <Contact />
-        <Shop />
+        <Shop products={products} />
         <Product />
         <Cart />
-        <Admin />
       </main>
       <Footer />
     </>
