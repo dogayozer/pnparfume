@@ -1,6 +1,44 @@
 "use client";
 
+import { useState, useRef } from 'react';
+
 export default function Admin() {
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadMessage('Excel yükleniyor, lütfen bekleyin...');
+    
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/admin/sync', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      const data = await res.json();
+      
+      if (res.ok) {
+        setUploadMessage(`Başarılı! ${data.summary?.created || 0} yeni eklendi, ${data.summary?.updated || 0} güncellendi.`);
+      } else {
+        setUploadMessage(`Hata: ${data.error || 'Bilinmeyen bir hata oluştu.'}`);
+      }
+    } catch (err: any) {
+      setUploadMessage(`Bağlantı hatası: ${err.message}`);
+    } finally {
+      setIsUploading(false);
+      // Reset input so the same file can be uploaded again if needed
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   return (
     <section id="admin" className="page-section">
             <div className="container">
@@ -9,7 +47,7 @@ export default function Admin() {
                 </div>
 
                 {/* Login State Container */}
-                <div id="admin-login-box" className="glass-panel form-container" style={{ maxWidth: '450px', margin: '4rem auto', padding: '2.5rem' }}>
+                <div id="admin-login-box" className="glass-panel form-container" style={{ display: 'none', maxWidth: '450px', margin: '4rem auto', padding: '2.5rem' }}>
                     <h3 style={{ color: 'var(--color-copper)', textAlign: 'center', marginBottom: '2rem' }}>Yönetici Girişi</h3>
                     <form id="admin-login-form">
                         <div className="form-group">
@@ -25,7 +63,8 @@ export default function Admin() {
                 </div>
 
                 {/* Admin Dashboard Grid */}
-                <div id="admin-dashboard" className="admin-grid" style={{ display: 'none' }}>
+                {/* Admin Dashboard Grid (Visible for testing upload) */}
+                <div id="admin-dashboard" className="admin-grid" style={{ display: 'grid' }}>
                     <aside className="admin-sidebar">
                         <button className="admin-menu-btn active" id="admin-btn-apps" data-i18n="adminApps">Bayilik Başvuruları</button>
                         <button className="admin-menu-btn" id="admin-btn-prods" data-i18n="adminProducts">Ürün Yönetimi</button>
@@ -56,11 +95,41 @@ export default function Admin() {
                         </div>
 
                         {/* Product Management Panel */}
-                        <div className="admin-panel-box" id="admin-panel-prods">
+                        <div className="admin-panel-box active" id="admin-panel-prods">
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                                 <h3 style={{ color: 'var(--color-copper)' }} data-i18n="adminProducts">Ürün Yönetimi</h3>
-                                <button className="btn btn-sm btn-primary" onClick={() => { /* TODO: handle showProductForm() */ }} data-i18n="adminAddProd">Yeni Ürün Ekle</button>
+                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                    <input 
+                                      type="file" 
+                                      accept=".xlsx, .xls" 
+                                      ref={fileInputRef} 
+                                      style={{ display: 'none' }} 
+                                      onChange={handleFileUpload} 
+                                    />
+                                    <button 
+                                      className="btn btn-sm btn-outline" 
+                                      onClick={() => fileInputRef.current?.click()}
+                                      disabled={isUploading}
+                                    >
+                                      {isUploading ? 'Yükleniyor...' : 'Excel ile Toplu Yükle'}
+                                    </button>
+                                    <button className="btn btn-sm btn-primary" onClick={() => { /* TODO: handle showProductForm() */ }} data-i18n="adminAddProd">Yeni Ürün Ekle</button>
+                                </div>
                             </div>
+                            
+                            {uploadMessage && (
+                                <div style={{ 
+                                    padding: '1rem', 
+                                    marginBottom: '2rem', 
+                                    borderRadius: '8px', 
+                                    backgroundColor: uploadMessage.includes('Hata') ? '#ffebee' : '#e8f5e9',
+                                    color: uploadMessage.includes('Hata') ? '#c62828' : '#2e7d32',
+                                    fontWeight: 'bold',
+                                    border: `1px solid ${uploadMessage.includes('Hata') ? '#ef9a9a' : '#a5d6a7'}`
+                                }}>
+                                    {uploadMessage}
+                                </div>
+                            )}
 
                             {/* Product Edit Form */}
                             <div id="product-form-container" className="glass-panel form-container" style={{ display: 'none', marginBottom: '3rem', padding: '2rem', maxWidth: '100%' }}>
