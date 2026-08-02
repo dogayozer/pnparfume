@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import * as xlsx from 'xlsx';
 
+// Vercel'de uzun süren Excel (veritabanı) işlemlerinin timeout'a (504) düşmemesi için
+export const maxDuration = 60; 
+// API'nin önbelleğe alınmasını (cache) engellemek için
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
