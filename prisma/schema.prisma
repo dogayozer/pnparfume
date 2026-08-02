@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id           String    @id @default(cuid())
+  name         String
+  slug         String    @unique
+  products     Product[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Product {
+  id                  String           @id @default(cuid())
+  barcode             String           @unique
+  model_code          String?
+  brand               String?
+  categoryId          String?
+  category            Category?        @relation(fields: [categoryId], references: [id])
+  title               String
+  slug                String           @unique
+  description_raw     String?
+  description_html    String?
+  reference_price     Float?
+  sale_price          Float
+  stock_qty           Int              @default(0)
+  status              String           @default("inactive")
+  images              ProductImage[]
+  priceHistory        PriceHistory[]
+  orderItems          OrderItem[]
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  last_synced_at      DateTime?
+}
+
+model ProductImage {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url         String
+  originalUrl String?
+  order       Int      @default(0)
+}
+
+model Customer {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String?
+  phone       String?
+  orders      Order[]
+  createdAt   DateTime @default(now())
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique
+  customerId    String?
+  customer      Customer?   @relation(fields: [customerId], references: [id])
+  totalAmount   Float
+  status        String      @default("pending")
+  items         OrderItem[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  quantity    Int
+  price       Float
+}
+
+model PriceHistory {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  oldPrice    Float
+  newPrice    Float
+  changedAt   DateTime @default(now())
+}
+
+model B2BAccount {
+  id            String   @id @default(cuid())
+  companyName   String
+  taxNumber     String   @unique
+  email         String   @unique
+  phone         String
+  discountRate  Float    @default(0)
+  status        String   @default("pending") // pending, approved, rejected
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ScentFormula {
+  id            String   @id @default(cuid())
+  reorderCode   String   @unique
+  mood          String
+  scentFamily   String
+  topNote       Float
+  midNote       Float
+  baseNote      Float
+  intensity     Int
+  customerName  String
+  customerPhone String
+  createdAt     DateTime @default(now())
+}

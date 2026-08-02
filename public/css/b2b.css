@@ -1,0 +1,160 @@
+
+/* ==========================================================================
+   B2B Build Brand Scroll Story 
+   ========================================================================== */
+.scroll-story {
+    position: relative;
+    background: #111;
+    color: #fff;
+    height: 400vh;
+}
+
+.build-brand-sticky {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: radial-gradient(circle at center, #1a1a1a 0%, #0d0d0d 100%);
+    --scroll-p: 0;
+}
+
+.brand-visuals {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    height: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.brand-title {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-mono);
+    font-size: 2rem;
+    letter-spacing: 0.5rem;
+    color: rgba(255,255,255,0.05);
+    white-space: nowrap;
+    z-index: 0;
+}
+
+.brand-light {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: var(--color-copper);
+    border-radius: 50%;
+    box-shadow: 0 0 calc(var(--scroll-p) * 300px) calc(var(--scroll-p) * 100px) rgba(228, 168, 114, 0.4);
+    opacity: calc(var(--scroll-p) * 1);
+    transform: scale(calc(var(--scroll-p) * 2));
+    z-index: 1;
+}
+
+.brand-part {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    z-index: 2;
+}
+
+.brand-part i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--color-copper);
+    text-shadow: 0 0 20px rgba(228, 168, 114, 0.3);
+}
+
+.brand-part span {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    letter-spacing: 0.1rem;
+    text-transform: uppercase;
+}
+
+.part-bottle {
+    transform: scale(calc(0.8 + (var(--scroll-p) * 0.4)));
+    opacity: calc(0.3 + (var(--scroll-p) * 0.7));
+}
+.part-bottle i {
+    font-size: 8rem;
+    color: rgba(228, 168, 114, calc(0.1 + (var(--scroll-p) * 0.9)));
+}
+
+.part-drop {
+    transform: translate(calc((1 - var(--scroll-p)) * -30vw), calc((1 - var(--scroll-p)) * -30vh)) scale(calc(1 - (var(--scroll-p) * 0.5)));
+    opacity: calc(1 - (var(--scroll-p) * 1));
+}
+
+.part-box {
+    transform: translate(calc((1 - var(--scroll-p)) * 30vw), calc((1 - var(--scroll-p)) * -30vh)) scale(calc(1 - (var(--scroll-p) * 0.5)));
+    opacity: calc(1 - (var(--scroll-p) * 1));
+}
+
+.part-logo {
+    transform: translate(calc((1 - var(--scroll-p)) * -30vw), calc((1 - var(--scroll-p)) * 30vh)) scale(calc(1 - (var(--scroll-p) * 0.5)));
+    opacity: calc(1 - (var(--scroll-p) * 1));
+}
+
+.part-cert {
+    transform: translate(calc((1 - var(--scroll-p)) * 30vw), calc((1 - var(--scroll-p)) * 30vh)) scale(calc(1 - (var(--scroll-p) * 0.5)));
+    opacity: calc(1 - (var(--scroll-p) * 1));
+}
+
+.build-brand-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    pointer-events: none;
+}
+
+.brand-step {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 10%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.brand-step h3 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 5px 15px rgba(0,0,0,0.8);
+    background: rgba(17, 17, 17, 0.7);
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    border-left: 4px solid var(--color-copper);
+    backdrop-filter: blur(10px);
+    display: inline-block;
+}
+
+.brand-step p {
+    font-size: 1.2rem;
+    line-height: 1.8;
+    color: #ccc;
+    background: rgba(17, 17, 17, 0.7);
+    padding: 2rem;
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+}
+
+@media (max-width: 768px) {
+    .brand-step h3 { font-size: 1.8rem; }
+    .brand-part i { font-size: 2rem; }
+    .part-drop { transform: translate(calc((1 - var(--scroll-p)) * -40vw), calc((1 - var(--scroll-p)) * -40vh)); }
+    .part-box { transform: translate(calc((1 - var(--scroll-p)) * 40vw), calc((1 - var(--scroll-p)) * -40vh)); }
+    .part-logo { transform: translate(calc((1 - var(--scroll-p)) * -40vw), calc((1 - var(--scroll-p)) * 40vh)); }
+    .part-cert { transform: translate(calc((1 - var(--scroll-p)) * 40vw), calc((1 - var(--scroll-p)) * 40vh)); }
+}
