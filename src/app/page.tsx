@@ -14,8 +14,8 @@ import Cart from '@/components/Cart';
 import Footer from '@/components/Footer';
 import prisma from '@/lib/prisma';
 
-export const dynamic = 'force-dynamic'; // Ensures we see new products immediately or we can revalidate.
-
+// Cache varsayılan olarak aktiftir (Static Generation). 
+// Excel yüklendiğinde revalidatePath('/') ile cache temizlenecek.
 export default async function Page() {
   // Fetch active products from the database
   const products = await prisma.product.findMany({

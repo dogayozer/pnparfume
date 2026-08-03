@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import prisma from '@/lib/prisma';
 import * as xlsx from 'xlsx';
 
@@ -85,6 +86,8 @@ export async function POST(req: Request) {
         newCount++;
       }
     }
+    // Sitenin anasayfa önbelleğini (cache) temizleyelim ki yeni ürünler anında görünsün
+    revalidatePath('/');
 
     return NextResponse.json({
       message: 'Senkronizasyon tamamlandı.',
