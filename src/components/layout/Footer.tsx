@@ -42,7 +42,7 @@ export default function Footer() {
         </div>
 
         {/* Yasal Linkler */}
-        <div className="flex flex-wrap justify-center gap-3 text-[10px] md:text-[11px] text-foreground/40 mt-1">
+        <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[10px] md:text-[11px] text-foreground/40 mt-1 leading-tight">
           <a href="/yasal/mesafeli-satis-sozlesmesi.txt" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Mesafeli Satış Sözleşmesi</a>
           <a href="/yasal/on-bilgilendirme-formu.txt" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Ön Bilgilendirme Formu</a>
           <a href="/yasal/iptal-ve-iade-kosullari.txt" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">İptal ve İade Koşulları</a>
@@ -50,7 +50,7 @@ export default function Footer() {
           <a href="/yasal/site-kullanim-sartlari.txt" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Site Kullanım Şartları</a>
         </div>
 
-        <div className="mt-2 pt-3 border-t border-foreground/5 w-full">
+        <div className="mt-1 pt-2 border-t border-foreground/5 w-full leading-none">
           <p className="text-xs text-foreground/40 tracking-wider lowercase">
             <a href="https://www.kobiklik.com" target="_blank" rel="noopener noreferrer" className="hover:text-accent-gold transition-colors">
               www.kobiklik.com
