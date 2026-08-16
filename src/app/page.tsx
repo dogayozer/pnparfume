@@ -3,8 +3,15 @@ import HomeHero from '@/components/home/HomeHero'
 import HomeHighlights from '@/components/home/HomeHighlights'
 import ProductCard from '@/components/ProductCard'
 import Link from 'next/link'
+import MobileFilterSort from '@/components/catalog/MobileFilterSort'
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const params = await searchParams
+  const sort = typeof params.sort === 'string' ? params.sort : 'best_sellers'
   // Fetch a larger pool of products to ensure we can filter out those without images
   const allProducts = await prisma.product.findMany({
     take: 50,
@@ -17,7 +24,7 @@ export default async function Home() {
     include: { marketplaceListings: true }
   })
 
-  const productsWithImages = allProducts.map((product) => {
+  let processedProducts = allProducts.map((product) => {
     const trendyolListing = product.marketplaceListings?.find(l => l.platform === 'trendyol')
     const trendyolImage = trendyolListing?.images?.[0] || null
     
@@ -26,7 +33,15 @@ export default async function Home() {
       trendyolListing,
       finalImageUrl: trendyolImage
     }
-  }).filter(product => product.finalImageUrl).slice(0, 12) // Only keep those with images, up to 12
+  }).filter(product => product.finalImageUrl)
+
+  if (sort === 'price_asc') {
+    processedProducts.sort((a, b) => (a.trendyolListing?.price || a.base_cost) - (b.trendyolListing?.price || b.base_cost))
+  } else if (sort === 'newest') {
+    processedProducts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  }
+  
+  const productsWithImages = processedProducts.slice(0, 12) // Only keep those with images, up to 12
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -47,17 +62,7 @@ export default async function Home() {
           </Link>
         </div>
 
-        {/* Mobile Filter and Sort Controls */}
-        <div className="flex items-center gap-3 mb-6 md:hidden">
-           <Link href="/katalog" className="flex-1 flex items-center justify-between border border-foreground/20 rounded px-4 py-2.5 text-[13px] font-bold bg-background">
-              Filtrele
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
-           </Link>
-           <Link href="/katalog" className="flex-1 flex items-center justify-between border border-foreground/20 rounded px-4 py-2.5 text-[13px] font-bold bg-background">
-              Çok Satanlar
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-           </Link>
-        </div>
+        <MobileFilterSort />
         
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-6">
           {productsWithImages.map(product => (

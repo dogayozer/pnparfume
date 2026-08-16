@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import ProductCard from '@/components/ProductCard'
 import FilterSidebar from '@/components/catalog/FilterSidebar'
+import MobileFilterSort from '@/components/catalog/MobileFilterSort'
 
 export default async function KatalogPage({
   searchParams,
@@ -27,13 +28,15 @@ export default async function KatalogPage({
   if (persona) whereClause.persona_tag = persona
   if (family) whereClause.fragrance_family = { has: family }
 
+  const sort = typeof params.sort === 'string' ? params.sort : 'best_sellers'
+
   const allProducts = await prisma.product.findMany({
     where: whereClause,
     orderBy: { sku: 'asc' },
     include: { marketplaceListings: true }
   })
 
-  const products = allProducts.map((product) => {
+  let processedProducts = allProducts.map((product) => {
     const trendyolListing = product.marketplaceListings?.find(l => l.platform === 'trendyol')
     const trendyolImage = trendyolListing?.images?.[0] || null
     
@@ -43,6 +46,14 @@ export default async function KatalogPage({
       finalImageUrl: trendyolImage
     }
   }).filter(product => product.finalImageUrl)
+
+  if (sort === 'price_asc') {
+    processedProducts.sort((a, b) => (a.trendyolListing?.price || a.base_cost) - (b.trendyolListing?.price || b.base_cost))
+  } else if (sort === 'newest') {
+    processedProducts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  }
+
+  const products = processedProducts
 
   return (
     <div className="min-h-screen px-6 py-12 md:px-12 max-w-7xl mx-auto">
@@ -54,7 +65,8 @@ export default async function KatalogPage({
       </div>
 
       <div className="flex flex-col md:flex-row gap-10">
-        <aside className="w-full md:w-64 flex-shrink-0">
+        <MobileFilterSort />
+        <aside className="hidden md:block w-64 flex-shrink-0">
           <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pr-2 pb-6">
             <FilterSidebar />
           </div>
