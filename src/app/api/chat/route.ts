@@ -109,7 +109,7 @@ KURALLAR:
     writer.write(encoder.encode(JSON.stringify({ text: result.text, toolResults: allToolResults })))
     writer.close()
   }).catch(err => {
-    writer.write(encoder.encode(JSON.stringify({ text: 'Üzgünüm, şu an bağlantı kuramıyorum.', toolResults: [] })))
+    writer.write(encoder.encode(JSON.stringify({ text: 'Hata: ' + (err?.message || String(err)), toolResults: [] })))
     writer.close()
   })
 
