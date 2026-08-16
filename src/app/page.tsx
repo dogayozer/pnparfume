@@ -49,14 +49,14 @@ export default async function Home() {
 
         {/* Mobile Filter and Sort Controls */}
         <div className="flex items-center gap-3 mb-6 md:hidden">
-           <button className="flex-1 flex items-center justify-between border border-foreground/20 rounded px-4 py-2.5 text-[13px] font-bold bg-background">
+           <Link href="/katalog" className="flex-1 flex items-center justify-between border border-foreground/20 rounded px-4 py-2.5 text-[13px] font-bold bg-background">
               Filtrele
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
-           </button>
-           <button className="flex-1 flex items-center justify-between border border-foreground/20 rounded px-4 py-2.5 text-[13px] font-bold bg-background">
+           </Link>
+           <Link href="/katalog" className="flex-1 flex items-center justify-between border border-foreground/20 rounded px-4 py-2.5 text-[13px] font-bold bg-background">
               Çok Satanlar
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-           </button>
+           </Link>
         </div>
         
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-6">
