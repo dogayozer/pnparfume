@@ -3,10 +3,10 @@ import { ShieldCheck, Globe, Clock, Leaf } from "lucide-react"
 
 export default function Footer() {
   return (
-    <footer className="border-t border-foreground/10 mt-20 py-12 px-6 md:px-12 text-center text-sm text-foreground/50">
-      <div className="max-w-6xl mx-auto flex flex-col items-center gap-6">
+    <footer className="border-t border-foreground/10 mt-10 md:mt-20 py-8 md:py-12 px-4 md:px-12 text-center text-sm text-foreground/50">
+      <div className="max-w-6xl mx-auto flex flex-col items-center gap-4 md:gap-6">
         {/* Trust Badges */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 w-full py-8 border-t border-foreground/10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 w-full py-6 md:py-8 border-t border-foreground/10">
           <div className="flex flex-col items-center gap-2">
             <ShieldCheck className="text-accent-gold" size={24} />
             <span className="font-medium text-foreground">IFRA & AB Uyumlu</span>
@@ -29,11 +29,11 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-foreground/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 w-full">
-          <p className="text-sm text-foreground/50">
+        <div className="border-t border-foreground/10 pt-6 md:pt-8 flex flex-col md:flex-row justify-between items-center gap-3 md:gap-4 w-full">
+          <p className="text-[10px] md:text-sm text-foreground/50">
             © {new Date().getFullYear()} PN PARFÜM. Tüm hakları saklıdır.
           </p>
-          <div className="flex flex-wrap justify-center gap-6 text-sm text-foreground/50">
+          <div className="flex flex-wrap justify-center gap-3 md:gap-6 text-xs md:text-sm text-foreground/50">
             <span className="hover:text-foreground transition-colors cursor-not-allowed">Kolonyalar & Yapım Kitleri (Yakında)</span>
             <Link href="/kurumsal/girisimcilere-ozel" className="hover:text-foreground transition-colors">Girişimcilere Özel</Link>
             <Link href="/kurumsal/kurumsal-kimlik" className="hover:text-foreground transition-colors">Kurumsal Kimlik</Link>
