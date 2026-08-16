@@ -53,7 +53,7 @@ export default function IletisimPage() {
             <div>
               <h4 className="font-medium mb-1">E-posta</h4>
               <p className="text-sm text-foreground/60">
-                info@pienparfume.com.tr
+                info@pnparfume.com
               </p>
             </div>
           </div>

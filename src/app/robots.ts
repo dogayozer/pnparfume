@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/hesap/', '/api/', '/_next/'],
     },
-    sitemap: 'https://pienparfume.com.tr/sitemap.xml',
+    sitemap: 'https://pnparfume.com/sitemap.xml',
   }
 }

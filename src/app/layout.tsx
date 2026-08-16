@@ -10,14 +10,14 @@ import ChatWidget from '@/components/layout/ChatWidget'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://pienparfume.com.tr'),
+  metadataBase: new URL('https://pnparfume.com'),
   title: 'PN Parfüm | Özel ve Niş Koku Deneyimi',
   description: 'Yapay zeka analiz ilkeleriyle teninize en uygun imza kokuyu keşfedin. Açık parfümde lüks ve kalıcılığın yeni adresi PN Parfüm.',
   keywords: ['açık parfüm', 'niş parfüm', 'kişiye özel parfüm', 'kalıcı parfüm', 'erkek parfüm', 'kadın parfüm', 'Pien parfüm'],
   openGraph: {
     title: 'PN Parfüm | Özel ve Niş Koku Deneyimi',
     description: 'Yapay zeka analiz ilkeleriyle teninize en uygun imza kokuyu keşfedin.',
-    url: 'https://pienparfume.com.tr',
+    url: 'https://pnparfume.com',
     siteName: 'PN Parfüm',
     locale: 'tr_TR',
     type: 'website',

@@ -33,25 +33,14 @@ export default async function KatalogPage({
     include: { marketplaceListings: true }
   })
 
-  // Prepare images and filter out those without images
-  const aiImages = [
-    '/images/products/perfume_rose_vanilla_1786862022661.jpg',
-    '/images/products/perfume_jasmine_sandalwood_1786862034617.jpg',
-    '/images/products/perfume_citrus_bergamot_1786862045892.jpg',
-    '/images/products/perfume_oud_amber_1786862058224.jpg',
-    '/images/products/perfume_lavender_musk_1786862068668.jpg'
-  ]
-
-  const products = allProducts.map((product, index) => {
+  const products = allProducts.map((product) => {
     const trendyolListing = product.marketplaceListings?.find(l => l.platform === 'trendyol')
     const trendyolImage = trendyolListing?.images?.[0] || null
-    // Fallback images for the first 5 products to make the demo look good, others use real images if available
-    const finalImageUrl = index < aiImages.length ? aiImages[index] : trendyolImage
     
     return {
       ...product,
       trendyolListing,
-      finalImageUrl
+      finalImageUrl: trendyolImage
     }
   }).filter(product => product.finalImageUrl)
 
