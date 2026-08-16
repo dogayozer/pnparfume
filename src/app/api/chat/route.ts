@@ -44,21 +44,25 @@ KURALLAR:
           gender: z.string().optional().describe('Cinsiyet filtresi (Erkek, Kadın, Unisex)')
         }),
         execute: async ({ query, gender }: any) => {
-          const products = await prisma.product.findMany({
-            where: {
-              OR: [
-                { sku: { contains: query, mode: 'insensitive' } },
-                { mood_tag: { contains: query, mode: 'insensitive' } },
-                { persona_tag: { contains: query, mode: 'insensitive' } },
-                { fragrance_family: { has: query } }
-              ],
-              ...(gender ? { gender: { equals: gender, mode: 'insensitive' } } : {})
-            },
-            take: 3,
-            select: { sku: true, original_name: true, gender: true, fragrance_family: true, mood_tag: true }
-          })
-          
-          return products.length > 0 ? products : { error: 'Kriterlere uygun ürün bulunamadı.' }
+          try {
+            const products = await prisma.product.findMany({
+              where: {
+                OR: [
+                  { sku: { contains: query, mode: 'insensitive' } },
+                  { mood_tag: { contains: query, mode: 'insensitive' } },
+                  { persona_tag: { contains: query, mode: 'insensitive' } },
+                  { fragrance_family: { has: query } }
+                ],
+                ...(gender ? { gender: { equals: gender, mode: 'insensitive' } } : {})
+              },
+              take: 3,
+              select: { sku: true, original_name: true, gender: true, fragrance_family: true, mood_tag: true }
+            })
+            
+            return products.length > 0 ? products : { error: 'Kriterlere uygun ürün bulunamadı.' }
+          } catch (e: any) {
+            return { error: 'Database search error: ' + e.message }
+          }
         },
       }),
       generateDiscount: tool({
@@ -68,23 +72,27 @@ KURALLAR:
           reason: z.string().describe('İndirim verme sebebi (müşteriye söylenecek)')
         }),
         execute: async ({ discountPercentage }: any) => {
-          if (!canGiveDiscount) {
-            return { error: 'Şu anda sistem tarafından indirim kodu oluşturulmasına izin verilmiyor.' }
-          }
-          
-          const actualDiscount = Math.min(discountPercentage, discountLimit)
-          
-          const code = 'PN' + Math.random().toString(36).substring(2, 8).toUpperCase()
-          await prisma.coupon.create({
-            data: {
-              code,
-              discount_type: 'percentage',
-              value: actualDiscount,
-              is_ai_generated: true,
-              usage_limit: 1,
+          try {
+            if (!canGiveDiscount) {
+              return { error: 'Şu anda sistem tarafından indirim kodu oluşturulmasına izin verilmiyor.' }
             }
-          })
-          return { code, discountPercentage: actualDiscount, message: 'İndirim kodu başarıyla üretildi.' }
+            
+            const actualDiscount = Math.min(discountPercentage, discountLimit)
+            
+            const code = 'PN' + Math.random().toString(36).substring(2, 8).toUpperCase()
+            await prisma.coupon.create({
+              data: {
+                code,
+                discount_type: 'percentage',
+                value: actualDiscount,
+                is_ai_generated: true,
+                usage_limit: 1,
+              }
+            })
+            return { code, discountPercentage: actualDiscount, message: 'İndirim kodu başarıyla üretildi.' }
+          } catch (e: any) {
+            return { error: 'Coupon creation error: ' + e.message }
+          }
         }
       })
     },
