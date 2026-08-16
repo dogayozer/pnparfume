@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Settings, Save, AlertCircle, RefreshCw, Box, Users, TrendingUp, Sparkles, Server } from 'lucide-react'
+import { Settings, Save, AlertCircle, RefreshCw, Box, Users, TrendingUp, Sparkles, Server, PackagePlus, UploadCloud, Percent } from 'lucide-react'
+import * as XLSX from 'xlsx'
 
 type ScenarioRule = { id: string; rule_key: string; rule_value: number; description: string; is_active: boolean }
 type AiConfig = { id: string; system_prompt: string; active_campaign: string | null; can_give_discount: boolean; discount_limit: number }
@@ -12,7 +13,7 @@ type MarketplaceStore = { id: string; name: string; platform: string; sellerId: 
 type MarketplaceOrder = { id: string; trendyolOrderId: string; status: string; totalPrice: number; store: { name: string; platform: string }; createdAt: string }
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<'scenarios' | 'ai' | 'orders' | 'customers' | 'reports' | 'api'>('scenarios')
+  const [activeTab, setActiveTab] = useState<'scenarios' | 'ai' | 'orders' | 'customers' | 'reports' | 'api' | 'products'>('scenarios')
   const [loading, setLoading] = useState(false)
   const [savingId, setSavingId] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
@@ -29,7 +30,11 @@ export default function AdminDashboard() {
   // New store form state
   const [newStore, setNewStore] = useState({ name: '', platform: 'trendyol', sellerId: '', apiKey: '', apiSecret: '' })
 
-  const showMsg = (type: 'success'|'error', text: string) => { setMessage({type, text}); setTimeout(() => setMessage(null), 3000) }
+  // Product Bulk update states
+  const [importProgress, setImportProgress] = useState<{current: number, total: number} | null>(null)
+  const [bulkPriceData, setBulkPriceData] = useState({ platform: 'all', type: 'zam', percentage: '' })
+
+  const showMsg = (type: 'success'|'error', text: string) => { setMessage({type, text}); setTimeout(() => setMessage(null), 4000) }
 
   const fetchData = async (endpoint: string, setter: any) => {
     setLoading(true)
@@ -93,6 +98,101 @@ export default function AdminDashboard() {
     finally { setSavingId(null) }
   }
 
+  // --- Excel Import (Chunking) Logic ---
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setSavingId('excel_import')
+    
+    try {
+      const data = await file.arrayBuffer()
+      const workbook = XLSX.read(data, { type: 'buffer' })
+      const firstSheetName = workbook.SheetNames[0]
+      const worksheet = workbook.Sheets[firstSheetName]
+      const jsonData = XLSX.utils.sheet_to_json(worksheet)
+
+      if (!jsonData || jsonData.length === 0) {
+        showMsg('error', 'Excel dosyası boş veya hatalı formatta.')
+        setSavingId(null)
+        return
+      }
+
+      // Chunk arrays into 50
+      const chunkSize = 50
+      const chunks = []
+      for (let i = 0; i < jsonData.length; i += chunkSize) {
+        chunks.push(jsonData.slice(i, i + chunkSize))
+      }
+
+      setImportProgress({ current: 0, total: chunks.length })
+
+      let totalSuccess = 0
+      let totalError = 0
+
+      // Process chunks sequentially
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i]
+        try {
+          const res = await fetch('/api/admin/products/import', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ products: chunk })
+          })
+          
+          if (res.ok) {
+            const result = await res.json()
+            totalSuccess += result.successCount || 0
+            totalError += result.errorCount || 0
+          } else {
+            console.error(`Chunk ${i+1} failed`)
+          }
+        } catch (err) {
+          console.error(`Chunk ${i+1} exception`, err)
+        }
+        
+        setImportProgress({ current: i + 1, total: chunks.length })
+      }
+
+      showMsg('success', `İçe aktarma tamamlandı: ${totalSuccess} başarılı, ${totalError} hatalı.`)
+    } catch (err) {
+      showMsg('error', 'Excel okunurken bir hata oluştu.')
+    } finally {
+      setSavingId(null)
+      setImportProgress(null)
+      if (e.target) e.target.value = '' // reset file input
+    }
+  }
+
+  // --- Bulk Pricing Logic ---
+  const handleBulkPricing = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSavingId('bulk_pricing')
+    try {
+      const res = await fetch('/api/admin/products/bulk-price', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platform: bulkPriceData.platform,
+          type: bulkPriceData.type,
+          percentage: bulkPriceData.percentage
+        })
+      })
+      if (res.ok) {
+        const data = await res.json()
+        showMsg('success', data.message || 'Toplu fiyat güncellemesi başarılı.')
+        setBulkPriceData({ ...bulkPriceData, percentage: '' })
+      } else {
+        const err = await res.json()
+        throw new Error(err.error || 'Hata')
+      }
+    } catch (err: any) {
+      showMsg('error', err.message || 'Fiyat güncellenirken hata oluştu.')
+    } finally {
+      setSavingId(null)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 pb-20">
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
@@ -117,6 +217,7 @@ export default function AdminDashboard() {
               { id: 'customers', icon: Users, label: 'Müşteriler & Elçiler' },
               { id: 'reports', icon: TrendingUp, label: 'Raporlar' },
               { id: 'api', icon: Server, label: 'Bayi & API Ent.' },
+              { id: 'products', icon: PackagePlus, label: 'Ürün Yönetimi' },
             ].map(tab => (
               <button 
                 key={tab.id}
@@ -139,6 +240,7 @@ export default function AdminDashboard() {
                  activeTab === 'orders' ? 'Sipariş Yönetimi' :
                  activeTab === 'customers' ? 'Müşteriler ve Elçiler' :
                  activeTab === 'reports' ? 'Genel Raporlar' :
+                 activeTab === 'products' ? 'Ürün Yönetimi (Excel & Fiyatlar)' :
                  'Bayi ve API Entegrasyonları'}
               </h1>
             </div>
@@ -153,7 +255,7 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {loading && (!reports && !aiConfig && rules.length===0 && orders.length===0 && customers.length===0 && stores.length===0) ? (
+          {loading && (!reports && !aiConfig && rules.length===0 && orders.length===0 && customers.length===0 && stores.length===0 && activeTab !== 'products') ? (
             <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center text-gray-400">
               <RefreshCw size={32} className="mx-auto mb-4 animate-spin text-gray-300" />
             </div>
@@ -314,6 +416,102 @@ export default function AdminDashboard() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'products' && (
+                <div className="space-y-8">
+                  {/* Excel Upload Section */}
+                  <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm text-center">
+                    <UploadCloud size={48} className="mx-auto text-indigo-500 mb-4" />
+                    <h3 className="font-semibold text-xl mb-2">Excel'den Ürün Yükle (Toplu Güncelleme)</h3>
+                    <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto">
+                      SKU, İsim, Cinsiyet vb. içeren Excel veya CSV dosyanızı yükleyin.
+                      Fiyatlar çok fazla ise sistem Vercel limitlerine takılmamak için 50'şerlik paketler halinde asenkron aktarım yapar.
+                    </p>
+                    
+                    <div className="relative inline-block">
+                      <input 
+                        type="file" 
+                        accept=".xlsx, .xls, .csv" 
+                        onChange={handleFileUpload} 
+                        disabled={savingId === 'excel_import'}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <button 
+                        disabled={savingId === 'excel_import'}
+                        className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                      >
+                        {savingId === 'excel_import' ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
+                        {savingId === 'excel_import' ? 'İçe Aktarılıyor...' : 'Excel Dosyası Seç & Yükle'}
+                      </button>
+                    </div>
+
+                    {importProgress && (
+                      <div className="mt-6 w-full max-w-md mx-auto bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                        <div 
+                          className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" 
+                          style={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}
+                        ></div>
+                        <p className="text-xs text-gray-500 mt-2 text-center">
+                          Aktarılıyor: Paket {importProgress.current} / {importProgress.total} (Her paket 50 Ürün)
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Bulk Price Adjustment Section */}
+                  <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="p-3 bg-rose-50 text-rose-600 rounded-lg"><Percent size={24} /></div>
+                      <div>
+                        <h3 className="font-semibold text-lg">Toplu Zam & İndirim</h3>
+                        <p className="text-gray-500 text-sm">Pazaryeri ürün fiyatlarına oran bazlı toplu zam veya indirim uygulayın.</p>
+                      </div>
+                    </div>
+
+                    <form onSubmit={handleBulkPricing} className="grid md:grid-cols-4 gap-4 items-end">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Platform</label>
+                        <select value={bulkPriceData.platform} onChange={e=>setBulkPriceData({...bulkPriceData, platform:e.target.value})} className="w-full border rounded-lg px-4 py-2 bg-white">
+                          <option value="all">Tüm Platformlar</option>
+                          <option value="trendyol">Sadece Trendyol</option>
+                          <option value="ikas">Sadece İkas</option>
+                          <option value="hepsiburada">Sadece Hepsiburada</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-1">İşlem Tipi</label>
+                        <select value={bulkPriceData.type} onChange={e=>setBulkPriceData({...bulkPriceData, type:e.target.value})} className="w-full border rounded-lg px-4 py-2 bg-white">
+                          <option value="zam">Zam Yap (+)</option>
+                          <option value="indirim">İndirim Yap (-)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Oran (%)</label>
+                        <input 
+                          type="number" 
+                          required 
+                          placeholder="Örn: 15" 
+                          value={bulkPriceData.percentage} 
+                          onChange={e=>setBulkPriceData({...bulkPriceData, percentage:e.target.value})} 
+                          className="w-full border rounded-lg px-4 py-2" 
+                        />
+                      </div>
+                      
+                      <div className="md:col-span-1">
+                        <button 
+                          type="submit" 
+                          disabled={savingId === 'bulk_pricing'} 
+                          className={`w-full text-white px-6 py-2 rounded-lg font-medium transition-colors ${bulkPriceData.type === 'zam' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} disabled:opacity-50`}
+                        >
+                          {savingId === 'bulk_pricing' ? 'Uygulanıyor...' : 'Uygula'}
+                        </button>
+                      </div>
+                    </form>
                   </div>
                 </div>
               )}
