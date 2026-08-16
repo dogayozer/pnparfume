@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { google } from '@ai-sdk/google'
-import { streamText, tool } from 'ai'
+import { generateText, tool } from 'ai'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 
@@ -32,7 +32,7 @@ KURALLAR:
   const canGiveDiscount = config?.can_give_discount ?? true
   const discountLimit = config?.discount_limit ?? 20
 
-  const result = streamText({
+  const result = await generateText({
     model: google('gemini-3.5-flash'),
     system: systemPrompt,
     messages,
@@ -96,7 +96,13 @@ KURALLAR:
         }
       })
     },
+    maxSteps: 3
   })
 
-  return result.toDataStreamResponse()
+  const allToolResults = result.steps?.flatMap(step => step.toolResults) || []
+
+  return Response.json({
+    text: result.text,
+    toolResults: allToolResults
+  })
 }
