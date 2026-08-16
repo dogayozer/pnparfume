@@ -39,7 +39,7 @@ export default function ChatWidget() {
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center shadow-2xl hover:scale-105 transition-transform z-50 overflow-hidden border-[3px] border-background ${isOpen ? 'hidden' : 'flex'}`}
+        className={`fixed bottom-8 right-4 md:bottom-6 md:right-6 w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center shadow-2xl hover:scale-105 transition-transform z-[60] overflow-hidden border-[3px] border-background ${isOpen ? 'hidden' : 'flex'}`}
       >
         <img src="/aura-avatar.jpg" alt="Aura AI Chat" className="w-full h-full object-cover" />
       </button>
@@ -52,7 +52,7 @@ export default function ChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-6 right-6 w-[90vw] md:w-[400px] h-[600px] max-h-[80vh] bg-background border border-foreground/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50"
+            className="fixed bottom-0 right-0 w-full h-[85vh] md:bottom-6 md:right-6 md:w-[400px] md:h-[600px] md:max-h-[80vh] bg-background border border-foreground/10 md:rounded-2xl shadow-2xl flex flex-col overflow-hidden z-[60]"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 bg-foreground text-background">
@@ -175,14 +175,15 @@ export default function ChatWidget() {
                   value={input}
                   onChange={handleInputChange}
                   placeholder="Bana bir koku tarif edin..."
-                  className="flex-1 bg-foreground/5 border border-foreground/10 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-accent-rose/50 transition-colors"
+                  className="flex-1 bg-foreground/5 border border-foreground/10 rounded-full px-4 py-3 text-sm focus:outline-none focus:border-accent-rose/50 transition-colors"
+                  style={{ touchAction: 'manipulation' }}
                 />
                 <button 
                   type="submit" 
                   disabled={isLoading || !(input || '').trim()}
-                  className="w-9 h-9 rounded-full bg-foreground text-background flex items-center justify-center hover:bg-accent-rose transition-colors disabled:opacity-50 flex-shrink-0"
+                  className="w-11 h-11 md:w-9 md:h-9 rounded-full bg-foreground text-background flex items-center justify-center hover:bg-accent-rose transition-colors disabled:opacity-50 flex-shrink-0"
                 >
-                  <Send size={14} />
+                  <Send size={16} />
                 </button>
               </form>
             </div>
