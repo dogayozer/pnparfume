@@ -3,6 +3,8 @@ export const metadata = {
   description: 'PN Parfüm iş ortağı olun, kârlı iş modelimizle gücümüze katılın.',
 }
 
+import CorporateForm from './CorporateForm'
+
 export default function GirisimcilereOzelPage() {
   return (
     <div className="space-y-10">
@@ -35,42 +37,7 @@ export default function GirisimcilereOzelPage() {
         </div>
       </div>
 
-      <div className="border-t border-foreground/10 pt-10">
-        <h3 className="text-2xl font-light mb-6">Ön Başvuru Formu</h3>
-        <form className="space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-xs font-medium uppercase tracking-widest text-foreground/50 mb-2">Ad Soyad / Firma Adı</label>
-              <input type="text" className="w-full bg-background border border-foreground/10 rounded-lg px-4 py-3 focus:outline-none focus:border-accent-gold transition-colors" placeholder="Firma veya Yetkili Adı" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium uppercase tracking-widest text-foreground/50 mb-2">E-posta Adresi</label>
-              <input type="email" className="w-full bg-background border border-foreground/10 rounded-lg px-4 py-3 focus:outline-none focus:border-accent-gold transition-colors" placeholder="iletisim@sirket.com" />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-xs font-medium uppercase tracking-widest text-foreground/50 mb-2">Telefon Numarası</label>
-              <input type="tel" className="w-full bg-background border border-foreground/10 rounded-lg px-4 py-3 focus:outline-none focus:border-accent-gold transition-colors" placeholder="05XX XXX XX XX" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium uppercase tracking-widest text-foreground/50 mb-2">Web Siteniz / Sosyal Medya</label>
-              <input type="url" className="w-full bg-background border border-foreground/10 rounded-lg px-4 py-3 focus:outline-none focus:border-accent-gold transition-colors" placeholder="https://www..." />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium uppercase tracking-widest text-foreground/50 mb-2">Satış Stratejiniz & Mesajınız</label>
-            <textarea rows={4} className="w-full bg-background border border-foreground/10 rounded-lg px-4 py-3 focus:outline-none focus:border-accent-gold transition-colors resize-none" placeholder="Bize kısaca kendinizden ve nasıl bir iş modeli kurguladığınızdan bahsedin..."></textarea>
-          </div>
-
-          <button type="button" className="bg-foreground text-background px-8 py-3 rounded-full text-sm font-medium hover:bg-accent-gold transition-colors">
-            Başvuruyu Gönder
-          </button>
-          <p className="text-xs text-foreground/40 mt-3">Başvurunuz incelendikten sonra ekibimiz sizinle iletişime geçecektir.</p>
-        </form>
-      </div>
+      <CorporateForm />
     </div>
   )
 }
