@@ -18,6 +18,12 @@ export default function AdminDashboard() {
   const [savingId, setSavingId] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
+  // Auth states
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [loginError, setLoginError] = useState('')
+
   // Data states
   const [rules, setRules] = useState<ScenarioRule[]>([])
   const [aiConfig, setAiConfig] = useState<AiConfig | null>(null)
@@ -46,6 +52,7 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     if (activeTab === 'scenarios') fetchData('/api/admin/scenarios', setRules)
     else if (activeTab === 'ai') fetchData('/api/admin/ai', setAiConfig)
     else if (activeTab === 'orders') fetchData('/api/admin/orders', setOrders)
@@ -55,7 +62,7 @@ export default function AdminDashboard() {
       fetchData('/api/admin/marketplace/stores', setStores)
       fetchData('/api/admin/marketplace/orders', setMarketOrders)
     }
-  }, [activeTab])
+  }, [activeTab, isAuthenticated])
 
   const handleUpdateRule = async (rule_key: string, newValue: number) => {
     setSavingId(rule_key)
@@ -193,6 +200,45 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (username === 'Admin' && password === 'Pds135596.') {
+      setIsAuthenticated(true)
+      setLoginError('')
+    } else {
+      setLoginError('Hatalı kullanıcı adı veya şifre')
+    }
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="w-12 h-12 bg-gray-900 text-white rounded-xl mx-auto flex items-center justify-center font-bold text-xl mb-4">PN</div>
+            <h1 className="text-2xl font-bold text-gray-900">Yönetici Girişi</h1>
+            <p className="text-gray-500 mt-2">Lütfen devam etmek için giriş yapın</p>
+          </div>
+          
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Kullanıcı Adı</label>
+              <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Şifre</label>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" required />
+            </div>
+            {loginError && <div className="text-red-500 text-sm font-medium bg-red-50 p-3 rounded-lg border border-red-200">{loginError}</div>}
+            <button type="submit" className="w-full bg-indigo-600 text-white font-medium py-2.5 rounded-lg hover:bg-indigo-700 transition-colors">
+              Giriş Yap
+            </button>
+          </form>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 pb-20">
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
@@ -244,7 +290,20 @@ export default function AdminDashboard() {
                  'Bayi ve API Entegrasyonları'}
               </h1>
             </div>
-            <button onClick={() => setActiveTab(activeTab)} className="flex items-center gap-2 text-sm text-gray-600 hover:text-indigo-600 bg-white px-4 py-2 border rounded-lg shadow-sm">
+            <button 
+              onClick={() => {
+                if (activeTab === 'scenarios') fetchData('/api/admin/scenarios', setRules)
+                else if (activeTab === 'ai') fetchData('/api/admin/ai', setAiConfig)
+                else if (activeTab === 'orders') fetchData('/api/admin/orders', setOrders)
+                else if (activeTab === 'customers') fetchData('/api/admin/customers', setCustomers)
+                else if (activeTab === 'reports') fetchData('/api/admin/reports', setReports)
+                else if (activeTab === 'api') {
+                  fetchData('/api/admin/marketplace/stores', setStores)
+                  fetchData('/api/admin/marketplace/orders', setMarketOrders)
+                }
+              }} 
+              className="flex items-center gap-2 text-sm text-gray-600 hover:text-indigo-600 bg-white px-4 py-2 border rounded-lg shadow-sm"
+            >
               <RefreshCw size={16} className={loading ? "animate-spin" : ""} /> Yenile
             </button>
           </div>
@@ -262,19 +321,26 @@ export default function AdminDashboard() {
           ) : (
             <>
               {activeTab === 'scenarios' && (
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                  <table className="w-full text-left border-collapse">
-                    <thead><tr className="bg-gray-50 border-b text-gray-500 text-sm"><th className="px-6 py-4 font-medium">Anahtar</th><th className="px-6 py-4 font-medium">Değer</th><th className="px-6 py-4">İşlem</th></tr></thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {rules.map(rule => (
-                        <tr key={rule.id}>
-                          <td className="px-6 py-5"><span className="bg-gray-100 px-3 py-1 rounded-md text-sm font-mono border">{rule.rule_key}</span></td>
-                          <td className="px-6 py-5"><input type="number" value={rule.rule_value} onChange={(e) => setRules(rules.map(r => r.id === rule.id ? { ...r, rule_value: parseFloat(e.target.value) || 0 } : r))} className="border rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500" /></td>
-                          <td className="px-6 py-5"><button onClick={() => handleUpdateRule(rule.rule_key, rule.rule_value)} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm">Kaydet</button></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="space-y-4">
+                  <div className="bg-blue-50 border border-blue-100 text-blue-800 rounded-xl p-4 text-sm">
+                    <h3 className="font-semibold mb-1">Senaryo Kuralları Hakkında</h3>
+                    <p>Bu bölümden sistem genelinde kullanılan dinamik kuralları (kargo alt limiti, kampanya tutarları vb.) yönetebilirsiniz. Değişiklikler anında tüm sisteme yansıyacaktır.</p>
+                  </div>
+                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                    <table className="w-full text-left border-collapse">
+                      <thead><tr className="bg-gray-50 border-b text-gray-500 text-sm"><th className="px-6 py-4 font-medium">Anahtar</th><th className="px-6 py-4 font-medium">Açıklama</th><th className="px-6 py-4 font-medium">Değer</th><th className="px-6 py-4">İşlem</th></tr></thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {rules.map(rule => (
+                          <tr key={rule.id}>
+                            <td className="px-6 py-5"><span className="bg-gray-100 px-3 py-1 rounded-md text-sm font-mono border">{rule.rule_key}</span></td>
+                            <td className="px-6 py-5 text-sm text-gray-600">{rule.description || 'Açıklama bulunmuyor'}</td>
+                            <td className="px-6 py-5"><input type="number" value={rule.rule_value} onChange={(e) => setRules(rules.map(r => r.id === rule.id ? { ...r, rule_value: parseFloat(e.target.value) || 0 } : r))} className="border rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500" /></td>
+                            <td className="px-6 py-5"><button onClick={() => handleUpdateRule(rule.rule_key, rule.rule_value)} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm">Kaydet</button></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
 
