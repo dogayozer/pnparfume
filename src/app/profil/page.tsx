@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Wallet, Gift, Users, Copy, Check, Package, Clock, ShieldCheck, Info } from 'lucide-react'
+import { ArrowLeft, Wallet, Gift, Users, Copy, Check, Package, Clock, ShieldCheck, Info, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react'
 
 // Mock User Data based on our new DB architecture
 const mockUser = {
@@ -17,20 +17,69 @@ const mockUser = {
     { code: 'REF-8319', type: 'Tavsiye Ödülü', discount: '200 TL', expiresAt: '2026-09-01' }
   ],
   orders: [
-    { id: 'PN-49182', date: '12 Ağustos 2026', total: '1850 TL', status: 'Kargoya Verildi', combinedWith: null },
-    { id: 'PN-38192', date: '01 Ağustos 2026', total: '600 TL', status: 'Teslim Edildi', combinedWith: 'PN-38191' },
+    { 
+      id: 'PN-49182', date: '12 Ağustos 2026', total: '1850 TL', status: 'Kargoya Verildi', combinedWith: null,
+      items: [{ name: 'PN Parfüm - Midnight Oud', sku: 'PN-MND-01' }, { name: 'Gül Şehri Koleksiyonu', sku: 'PN-RS-02' }]
+    },
+    { 
+      id: 'PN-49332', date: '14 Ağustos 2026', total: '850 TL', status: 'Hazırlanıyor', combinedWith: null,
+      items: [{ name: 'PN Parfüm - Citrus Breeze', sku: 'PN-CB-01' }]
+    },
+    { 
+      id: 'PN-38192', date: '01 Ağustos 2026', total: '600 TL', status: 'Teslim Edildi', combinedWith: 'PN-38191',
+      items: [{ name: 'Klasik Beyaz Çiçekler', sku: 'PN-WHT-03' }]
+    },
+    { 
+      id: 'PN-37111', date: '15 Temmuz 2026', total: '1200 TL', status: 'İptal Edildi', combinedWith: null,
+      items: [{ name: 'Amber Geccesi Serisi', sku: 'PN-AMB-05' }]
+    },
   ]
 }
 
 export default function ProfilePage() {
   const [copied, setCopied] = useState(false)
-  const [activeTab, setActiveTab] = useState<'ozet' | 'kuponlar' | 'siparisler' | 'b2b'>('ozet')
+  const [activeTab, setActiveTab] = useState<'ozet' | 'kuponlar' | 'siparisler' | 'b2b' | 'ayarlar'>('ozet')
+  
+  // Sipariş alt sekmesi (Mevcut veya Geçmiş)
+  const [orderSubTab, setOrderSubTab] = useState<'aktif' | 'gecmis'>('aktif')
+  
+  // Şifre değiştirme state
+  const [passwordData, setPasswordData] = useState({ current: '', new: '', confirm: '' })
+  const [showPwd, setShowPwd] = useState(false)
+  const [pwdLoading, setPwdLoading] = useState(false)
+  const [pwdMsg, setPwdMsg] = useState<{type: 'success' | 'error', text: string} | null>(null)
 
   const copyCode = () => {
     navigator.clipboard.writeText(mockUser.referral_code)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
+
+  const handlePasswordChange = (e: React.FormEvent) => {
+    e.preventDefault()
+    setPwdMsg(null)
+    
+    if (passwordData.new !== passwordData.confirm) {
+      setPwdMsg({ type: 'error', text: 'Yeni şifreler eşleşmiyor!' })
+      return
+    }
+    
+    if (passwordData.new.length < 6) {
+      setPwdMsg({ type: 'error', text: 'Şifreniz en az 6 karakter olmalıdır.' })
+      return
+    }
+
+    setPwdLoading(true)
+    // Gerçek bir API isteği simülasyonu
+    setTimeout(() => {
+      setPwdLoading(false)
+      setPwdMsg({ type: 'success', text: 'Şifreniz başarıyla güncellendi!' })
+      setPasswordData({ current: '', new: '', confirm: '' })
+    }, 1500)
+  }
+
+  const activeOrders = mockUser.orders.filter(o => o.status === 'Hazırlanıyor' || o.status === 'Kargoya Verildi')
+  const pastOrders = mockUser.orders.filter(o => o.status === 'Teslim Edildi' || o.status === 'İptal Edildi')
 
   return (
     <div className="min-h-screen bg-background pt-24 pb-20">
@@ -66,7 +115,7 @@ export default function ProfilePage() {
                 onClick={() => setActiveTab('siparisler')}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-left ${activeTab === 'siparisler' ? 'bg-foreground/5 text-foreground font-medium' : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'}`}
               >
-                <Package size={18} /> Siparişlerim
+                <Package size={18} /> Sipariş Yönetimi
               </button>
               
               <button 
@@ -74,6 +123,13 @@ export default function ProfilePage() {
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-left ${activeTab === 'b2b' ? 'bg-foreground/5 text-foreground font-medium' : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'}`}
               >
                 <ShieldCheck size={18} /> Özel Davet & Elçilik
+              </button>
+              
+              <button 
+                onClick={() => setActiveTab('ayarlar')}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-left ${activeTab === 'ayarlar' ? 'bg-foreground/5 text-foreground font-medium' : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'}`}
+              >
+                <Lock size={18} /> Ayarlar ve Güvenlik
               </button>
             </div>
           </div>
@@ -166,32 +222,156 @@ export default function ProfilePage() {
             )}
 
             {activeTab === 'siparisler' && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <h2 className="text-2xl font-light mb-8">Sipariş Geçmişim</h2>
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div>
+                  <h2 className="text-2xl font-light mb-2">Sipariş Yönetimi</h2>
+                  <p className="text-foreground/60 text-sm font-light">Mevcut kargolarınızı takip edebilir veya eski siparişlerinizi inceleyebilirsiniz.</p>
+                </div>
+
+                {/* Sub-tabs for Orders */}
+                <div className="flex border-b border-foreground/10">
+                  <button 
+                    onClick={() => setOrderSubTab('aktif')}
+                    className={`pb-4 px-4 text-sm font-medium transition-colors border-b-2 ${orderSubTab === 'aktif' ? 'border-accent-gold text-foreground' : 'border-transparent text-foreground/50 hover:text-foreground/80'}`}
+                  >
+                    Mevcut Siparişlerim ({activeOrders.length})
+                  </button>
+                  <button 
+                    onClick={() => setOrderSubTab('gecmis')}
+                    className={`pb-4 px-4 text-sm font-medium transition-colors border-b-2 ${orderSubTab === 'gecmis' ? 'border-accent-gold text-foreground' : 'border-transparent text-foreground/50 hover:text-foreground/80'}`}
+                  >
+                    Geçmiş Siparişlerim ({pastOrders.length})
+                  </button>
+                </div>
                 
-                <div className="space-y-4">
-                  {mockUser.orders.map((order, i) => (
-                    <div key={i} className="border border-foreground/10 rounded-2xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                      <div>
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="font-mono text-sm tracking-wider">{order.id}</span>
-                          <span className={`text-xs px-2 py-1 rounded-full ${order.status === 'Teslim Edildi' ? 'bg-green-500/10 text-green-600' : 'bg-accent-gold/10 text-accent-gold'}`}>
-                            {order.status}
-                          </span>
+                <div className="space-y-4 pt-4">
+                  {(orderSubTab === 'aktif' ? activeOrders : pastOrders).map((order, i) => (
+                    <div key={i} className="border border-foreground/10 rounded-2xl p-6 flex flex-col justify-between items-start gap-4 hover:border-accent-gold/30 transition-colors">
+                      <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-foreground/5 pb-4 mb-2">
+                        <div>
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="font-mono text-sm tracking-wider font-medium">{order.id}</span>
+                            <span className={`text-xs px-2 py-1 rounded-full ${
+                              order.status === 'Teslim Edildi' ? 'bg-green-500/10 text-green-600' : 
+                              order.status === 'İptal Edildi' ? 'bg-red-500/10 text-red-600' :
+                              'bg-accent-gold/10 text-accent-gold'
+                            }`}>
+                              {order.status}
+                            </span>
+                          </div>
+                          <p className="text-sm text-foreground/60">{order.date}</p>
                         </div>
-                        <p className="text-sm text-foreground/60">{order.date}</p>
+                        
+                        <div className="text-left sm:text-right w-full sm:w-auto flex sm:flex-col justify-between sm:justify-center items-center sm:items-end">
+                          <span className="text-xl font-light text-accent-rose">{order.total}</span>
+                          {order.combinedWith && (
+                            <span className="text-xs bg-blue-500/10 text-blue-600 px-2 py-1 rounded-full mt-2 inline-block">
+                              Arkadaş Kargosu ({order.combinedWith})
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      
-                      <div className="text-left sm:text-right w-full sm:w-auto flex sm:flex-col justify-between sm:justify-center items-center sm:items-end">
-                        <span className="text-xl font-light">{order.total}</span>
-                        {order.combinedWith && (
-                          <span className="text-xs bg-blue-500/10 text-blue-600 px-2 py-1 rounded-full mt-2 inline-block">
-                            Arkadaş Kargosu ({order.combinedWith})
-                          </span>
-                        )}
+
+                      {/* Sipariş İçeriği (Yeni eklendi) */}
+                      <div className="w-full">
+                        <p className="text-xs uppercase tracking-widest text-foreground/50 mb-3">Sipariş İçeriği</p>
+                        <ul className="space-y-2">
+                          {order.items.map((item, idx) => (
+                            <li key={idx} className="flex justify-between items-center text-sm">
+                              <span className="text-foreground/80 font-light">{item.name}</span>
+                              <span className="font-mono text-xs text-foreground/40">{item.sku}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     </div>
                   ))}
+
+                  {(orderSubTab === 'aktif' ? activeOrders : pastOrders).length === 0 && (
+                    <div className="text-center py-12 text-foreground/40 font-light">
+                      Bu kategoride siparişiniz bulunmamaktadır.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'ayarlar' && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-xl">
+                <div>
+                  <h2 className="text-2xl font-light mb-2">Ayarlar ve Güvenlik</h2>
+                  <p className="text-foreground/60 text-sm font-light">Şifrenizi ve hesap güvenliğinizi buradan yönetebilirsiniz.</p>
+                </div>
+
+                <div className="bg-background border border-foreground/10 rounded-3xl p-8">
+                  <h3 className="text-lg font-medium mb-6">Şifre Değiştirme</h3>
+                  
+                  {pwdMsg && (
+                    <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 text-sm border ${pwdMsg.type === 'success' ? 'bg-green-500/10 text-green-700 border-green-500/20' : 'bg-red-500/10 text-red-700 border-red-500/20'}`}>
+                      <AlertCircle size={18} /> <span>{pwdMsg.text}</span>
+                    </div>
+                  )}
+
+                  <form onSubmit={handlePasswordChange} className="space-y-5">
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-foreground/80">Mevcut Şifre</label>
+                      <div className="relative">
+                        <input 
+                          type={showPwd ? 'text' : 'password'}
+                          required
+                          value={passwordData.current}
+                          onChange={e => setPasswordData({...passwordData, current: e.target.value})}
+                          className="w-full bg-foreground/5 border border-transparent focus:border-accent-gold focus:bg-background rounded-xl px-4 py-3 text-foreground transition-colors outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-foreground/80">Yeni Şifre</label>
+                        <div className="relative">
+                          <input 
+                            type={showPwd ? 'text' : 'password'}
+                            required
+                            value={passwordData.new}
+                            onChange={e => setPasswordData({...passwordData, new: e.target.value})}
+                            className="w-full bg-foreground/5 border border-transparent focus:border-accent-gold focus:bg-background rounded-xl px-4 py-3 text-foreground transition-colors outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-foreground/80">Yeni Şifre (Tekrar)</label>
+                        <div className="relative">
+                          <input 
+                            type={showPwd ? 'text' : 'password'}
+                            required
+                            value={passwordData.confirm}
+                            onChange={e => setPasswordData({...passwordData, confirm: e.target.value})}
+                            className="w-full bg-foreground/5 border border-transparent focus:border-accent-gold focus:bg-background rounded-xl px-4 py-3 text-foreground transition-colors outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-6">
+                      <button 
+                        type="button"
+                        onClick={() => setShowPwd(!showPwd)}
+                        className="text-sm text-foreground/60 hover:text-foreground flex items-center gap-2 transition-colors"
+                      >
+                        {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                        Şifreyi Göster
+                      </button>
+
+                      <button 
+                        type="submit"
+                        disabled={pwdLoading}
+                        className="bg-foreground text-background px-8 py-3 rounded-xl text-sm font-medium hover:bg-accent-gold transition-colors disabled:opacity-50"
+                      >
+                        {pwdLoading ? 'Kaydediliyor...' : 'Şifreyi Güncelle'}
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
             )}
