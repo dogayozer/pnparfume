@@ -11,13 +11,13 @@ export interface Article {
 export const articles: Article[] = [
   {
     slug: 'imza-kokunuzu-nasil-secersiniz',
-    title: 'İmza Kokunuzu Nasıl Seçersiniz? (Nöropazarlama Yaklaşımı)',
+    title: 'İmza Kokunuzu Nasıl Seçersiniz? (yapay zeka analiz Yaklaşımı)',
     excerpt: 'Parfüm seçimi sadece güzel kokmakla ilgili değildir; bilinçaltına gönderilen güçlü bir mesajdır. Kendi imza kokunuzu bulmanın bilimsel sırlarını keşfedin.',
     coverImage: '/blog-signature.jpg',
     date: '12 Ağustos 2026',
     readTime: '4 dk okuma',
     content: `
-## Nöropazarlama ve Koku Bağlantısı
+## yapay zeka analiz ve Koku Bağlantısı
 İnsan beyni kokuyu, doğrudan duyguları ve hafızayı yöneten limbik sistemde işler. Görme veya duyma duyularından farklı olarak koku, filtrelerden geçmeden bilinçaltımıza ulaşır. Bu yüzden bir parfüm, etrafınızdaki insanların sizin hakkınızdaki düşüncelerini saniyeler içinde değiştirebilir.
 
 ### Karakterinize Uygun Notaları Seçmek
@@ -28,7 +28,7 @@ Odunsu notalar (Sedir, Vetiver, Sandal Ağacı) ve hafif deri dokunuşları, evr
 Turunçgiller (Bergamot, Limon, Greyfurt) beyni uyarır ve karşınızdaki kişiye enerjik, genç ve yenilikçi olduğunuz mesajını iletir. Sabahları veya spor sonrası için mükemmel bir tercihtir.
 
 **3. Gizemli ve Çekici:**
-Oryantal notalar (Vanilya, Kehribar, Baharatlar) sıcaklık ve gizem katar. Nöropazarlama araştırmalarına göre, hafif tatlı ve baharatlı kokular, karşı cinste merak uyandırır ve akılda kalıcılığı artırır. Gece dışarı çıkarken bu notaları tercih edin.
+Oryantal notalar (Vanilya, Kehribar, Baharatlar) sıcaklık ve gizem katar. yapay zeka analiz araştırmalarına göre, hafif tatlı ve baharatlı kokular, karşı cinste merak uyandırır ve akılda kalıcılığı artırır. Gece dışarı çıkarken bu notaları tercih edin.
 
 ### İmza Koku Nedir?
 İmza koku, bir odaya girdiğinizde veya odadan çıktığınızda insanların sizi hatırlamasını sağlayan koku profiline denir. Sadece tek bir parfüm kullanmak zorunda değilsiniz, ancak parfümlerinizin *ortak bir alt notası* olması (örneğin hep misk veya hep paçuli barındırması) beynin sizi tekil bir koku hafızasıyla eşleştirmesini sağlar.

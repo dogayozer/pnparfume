@@ -60,7 +60,7 @@ export default function ProfilePage() {
                 onClick={() => setActiveTab('kuponlar')}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-left ${activeTab === 'kuponlar' ? 'bg-foreground/5 text-foreground font-medium' : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'}`}
               >
-                <Gift size={18} /> Kupon Kasası
+                <Gift size={18} /> Ayrıcalıklarım
               </button>
               <button 
                 onClick={() => setActiveTab('siparisler')}
@@ -69,12 +69,11 @@ export default function ProfilePage() {
                 <Package size={18} /> Siparişlerim
               </button>
               
-              {/* Sadece B2B veya Influencer ise gösterilebilecek ek sekmeler (Demo amaçlı görünür bırakıldı) */}
               <button 
                 onClick={() => setActiveTab('b2b')}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-left ${activeTab === 'b2b' ? 'bg-foreground/5 text-foreground font-medium' : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'}`}
               >
-                <ShieldCheck size={18} /> Ortaklık Paneli
+                <ShieldCheck size={18} /> Özel Davet & Elçilik
               </button>
             </div>
           </div>
@@ -102,7 +101,7 @@ export default function ProfilePage() {
                   {/* Referans Kodu */}
                   <div className="bg-background border border-foreground/10 rounded-3xl p-8 flex flex-col justify-between">
                     <div>
-                      <p className="text-sm uppercase tracking-widest text-foreground/60 mb-2">Davet Kodunuz</p>
+                      <p className="text-sm uppercase tracking-widest text-foreground/60 mb-2">Özel Davet (Elçilik) Kodunuz</p>
                       <div className="flex items-center gap-4 mt-4">
                         <div className="px-6 py-4 bg-foreground/5 border border-foreground/10 rounded-xl font-mono text-xl tracking-wider text-foreground">
                           {mockUser.referral_code}
@@ -116,8 +115,8 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     <div className="mt-6 pt-6 border-t border-foreground/10">
-                      <p className="text-xs text-foreground/60 leading-relaxed">
-                        Arkadaşlarınız bu kodla üye olduklarında anında <strong>150 TL</strong> indirim kazanır. Onlar alışveriş yaptıklarında siz de cüzdanınıza komisyon kazanırsınız.
+                      <p className="text-xs text-foreground/60 leading-relaxed font-light">
+                        Sizin gibi seçkin zevklere sahip dostlarınızı PN Parfüm dünyasına davet edin. Onlar ayrıcalıklı bir karşılama hediyesi kazanırken, siz de PN Cüzdanınıza teşekkür hediyeleri biriktirin.
                       </p>
                     </div>
                   </div>
@@ -129,8 +128,8 @@ export default function ProfilePage() {
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="flex items-center justify-between mb-8">
                   <div>
-                    <h2 className="text-2xl font-light">Kupon Kasası</h2>
-                    <p className="text-foreground/60 text-sm mt-1">Sahip olduğunuz aktif kuponlar (Maksimum 3 ay geçerlidir).</p>
+                    <h2 className="text-2xl font-light">Ayrıcalıklarım</h2>
+                    <p className="text-foreground/60 text-sm mt-1 font-light">Size özel tanımlanan hediye kodları ve davetiyeler.</p>
                   </div>
                   <div className="bg-accent-gold/10 text-accent-gold px-4 py-2 rounded-full text-sm font-medium">
                     {mockUser.coupons.length} Aktif Kupon
@@ -199,23 +198,34 @@ export default function ProfilePage() {
 
             {activeTab === 'b2b' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <h2 className="text-2xl font-light mb-8">B2B Pazaryeri Ortaklığı</h2>
-                <div className="bg-foreground/5 border border-foreground/10 rounded-3xl p-8">
+                <h2 className="text-2xl font-light mb-8">Marka Elçiliği ve Kurumsal İş Ortaklığı</h2>
+                
+                <div className="bg-foreground/5 border border-foreground/10 rounded-3xl p-8 mb-6">
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-12 h-12 bg-accent-gold/20 rounded-full flex items-center justify-center text-accent-gold">
                       <Package size={24} />
                     </div>
                     <div>
-                      <p className="text-sm uppercase tracking-widest text-foreground/60">Hak Edilmiş Eşantiyon Kotası</p>
-                      <h3 className="text-3xl font-light text-foreground">{mockUser.earned_samples} Adet <span className="text-sm text-foreground/50">Tester</span></h3>
+                      <p className="text-sm uppercase tracking-widest text-foreground/60">Tedarik ve Eşantiyon Kotası (B2B)</p>
+                      <h3 className="text-3xl font-light text-foreground">{mockUser.earned_samples} Adet <span className="text-sm text-foreground/50">Hediye Tester Seçimi</span></h3>
                     </div>
                   </div>
                   <p className="text-sm text-foreground/70 leading-relaxed font-light mb-8">
-                    Müşterilerinize gönderdiğiniz paketlerin içine PN Parfüm hediye tester'ı (eşantiyon) ve sizin adınıza tanımlı <strong>{mockUser.referral_code}</strong> davet kodunu koyun. Müşteriniz sitemizden bu kodla alışveriş yaptığında kotanız otomatik olarak artar.
+                    Profesyonel iş ortaklarımız, müşterilerine gönderdikleri her paketin içine PN Parfüm ayrıcalık davetiyelerini ekleyerek, karşılığında kendi mağazaları için ücretsiz koku koleksiyonları (tester'lar) kazanır.
                   </p>
-                  <button className="bg-foreground text-background px-6 py-3 rounded-full text-sm font-medium hover:bg-accent-gold transition-colors opacity-50 cursor-not-allowed">
-                    Eşantiyon Talep Et (Kota Yetersiz)
-                  </button>
+                  <div className="flex gap-4">
+                    <button className="bg-foreground text-background px-6 py-3 rounded-full text-sm font-medium hover:bg-accent-gold transition-colors opacity-50 cursor-not-allowed">
+                      Ayrıcalığı Talep Et (Kota Yetersiz)
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-background border border-foreground/10 rounded-3xl p-8 text-center max-w-lg mx-auto">
+                  <p className="text-xs uppercase tracking-widest text-foreground/50 mb-3">Kurumsal Ağa Katılın</p>
+                  <p className="text-sm font-light text-foreground/80 mb-6">İşletmeniz veya konsept mağazanız için toptan alım şartlarını ve iş ortaklığı fırsatlarını değerlendirin.</p>
+                  <Link href="/kurumsal" className="inline-block border border-foreground px-8 py-3 text-xs uppercase tracking-widest font-medium hover:bg-foreground hover:text-background transition-colors">
+                    Kurumsal Başvuru Yap
+                  </Link>
                 </div>
               </div>
             )}

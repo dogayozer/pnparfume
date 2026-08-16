@@ -9,6 +9,9 @@ datasource db {
 model Product {
   sku                  String   @id
   original_name        String
+  seo_name             String?
+  publish_status       String   @default("ACTIVE")
+  barcode              String?  @unique
   gender               String
   fragrance_family     String[]
   top_notes            String   @default("Gizli Formül")
@@ -31,6 +34,7 @@ model Product {
   content_tag          String
 
   ingredients          ProductIngredient[]
+  marketplaceListings  MarketplaceListing[]
 
   // Maliyet ve Senaryo Yönetimi
   base_cost            Float    @default(0) // Maliyetin altında satışı önlemek için
@@ -41,6 +45,29 @@ model Product {
 
   @@index([original_name])
   @@index([gender])
+}
+
+// Ürünlerin Pazaryeri (Trendyol, İkas, Amazon vb.) Satış Linkleri ve Fiyatları
+model MarketplaceListing {
+  id                String   @id @default(cuid())
+  productId         String
+  product           Product  @relation(fields: [productId], references: [sku], onDelete: Cascade)
+  
+  platform          String   // "trendyol", "ikas", "amazon" vb.
+  url               String?  // Pazaryeri linki
+  price             Float    // Pazaryeri Satış Fiyatı
+  marketPrice       Float?   // Piyasa Satış Fiyatı (Üstü Çizili Fiyat)
+  stock             Int      @default(0)
+  
+  // Resimler (Trendyol sayfasındaki Görsel 1, Görsel 2 vb.)
+  images            String[] 
+  description       String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([productId, platform])
+  @@index([platform])
 }
 
 model Ingredient {
@@ -87,6 +114,11 @@ model Customer {
   password          String?
   phone             String?  // WhatsApp bildirimleri için
   name              String?
+  
+  // Demografi & Profilleme
+  birth_year        Int?     // Kayıtta zorunlu hale getirilecek (UI seviyesinde)
+  birth_date        String?  // Örn: "05-12" (Gün ve Ay) Doğum günü ayrıcalıkları için
+  profession        String?  // Mesleğe/Yaşam tarzına özel kampanyalar için
   
   // Nöropazarlama Profili (Asistanın satış taktikleri için)
   budget_segment    String?  // "Premium", "Ulaşılabilir" vb.

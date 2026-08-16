@@ -10,6 +10,12 @@ export default function AccountPage() {
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
+  
+  // Profiling Fields
+  const [birthYear, setBirthYear] = useState('')
+  const [birthMonthDay, setBirthMonthDay] = useState('')
+  const [profession, setProfession] = useState('')
+  
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
   const [termsConsent, setTermsConsent] = useState(false)
@@ -25,8 +31,8 @@ export default function AccountPage() {
     e.preventDefault()
     setError('')
     
-    if (!firstName || !lastName || !email || !password || !passwordConfirm) {
-      setError('Lütfen tüm zorunlu alanları doldurun.')
+    if (!firstName || !lastName || !email || !password || !passwordConfirm || !birthYear) {
+      setError('Lütfen tüm zorunlu alanları (Doğum Yılı dahil) doldurun.')
       return
     }
     
@@ -50,6 +56,9 @@ export default function AccountPage() {
           lastName,
           email,
           phone,
+          birthYear: parseInt(birthYear),
+          birthDate: birthMonthDay || null,
+          profession: profession || null,
           password,
           emailConsent,
           smsConsent
@@ -193,6 +202,47 @@ export default function AccountPage() {
                   className="w-full bg-transparent border-b border-foreground/20 py-2 focus:outline-none focus:border-accent-gold transition-colors"
                   placeholder="0 (5XX) XXX XX XX"
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div className="flex flex-col">
+                  <label className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Doğum Yılı *</label>
+                  <input 
+                    type="number" 
+                    min="1920" max="2015"
+                    value={birthYear}
+                    onChange={(e) => setBirthYear(e.target.value)}
+                    className="w-full bg-transparent border-b border-foreground/20 py-2 focus:outline-none focus:border-accent-gold transition-colors"
+                    placeholder="YYYY"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-xs uppercase tracking-widest text-foreground/60 mb-2 flex items-center justify-between">
+                    Doğum Günü <span className="text-[10px] text-foreground/40 normal-case tracking-normal">Opsiyonel</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    value={birthMonthDay}
+                    onChange={(e) => setBirthMonthDay(e.target.value)}
+                    className="w-full bg-transparent border-b border-foreground/20 py-2 focus:outline-none focus:border-accent-gold transition-colors"
+                    placeholder="GG/AA"
+                  />
+                  <p className="text-[10px] text-foreground/50 mt-1 leading-tight">Size özel sürpriz doğum günü ayrıcalıkları için.</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col">
+                <label className="text-xs uppercase tracking-widest text-foreground/60 mb-2 flex items-center justify-between">
+                  Meslek <span className="text-[10px] text-foreground/40 normal-case tracking-normal">Opsiyonel</span>
+                </label>
+                <input 
+                  type="text" 
+                  value={profession}
+                  onChange={(e) => setProfession(e.target.value)}
+                  className="w-full bg-transparent border-b border-foreground/20 py-2 focus:outline-none focus:border-accent-gold transition-colors"
+                  placeholder="Mimar, Avukat, Tasarımcı vb."
+                />
+                <p className="text-[10px] text-foreground/50 mt-1 leading-tight">Yaşam tarzınıza ve mesleğinize en uygun koku profillerini size önerebilmemiz için.</p>
               </div>
               
               <div className="grid grid-cols-2 gap-6">

@@ -7,24 +7,34 @@ export default function KurumsalKimlikPage() {
   return (
     <div className="space-y-10">
       <div>
-        <h2 className="text-3xl font-light mb-4 text-accent-gold">Hakkımızda & Kurumsal Kimlik</h2>
-        <p className="text-foreground/70 leading-relaxed mb-6">
-          Güzellik ve kozmetik endüstrisinde parfüme olan yaklaşımı kökünden değiştirmek için kurulduk. Bizler; parfümü yalnızca güzel kokan bir sıvı olarak değil, insanın duygu dünyasını yöneten, bilinçaltıyla iletişim kuran biyokimyasal bir sanat eseri olarak görüyoruz.
-        </p>
-      </div>
-
-      <div className="space-y-8">
-        <div>
-          <h3 className="text-xl font-medium mb-3">Vizyonumuz</h3>
-          <p className="text-foreground/70 text-sm leading-relaxed p-6 bg-background rounded-2xl border border-foreground/10">
-            Klasik koku notalarının sınırlarını aşarak, parfüm endüstrisini "Nöropazarlama" ve "Biyokimya" temelleri üzerine yeniden inşa etmek. Tüm dünyada, kişilerin sadece kokularıyla bile karşılarındakine istedikleri duyguyu (güven, cazibe, otorite) aktarabildikleri farkındalıklı bir koku kültürü yaratmak.
+        <h2 className="text-3xl font-light mb-8 text-accent-gold">Hakkımızda</h2>
+        
+        <div className="space-y-8 text-foreground/70 leading-relaxed font-light">
+          <p className="text-lg text-foreground font-medium italic">
+            "Koku, hafızanın en derin odalarına açılan görünmez bir anahtardır. Bizim için bir parfüm, yalnızca esansların birleşiminden ibaret değil; teninizde yaşayan, sizi sarmalayan ve gün boyu sizinle nefes alan hipnotik bir duygu durum mimarisidir."
           </p>
-        </div>
 
-        <div>
-          <h3 className="text-xl font-medium mb-3">Misyonumuz</h3>
-          <p className="text-foreground/70 text-sm leading-relaxed p-6 bg-background rounded-2xl border border-foreground/10">
-            Tüketicileri ezberletilmiş marka illüzyonlarından kurtarmak. Şeffaf, bilimsel olarak kanıtlanmış (termodinamik difüzyon analizleriyle) ve yüksek performanslı ürünleri, ulaşılabilir lüks konseptinde sunmak. Akıllı algoritmalarımız sayesinde herkesin ten kimyasına en uygun "imza kokuyu" bulmasını sağlamak.
+          <p>
+            PN Parfume felsefesinin merkezinde, beklentilerin ötesine geçme tutkusu yatar. Çeyrek asra yaklaşan (20 yıllık) üretim mirasımızı modern nöro-parfümeri ile harmanlıyor, sıradan bir alışkanlığı eşsiz bir ritüele dönüştürüyoruz. Şişelerimizin içine hapsettiğimiz her bir damla, kalıcılık ve tutarlılık vaadimizin kusursuz bir yansımasıdır.
+          </p>
+
+          <div className="bg-foreground/5 p-8 rounded-3xl border border-foreground/10 my-10">
+            <h3 className="text-xl font-medium mb-4 text-foreground">Klinik Şeffaflık ve Sürdürülebilir Simya</h3>
+            <p className="mb-4">
+              Bizler sadece koku tasarlamıyor, doğaya, insana ve teknik emniyete saygı duyan bir güven ekosistemi inşa ediyoruz. Gelişmiş laboratuvarlarımızda, dünyanın en seçkin doğal özleri ile inovatif koku moleküllerini bir araya getiriyoruz.
+            </p>
+            <p>
+              Bu eşsiz simya, <strong>IFRA (Uluslararası Koku Birliği)</strong> ve <strong>Avrupa Birliği Kozmetik regülasyonlarının</strong> titiz standartlarıyla filtrelenir. Tüketicimizi bilinçlendirmeyi ve gezegenimizi korumayı odağımıza alan Entegre Yönetim Sistemimiz, sürdürülebilir kusursuzluğa olan sarsılmaz inancımızın kanıtıdır.
+            </p>
+          </div>
+
+          <h3 className="text-xl font-medium mb-4 text-foreground mt-8">Sınırları Aşan Frekans: Global Ekosistemimiz</h3>
+          <p>
+            PN Parfume olarak yarattığımız bu görünmez imza, sınırların ötesine uzanan bir frekansa dönüştü. Bugün, Avrupa dahil hem yurt içinde hem de yurt dışında sayısız noktada güçlü bayilik ve distribütörlük ağımızla ruhunuza dokunuyor; yenilikçi franchising sistemimizle bu karlı ekosisteme katılmak isteyen girişimcilere kapılarımızı açıyoruz.
+          </p>
+
+          <p className="text-lg text-accent-gold mt-6 font-medium">
+            Amacımız; dünya standartlarındaki bu benzersiz koku deneyimini, kaliteden ödün vermeden, ruhunuzu eşsiz bir ahenkle saracak o 'doğru nota' ile buluşturmaktır.
           </p>
         </div>
       </div>

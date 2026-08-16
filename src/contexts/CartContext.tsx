@@ -46,7 +46,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
       return [...prev, item]
     })
-    setIsCartOpen(true)
   }
 
   const removeFromCart = (sku: string) => {

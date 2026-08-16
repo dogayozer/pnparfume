@@ -69,7 +69,7 @@ export default function KolonyaVeKitlerPage() {
           >
             <h2 className="text-3xl md:text-4xl font-light mb-4">PN Alchemy: Kendi Kokunu Yarat</h2>
             <p className="text-foreground/60 max-w-2xl mx-auto">
-              Sadece size ait, eşsiz bir koku formülü mü arıyorsunuz? PN Alchemy (Simya) Kitleri ile nöropazarlama prensiplerine uygun, profesyonel kalitede parfüm veya kolonyanızı evinizde kendiniz tasarlayın.
+              Sadece size ait, eşsiz bir koku formülü mü arıyorsunuz? PN Alchemy (Simya) Kitleri ile biyokimya prensiplerine uygun, profesyonel kalitede parfüm veya kolonyanızı evinizde kendiniz tasarlayın.
             </p>
           </motion.div>
 

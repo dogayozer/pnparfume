@@ -26,8 +26,9 @@ export default function IletisimPage() {
             <div>
               <h4 className="font-medium mb-1">Merkez Ofis</h4>
               <p className="text-sm text-foreground/60 leading-relaxed">
-                Levent Mah. Büyükdere Cad. No:199<br />
-                Şişli / İstanbul, Türkiye
+                PİEN PARFUME / SİLİVRİ / İSTANBUL<br />
+                Yeni Sanayi Sit. E-Blok 9.Cad. No:8<br />
+                Silivri / İST.
               </p>
             </div>
           </div>
@@ -39,7 +40,8 @@ export default function IletisimPage() {
             <div>
               <h4 className="font-medium mb-1">Müşteri Hizmetleri</h4>
               <p className="text-sm text-foreground/60">
-                +90 (850) 123 45 67
+                Telefon: (+90) 212 736 09 90<br />
+                Fax: (+90) 212 736 09 91
               </p>
             </div>
           </div>
@@ -51,8 +53,7 @@ export default function IletisimPage() {
             <div>
               <h4 className="font-medium mb-1">E-posta</h4>
               <p className="text-sm text-foreground/60">
-                destek@pnparfum.com<br />
-                bayilik@pnparfum.com
+                info@pienparfume.com.tr
               </p>
             </div>
           </div>

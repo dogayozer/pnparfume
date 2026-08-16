@@ -22,7 +22,7 @@ export default function AsistanPage() {
           <Sparkles className="text-accent-gold" size={28} />
         </div>
         <h1 className="text-3xl font-light">Kişisel Koku Asistanınız</h1>
-        <p className="text-foreground/50 mt-2">Karakterinize ve ruh halinize en uygun imzayı birlikte bulalım.</p>
+        <p className="text-foreground/50 mt-2">Bildiğiniz veya aradığınız bir parfümün ismini yazın, size en uygun PN imzasını bulalım.</p>
       </div>
 
       <div className="flex-1 bg-foreground/[0.02] border border-foreground/5 rounded-3xl overflow-hidden flex flex-col shadow-2xl relative">
@@ -35,7 +35,7 @@ export default function AsistanPage() {
           {messages.length === 0 && (
             <div className="text-center text-foreground/40 mt-12 flex flex-col items-center">
               <Bot size={32} className="mb-4 opacity-50" />
-              <p>Örneğin: "Girdiğim ortamda fark edilmek istiyorum, bana ne önerirsin?"</p>
+              <p>Örneğin: "Baccarat Rouge 540 benzeri bir koku arıyorum, ne önerirsiniz?"</p>
             </div>
           )}
           
@@ -117,7 +117,7 @@ export default function AsistanPage() {
               type="text"
               value={input}
               onChange={handleInputChange}
-              placeholder="Nasıl bir izlenim bırakmak istersiniz?"
+              placeholder="Bildiğiniz/aradığınız bir koku ismini yazın..."
               className="flex-1 bg-foreground/5 border border-foreground/10 rounded-full px-6 py-4 focus:outline-none focus:border-accent-rose/50 transition-colors"
             />
             <button 

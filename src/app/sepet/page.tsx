@@ -1,34 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowLeft, Trash2, Tag, Truck, Info, Users, ShieldCheck, Check } from 'lucide-react'
-
-// Mock Data for Cart Items
-const initialCart = [
-  {
-    id: '1',
-    name: 'Smyrna Fig & Incense',
-    size: '50ml',
-    isExtrait: true, // +200 TL extra
-    basePrice: 600,
-    extraPrice: 200,
-    image: '/cologne_fig_incense_1786736624153.jpg'
-  },
-  {
-    id: '2',
-    name: 'Pera Leather & Amber',
-    size: '100ml',
-    isExtrait: false,
-    basePrice: 850,
-    extraPrice: 0,
-    image: '/cologne_leather_amber_1786736633619.jpg'
-  }
-]
+import { ArrowLeft, Trash2, Tag, Truck, Info, Users, ShieldCheck, Check, Clock } from 'lucide-react'
+import { useCart } from '@/contexts/CartContext'
 
 export default function CartPage() {
-  const [items, setItems] = useState(initialCart)
+  const { items, removeFromCart, totalAmount, clearCart } = useCart()
   const [couponCode, setCouponCode] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState<{code: string, discount: number} | null>(null)
   
@@ -36,13 +15,30 @@ export default function CartPage() {
   const [combinedShipping, setCombinedShipping] = useState(false)
   const [friendOrderCode, setFriendOrderCode] = useState('')
   const [shippingDiscountApplied, setShippingDiscountApplied] = useState(false)
+  
+  // VIP Urgency State
+  const [timeLeft, setTimeLeft] = useState(3599) // 59:59
+  const [selectedTester, setSelectedTester] = useState<string | null>(null)
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => (prev > 0 ? prev - 1 : 0))
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0')
+    const s = (seconds % 60).toString().padStart(2, '0')
+    return `${m}:${s}`
+  }
 
   // Kurallar (Senaryolardan Gelen)
   const SHIPPING_COST = 100
   const SECOND_ITEM_DISCOUNT = 250
 
   // Hesaplamalar
-  const subtotal = items.reduce((sum, item) => sum + item.basePrice + item.extraPrice, 0)
+  const subtotal = totalAmount
   
   // 2. Ürün İndirimi
   const multiItemDiscount = items.length >= 2 ? SECOND_ITEM_DISCOUNT : 0
@@ -57,9 +53,11 @@ export default function CartPage() {
 
   const total = subtotal - multiItemDiscount - couponDiscount + shippingFee
 
-  const removeItem = (id: string) => {
-    setItems(items.filter(item => item.id !== id))
-  }
+  // WhatsApp Manuel Sipariş Hazırlığı
+  const whatsappNumber = "905323913141"
+  const cartText = items.map(i => `- ${i.quantity}x PN ${i.sku} (${i.name}) : ${i.price * i.quantity} TL`).join('%0A')
+  const whatsappMessage = `Merhaba, PN Parfüm'den sipariş vermek istiyorum.%0A%0ASepetim:%0A${cartText}%0A%0A🎁 İndirimler & Kargo: -${multiItemDiscount + couponDiscount - shippingFee} TL%0A💳 Toplam Tutar: ${total} TL%0A%0A(Sanal POS kurulumunuz devam ettiği için manuel sipariş oluşturmak istedim, yardımcı olabilir misiniz?)`
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`
 
   const applyCoupon = () => {
     if (couponCode.toUpperCase() === 'HOSGELDIN150' || couponCode.toUpperCase() === 'HOŞGELDİN150') {
@@ -83,7 +81,7 @@ export default function CartPage() {
       <div className="min-h-screen bg-background pt-32 pb-20 px-6 text-center">
         <h1 className="text-3xl font-light mb-4 text-foreground">Sepetiniz Boş</h1>
         <p className="text-foreground/60 mb-8">Koku imzanızı bulmak için koleksiyonlarımızı keşfedin.</p>
-        <Link href="/koleksiyonlar/kolonya-ve-kitler" className="inline-block bg-foreground text-background px-8 py-4 uppercase tracking-widest text-sm hover:bg-accent-gold transition-colors">
+        <Link href="/katalog" className="inline-block bg-foreground text-background px-8 py-4 uppercase tracking-widest text-sm hover:bg-accent-gold transition-colors">
           Alışverişe Başla
         </Link>
       </div>
@@ -94,6 +92,23 @@ export default function CartPage() {
     <div className="min-h-screen bg-background pt-24 pb-20">
       <div className="max-w-7xl mx-auto px-6">
         
+        {/* VIP Urgency Banner */}
+        {timeLeft > 0 && (
+          <div className="mb-8 bg-gradient-to-r from-accent-gold/20 via-accent-gold/10 to-transparent border border-accent-gold/30 rounded-2xl p-4 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-6 animate-in slide-in-from-top-4 duration-700">
+            <div>
+              <h2 className="text-lg font-medium text-foreground mb-1 flex items-center gap-2">
+                <Clock className="text-accent-gold" size={20} /> Yeni Üyeliğinize Özel Ayrıcalık
+              </h2>
+              <p className="text-sm text-foreground/70 font-light">
+                PN Parfüm kulübüne hoş geldiniz. %15 İndirim ve 1 Adet Signature Koku Deneme Boyu (Tester) hediyenizi sepetinize eklemek için size ayrılan süre:
+              </p>
+            </div>
+            <div className="flex-shrink-0 flex items-center gap-4 bg-background px-6 py-3 rounded-xl border border-accent-gold/20 shadow-sm">
+              <span className="text-2xl font-light tracking-widest text-accent-gold font-mono">{formatTime(timeLeft)}</span>
+            </div>
+          </div>
+        )}
+
         <div className="mb-12">
           <h1 className="text-4xl font-light tracking-wide text-foreground">Sepetiniz</h1>
           <p className="text-foreground/60 font-light mt-2">{items.length} ürün seçtiniz.</p>
@@ -104,34 +119,47 @@ export default function CartPage() {
           {/* Sol Kolon: Ürünler */}
           <div className="flex-1 space-y-6">
             {items.map((item) => (
-              <div key={item.id} className="flex gap-6 border-b border-foreground/10 pb-6">
-                <div className="w-24 h-32 relative bg-foreground/5 rounded-md overflow-hidden flex-shrink-0">
-                  <Image src={item.image} alt={item.name} fill className="object-cover mix-blend-multiply opacity-90" />
+              <div key={item.sku} className="flex gap-6 border-b border-foreground/10 pb-6">
+                <div className="w-24 h-32 relative bg-foreground/5 rounded-md flex items-center justify-center flex-shrink-0">
+                  <span className="text-xs font-light text-foreground/30 px-2 text-center">{item.sku}</span>
                 </div>
                 <div className="flex-1 flex flex-col justify-center">
                   <div className="flex justify-between items-start mb-1">
-                    <h3 className="text-xl font-medium text-foreground">{item.name}</h3>
-                    <button onClick={() => removeItem(item.id)} className="text-foreground/40 hover:text-accent-rose transition-colors">
+                    <h3 className="text-xl font-medium text-foreground">PN {item.sku}</h3>
+                    <button onClick={() => removeFromCart(item.sku)} className="text-foreground/40 hover:text-accent-rose transition-colors">
                       <Trash2 size={18} />
                     </button>
                   </div>
-                  <p className="text-sm text-foreground/50 mb-3">{item.size}</p>
-                  
-                  {item.isExtrait && (
-                    <span className="inline-flex items-center gap-1 text-xs text-accent-gold bg-accent-gold/10 px-2 py-1 rounded-sm w-max mb-3">
-                      <ShieldCheck size={12} /> %20 Daha Yoğun Esans (Extrait)
-                    </span>
-                  )}
+                  <p className="text-sm text-foreground/50 mb-3">{item.name}</p>
                   
                   <div className="mt-auto">
-                    <span className="text-lg font-light text-foreground">{item.basePrice + item.extraPrice} TL</span>
-                    {item.isExtrait && (
-                      <span className="text-xs text-foreground/40 ml-2">({item.basePrice} TL + {item.extraPrice} TL)</span>
-                    )}
+                    <span className="text-lg font-light text-foreground">{item.price * item.quantity} TL</span>
+                    <span className="text-xs text-foreground/40 ml-2">({item.quantity} Adet)</span>
                   </div>
                 </div>
               </div>
             ))}
+
+            {/* VIP Tester Selection */}
+            {timeLeft > 0 && (
+              <div className="mt-8 border border-accent-gold/20 bg-accent-gold/5 rounded-2xl p-6">
+                <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
+                  <Tag size={18} className="text-accent-gold" /> Hediye Tester Seçiminiz
+                </h3>
+                <p className="text-sm text-foreground/60 font-light mb-4">Ayrıcalıklı süreniz dolmadan siparişinize eklenecek hediye kokuyu seçin.</p>
+                <div className="flex flex-wrap gap-3">
+                  {['Pera Leather', 'Smyrna Fig', 'Ephesus Rose'].map(tester => (
+                    <button 
+                      key={tester}
+                      onClick={() => setSelectedTester(tester)}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${selectedTester === tester ? 'bg-accent-gold text-background border-accent-gold' : 'bg-background text-foreground/70 border-foreground/10 hover:border-accent-gold/50'}`}
+                    >
+                      {tester} (2ml)
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Sağ Kolon: Özet & Paydaş Ekonomisi */}
@@ -244,13 +272,23 @@ export default function CartPage() {
                 </div>
               </div>
 
-              <button className="w-full bg-foreground text-background py-5 uppercase tracking-widest text-sm font-medium hover:bg-accent-gold transition-colors group relative overflow-hidden">
-                <span className="relative z-10">Güvenle Öde</span>
-                <div className="absolute inset-0 bg-white/20 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out"></div>
-              </button>
+              <div className="mb-4 p-4 bg-[#25D366]/10 border border-[#25D366]/20 rounded-xl">
+                <p className="text-xs text-[#25D366] font-medium leading-relaxed">
+                  Sanal POS kurulumumuz devam etmektedir. Sizin için müşteri temsilcimize iletilmek üzere bir manuel sipariş mesajı hazırladık.
+                </p>
+              </div>
+
+              <a 
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex items-center justify-center gap-3 bg-[#25D366] text-white py-5 uppercase tracking-widest text-sm font-medium hover:bg-[#1da851] transition-colors rounded-xl shadow-lg"
+              >
+                WhatsApp İle Sipariş Ver
+              </a>
 
               <div className="flex items-center justify-center gap-2 mt-6 text-xs text-foreground/40">
-                <ShieldCheck size={14} /> 256-bit SSL Güvenli Ödeme
+                <ShieldCheck size={14} /> Manuel Onaylı Güvenli Sipariş
               </div>
             </div>
           </div>

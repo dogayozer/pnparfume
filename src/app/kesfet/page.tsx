@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react'
 
 export const metadata = {
   title: 'Koku Rehberi & Keşfet | PN Parfüm',
-  description: 'Nöropazarlama, koku psikolojisi ve doğru parfüm seçimi hakkında uzman makaleleri.',
+  description: 'yapay zeka analiz, koku psikolojisi ve doğru parfüm seçimi hakkında uzman makaleleri.',
 }
 
 export default function KesfetPage() {
@@ -13,7 +13,7 @@ export default function KesfetPage() {
       <div className="mb-16">
         <h1 className="text-4xl md:text-5xl font-light mb-4">Koku Rehberi</h1>
         <p className="text-foreground/60 max-w-2xl text-lg">
-          Koku alma duyusu, beynimizin duygular ve hafıza ile ilgilenen kısmına doğrudan bağlı olan tek duyudur. Parfüm sanatının ardındaki bilimi ve nöropazarlama sırlarını keşfedin.
+          Koku alma duyusu, beynimizin duygular ve hafıza ile ilgilenen kısmına doğrudan bağlı olan tek duyudur. Parfüm sanatının ardındaki bilimi ve koku bilimi sırlarını keşfedin.
         </p>
       </div>
 

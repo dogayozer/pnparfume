@@ -9,7 +9,7 @@ export default function GirisimcilereOzelPage() {
       <div>
         <h2 className="text-3xl font-light mb-4 text-accent-gold">Girişimcilere Özel</h2>
         <p className="text-foreground/70 leading-relaxed mb-6">
-          Nöropazarlama destekli koku tasarımında öncü olan PN Parfüm, vizyonunu paylaşacak ve bu eşsiz deneyimi kendi müşterilerine ulaştıracak dijital iş ortakları arıyor. 
+          yapay zeka analiz destekli koku tasarımında öncü olan PN Parfüm, vizyonunu paylaşacak ve bu eşsiz deneyimi kendi müşterilerine ulaştıracak dijital iş ortakları arıyor. 
         </p>
         <p className="text-foreground/70 leading-relaxed">
           Geleneksel bayiliğin yüksek yatırım maliyetleri ve ağır operasyonel yükleri yerine; risksiz, stoksuz veya düşük stoklu e-ticaret modelleriyle yüksek kâr marjları sunuyoruz. 
@@ -23,7 +23,7 @@ export default function GirisimcilereOzelPage() {
         </div>
         <div className="p-6 border border-foreground/10 rounded-2xl bg-background">
           <h3 className="font-medium text-lg mb-2">Pazarlama Desteği</h3>
-          <p className="text-sm text-foreground/60">Yüksek dönüşümlü nöropazarlama metinleri, profesyonel ürün görselleri ve kampanya materyalleri desteği.</p>
+          <p className="text-sm text-foreground/60">Yüksek dönüşümlü ikna edici pazarlama metinleri, profesyonel ürün görselleri ve kampanya materyalleri desteği.</p>
         </div>
         <div className="p-6 border border-foreground/10 rounded-2xl bg-background">
           <h3 className="font-medium text-lg mb-2">Lüks Marka İmajı</h3>

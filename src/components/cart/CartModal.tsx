@@ -11,7 +11,6 @@ export default function CartModal() {
   const [discount, setDiscount] = useState(0)
   const [error, setError] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
-  const [isSuccess, setIsSuccess] = useState(false)
 
   const applyCoupon = async () => {
     setError('')
@@ -32,24 +31,9 @@ export default function CartModal() {
     }
   }
 
-  const checkout = async () => {
-    setIsProcessing(true)
-    try {
-      const res = await fetch('/api/checkout/order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items, couponCode, totalAmount, discount })
-      })
-      if (res.ok) {
-        setIsSuccess(true)
-        clearCart()
-        setCouponCode('')
-        setDiscount(0)
-      }
-    } catch (e) {
-      console.error(e)
-    }
-    setIsProcessing(false)
+  const checkout = () => {
+    setIsCartOpen(false)
+    window.location.href = '/sepet'
   }
 
   const finalAmount = Math.max(0, totalAmount - (totalAmount * discount / 100))
@@ -86,21 +70,7 @@ export default function CartModal() {
               </button>
             </div>
 
-            {isSuccess ? (
-              <div className="flex-1 p-6 flex flex-col items-center justify-center text-center">
-                <div className="w-16 h-16 rounded-full bg-accent-gold/20 flex items-center justify-center text-accent-gold mb-6">
-                  <Sparkles size={32} />
-                </div>
-                <h3 className="text-2xl font-light mb-2">Siparişiniz Alındı!</h3>
-                <p className="text-foreground/60 mb-8">Kişisel imzanız en kısa sürede hazırlanıp size ulaştırılacak.</p>
-                <button 
-                  onClick={() => { setIsSuccess(false); setIsCartOpen(false) }}
-                  className="px-8 py-3 bg-foreground text-background rounded-full font-medium"
-                >
-                  Alışverişe Devam Et
-                </button>
-              </div>
-            ) : items.length === 0 ? (
+            {items.length === 0 ? (
               <div className="flex-1 p-6 flex flex-col items-center justify-center text-foreground/40">
                 <ShoppingBag size={48} className="mb-4 opacity-50" />
                 <p>Sepetiniz şu an boş.</p>
@@ -188,10 +158,9 @@ export default function CartModal() {
 
                   <button 
                     onClick={checkout}
-                    disabled={isProcessing}
-                    className="w-full py-4 bg-foreground text-background rounded-full font-medium hover:bg-accent-gold transition-colors disabled:opacity-50"
+                    className="w-full py-4 bg-foreground text-background rounded-full font-medium tracking-wide hover:bg-accent-gold transition-colors flex items-center justify-center gap-2"
                   >
-                    {isProcessing ? 'İşleniyor...' : 'Siparişi Tamamla'}
+                    Sepete Git ve Ödemeye Geç
                   </button>
                 </div>
               </>

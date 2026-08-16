@@ -10,8 +10,18 @@ import ChatWidget from '@/components/layout/ChatWidget'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'PN Parfüm | Nöropazarlama Odaklı Kişisel Koku Deneyimi',
-  description: 'Yapay zeka ve nöropazarlama ilkeleriyle sizin için en uygun kokuyu buluyoruz.',
+  metadataBase: new URL('https://pienparfume.com.tr'),
+  title: 'PN Parfüm | Özel ve Niş Koku Deneyimi',
+  description: 'Yapay zeka analiz ilkeleriyle teninize en uygun imza kokuyu keşfedin. Açık parfümde lüks ve kalıcılığın yeni adresi PN Parfüm.',
+  keywords: ['açık parfüm', 'niş parfüm', 'kişiye özel parfüm', 'kalıcı parfüm', 'erkek parfüm', 'kadın parfüm', 'Pien parfüm'],
+  openGraph: {
+    title: 'PN Parfüm | Özel ve Niş Koku Deneyimi',
+    description: 'Yapay zeka analiz ilkeleriyle teninize en uygun imza kokuyu keşfedin.',
+    url: 'https://pienparfume.com.tr',
+    siteName: 'PN Parfüm',
+    locale: 'tr_TR',
+    type: 'website',
+  },
 }
 
 export default function RootLayout({
@@ -20,8 +30,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="tr" className="scroll-smooth">
-      <body className={`${inter.className} bg-background text-foreground antialiased selection:bg-accent-gold/30 selection:text-accent-gold`}>
+    <html lang="tr" className="scroll-smooth" suppressHydrationWarning>
+      <body className={`${inter.className} bg-background text-foreground antialiased selection:bg-accent-gold/30 selection:text-accent-gold`} suppressHydrationWarning>
         <CartProvider>
           <Navbar />
           <main className="min-h-screen pt-20">

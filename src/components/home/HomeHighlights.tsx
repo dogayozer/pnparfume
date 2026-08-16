@@ -20,7 +20,7 @@ export default function HomeHighlights() {
 
         <div className="grid md:grid-cols-3 gap-8">
           {[
-            { title: "Nöroetki Odaklı", desc: "Sadece kokuları değil, o kokunun insan beyninde bıraktığı etkiyi analiz ederek öneri sunarız." },
+            { title: "Duygu Odaklı", desc: "Sadece kokuları değil, o kokunun insan beyninde bıraktığı etkiyi analiz ederek öneri sunarız." },
             { title: "3000+ Nota Analizi", desc: "400'den fazla koku molekülündeki binlerce hammadde ağırlığını hesaplayan Mix Engine ile teninize, mekanınıza, duygu durumunuza, iş ve özel hayatınıza en uygun alt notaları buluruz." },
             { title: "Kişisel Bütçe Esnekliği", desc: "Yapay zeka asistanımız, bütçenize anında uyum sağlayarak size en uygun ebat, şişe, kutu seçimi veya anlık indirim kodunu sunar." }
           ].map((feature, idx) => (

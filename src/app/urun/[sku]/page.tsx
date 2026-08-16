@@ -1,7 +1,36 @@
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
-import { Sparkles, ArrowLeft } from 'lucide-react'
+import { Sparkles, ArrowLeft, ShoppingBag, SunMoon, Compass, CalendarRange, Sun, MoonStar, Snowflake, Leaf, Briefcase, Coffee, Wine, Zap, Layers } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
+import ProductGallery from '@/components/ProductGallery'
+import ProductActions from '@/components/ProductActions'
+
+export const revalidate = 86400 // Cache for 24 hours (super fast loading)
+
+const getSeasonIcon = (tag: string | null) => {
+  if (!tag) return <CalendarRange size={14} />
+  if (tag.includes('Kış') || tag.includes('Sonbahar')) return <Leaf size={14} />
+  if (tag.includes('Yaz')) return <Sun size={14} />
+  if (tag.includes('Dört')) return <Layers size={14} />
+  return <CalendarRange size={14} />
+}
+
+const getTimeIcon = (tag: string | null) => {
+  if (!tag) return <SunMoon size={14} />
+  if (tag === 'Gündüz') return <Sun size={14} />
+  if (tag === 'Gece') return <MoonStar size={14} />
+  return <SunMoon size={14} />
+}
+
+const getOccasionIcon = (tag: string | null) => {
+  if (!tag) return <Compass size={14} />
+  if (tag.includes('Ofis') || tag.includes('Toplantı')) return <Briefcase size={14} />
+  if (tag.includes('Günlük')) return <Coffee size={14} />
+  if (tag.includes('Davet') || tag.includes('Gece')) return <Wine size={14} />
+  if (tag.includes('Spor') || tag.includes('Dinamik')) return <Zap size={14} />
+  return <Compass size={14} />
+}
 
 export default async function ProductPage({ params }: { params: Promise<{ sku: string }> }) {
   const { sku } = await params
@@ -13,14 +42,41 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
         include: {
           ingredient: true
         }
-      }
+      },
+      marketplaceListings: true
     }
   })
 
-  if (!product) {
+  if (!product || product.publish_status === 'DRAFT') {
     notFound()
   }
 
+  const trendyolListing = product.marketplaceListings?.find(l => l.platform === 'trendyol')
+  const imageUrl = trendyolListing?.images?.[0]
+  const displayPrice = trendyolListing?.price || product.base_cost
+  const marketPrice = trendyolListing?.marketPrice
+  const description = trendyolListing?.description || `
+    <div class="space-y-4">
+      <p><strong>Duygusal Etki:</strong> Çevrenizde <em>${product.mood_tag || 'etkileyici'}</em> bir izlenim bırakmak için özel olarak formüle edilmiştir.</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 p-4 bg-foreground/5 rounded-2xl border border-foreground/10">
+        <div>
+          <h4 class="text-accent-gold font-medium text-sm mb-1 uppercase tracking-widest">Üst Notalar</h4>
+          <p class="text-foreground/80 text-sm">${product.top_notes}</p>
+        </div>
+        <div>
+          <h4 class="text-accent-gold font-medium text-sm mb-1 uppercase tracking-widest">Kalp Notaları</h4>
+          <p class="text-foreground/80 text-sm">${product.heart_notes}</p>
+        </div>
+        <div>
+          <h4 class="text-accent-gold font-medium text-sm mb-1 uppercase tracking-widest">Dip Notalar</h4>
+          <p class="text-foreground/80 text-sm">${product.base_notes}</p>
+        </div>
+      </div>
+    </div>
+  `
+
+  const isOutOfStock = product.publish_status === 'OUT_OF_STOCK'
+  const title = product.seo_name ? `${product.seo_name} - PN ${product.sku}` : `PN ${product.sku}`
 
   return (
     <div className="min-h-screen max-w-5xl mx-auto px-6 py-12 md:px-12">
@@ -29,93 +85,128 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
       </Link>
 
       <div className="grid md:grid-cols-2 gap-16 items-start">
-        {/* Left: Product Visual/Abstract */}
-        <div className="relative aspect-[4/5] bg-foreground/[0.02] rounded-3xl overflow-hidden flex items-center justify-center border border-foreground/5">
-           <div className="absolute inset-0 z-0 opacity-30">
-              <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-accent-gold rounded-full mix-blend-multiply filter blur-[96px] animate-blob"></div>
-              <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-accent-rose rounded-full mix-blend-multiply filter blur-[96px] animate-blob animation-delay-2000"></div>
-           </div>
-           
-           <div className="relative z-10 w-48 h-64 bg-background/50 backdrop-blur-md rounded-t-full rounded-b-2xl border border-foreground/10 flex items-center justify-center shadow-2xl">
-              <span className="text-foreground/30 font-light text-2xl tracking-[0.3em]">{product.sku}</span>
-           </div>
+        <div>
+          {/* Left: Product Visual/Gallery */}
+          <ProductGallery 
+            images={trendyolListing?.images || []}
+            title={title}
+            isOutOfStock={isOutOfStock}
+            sku={product.sku}
+          />
+
+          {/* Etkinlik ve Kullanım Simgeleri */}
+          <div className="flex flex-wrap gap-3 justify-center pt-6">
+            {product.season_tag && product.season_tag !== 'Bilinmiyor' && (
+               <div className="flex items-center gap-2 px-4 py-2 bg-foreground/5 hover:bg-foreground/10 transition-colors rounded-full text-xs font-medium text-foreground/70 cursor-default" title="Mevsimsellik">
+                  {getSeasonIcon(product.season_tag)}
+                  {product.season_tag}
+               </div>
+            )}
+            {product.time_of_day_tag && product.time_of_day_tag !== 'Bilinmiyor' && (
+               <div className="flex items-center gap-2 px-4 py-2 bg-foreground/5 hover:bg-foreground/10 transition-colors rounded-full text-xs font-medium text-foreground/70 cursor-default" title="Kullanım Zamanı">
+                  {getTimeIcon(product.time_of_day_tag)}
+                  {product.time_of_day_tag}
+               </div>
+            )}
+            {product.occasion_tag && product.occasion_tag !== 'Bilinmiyor' && (
+               <div className="flex items-center gap-2 px-4 py-2 bg-foreground/5 hover:bg-foreground/10 transition-colors rounded-full text-xs font-medium text-foreground/70 cursor-default" title="Etkinlik / Mekan">
+                  {getOccasionIcon(product.occasion_tag)}
+                  {product.occasion_tag}
+               </div>
+            )}
+          </div>
+
+          {/* Koku Piramidi - Sol Alt Kısım (Niche Tasarım) */}
+          <div className="mt-16 pt-12 border-t border-foreground/10">
+            <div className="flex items-center gap-6 mb-8 text-foreground/50">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] mb-1">Kalıcılık</span>
+                <div className="flex gap-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className={`h-1 w-4 rounded-full ${i < Math.ceil((product.longevity_score || 0) / 2) ? 'bg-accent-gold' : 'bg-foreground/10'}`}></div>
+                  ))}
+                </div>
+              </div>
+              <span className="text-foreground/20">|</span>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] mb-1">Silaj (İz)</span>
+                <div className="flex gap-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className={`h-1 w-4 rounded-full ${i < Math.ceil((product.sillage_score || 0) / 2) ? 'bg-accent-gold' : 'bg-foreground/10'}`}></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <h3 className="text-2xl font-light mb-8 tracking-tight">Koku Mimarisi</h3>
+            
+            <div className="space-y-8 relative before:absolute before:inset-y-0 before:left-[5px] before:w-[1px] before:bg-gradient-to-b before:from-accent-gold/50 before:to-transparent ml-2">
+              <div className="relative pl-8">
+                <div className="absolute left-[3px] top-2 w-1.5 h-1.5 rounded-full bg-accent-gold"></div>
+                <h4 className="text-xs font-bold text-foreground/40 uppercase tracking-[0.2em] mb-2">Tepe Notaları</h4>
+                <p className="text-foreground text-sm font-medium tracking-wide leading-relaxed">
+                  {(product.top_notes || 'Gizli Formül').split(',').map(n => n.trim()).join(' • ')}
+                </p>
+              </div>
+
+              <div className="relative pl-8">
+                <div className="absolute left-[3px] top-2 w-1.5 h-1.5 rounded-full bg-accent-gold/60"></div>
+                <h4 className="text-xs font-bold text-foreground/40 uppercase tracking-[0.2em] mb-2">Kalp Notaları</h4>
+                <p className="text-foreground text-sm font-medium tracking-wide leading-relaxed">
+                  {(product.heart_notes || 'Gizli Formül').split(',').map(n => n.trim()).join(' • ')}
+                </p>
+              </div>
+
+              <div className="relative pl-8">
+                <div className="absolute left-[3px] top-2 w-1.5 h-1.5 rounded-full bg-foreground/20"></div>
+                <h4 className="text-xs font-bold text-foreground/40 uppercase tracking-[0.2em] mb-2">Dip Notalar</h4>
+                <p className="text-foreground text-sm font-medium tracking-wide leading-relaxed">
+                  {(product.base_notes || 'Gizli Formül').split(',').map(n => n.trim()).join(' • ')}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Right: Info */}
         <div className="space-y-8">
           <div>
-            <div className="flex items-center gap-4 mb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-3">
               <span className="text-sm font-medium tracking-widest text-accent-gold">
                 {product.fragrance_family?.[0]?.toUpperCase() || 'ÖZEL HARMAN'}
               </span>
-              <div className="flex items-center gap-4">
-                <span className="text-3xl font-light text-foreground">{product.base_cost.toLocaleString('tr-TR')} ₺</span>
-                {product.base_cost > 3000 && (
+              <div className="flex items-center gap-3">
+                <span className="text-3xl font-light text-foreground">{displayPrice.toLocaleString('tr-TR')} ₺</span>
+                {marketPrice && marketPrice > displayPrice && (
+                  <span className="text-lg text-foreground/40 line-through">{marketPrice.toLocaleString('tr-TR')} ₺</span>
+                )}
+                {displayPrice > 3000 && !isOutOfStock && (
                   <span className="text-xs bg-foreground/10 px-2 py-1 uppercase tracking-widest text-foreground/70">Premium Ücretsiz Kargo</span>
                 )}
               </div>
             </div>
-            <h1 className="text-4xl md:text-5xl font-light text-foreground">
+            <h1 className="text-3xl md:text-4xl font-light text-foreground tracking-tight leading-snug">
               PN {product.sku}
             </h1>
-            <p className="text-xl text-foreground/50 mt-2 font-medium">
+            {product.seo_name && (
+              <h2 className="text-lg text-foreground/70 mt-2 font-medium leading-relaxed">
+                {product.seo_name}
+              </h2>
+            )}
+            <p className="text-xs text-foreground/40 mt-2 uppercase tracking-widest">
               {product.fragrance_family?.join(', ') || 'Gizli Formül'}
             </p>
           </div>
 
-          <p className="text-foreground/70 leading-relaxed text-lg font-light">
-            Bu benzersiz kompozisyon, <span className="font-medium text-accent-rose">nöropazarlama</span> ilkeleri dikkate alınarak karakterinizi yansıtacak şekilde formüle edilmiştir. 
-            Çevrenizde {product.sillage_score ? `seviye ${product.sillage_score}/10` : 'etkileyici'} bir izlenim bırakmak için idealdir.
-          </p>
+          <div className="text-foreground/70 leading-relaxed text-lg font-light" dangerouslySetInnerHTML={{ __html: description }} />
 
-          <button className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-foreground text-background font-medium rounded-full hover:bg-accent-rose transition-colors duration-300">
-            <Sparkles size={18} />
-            Yapay Zeka ile Bana Özel Yap
-          </button>
-
-          <div className="pt-8 border-t border-foreground/10">
-            <div className="flex items-center gap-4 mb-6 text-foreground/60">
-              <span className="text-xs font-medium uppercase tracking-widest">Kalıcılık: {product.longevity_score || 0}/10</span>
-              <span className="text-foreground/20">|</span>
-              <span className="text-xs font-medium uppercase tracking-widest">Silaj (İz): {product.sillage_score || 0}/10</span>
-            </div>
-            <h3 className="text-xl font-medium mb-6">Koku Piramidi</h3>
-            
-            <div className="space-y-6">
-              <div>
-                <h4 className="text-sm font-medium text-foreground/50 uppercase tracking-widest mb-3">Üst (Tepe) Notalar</h4>
-                <div className="flex flex-wrap gap-2">
-                  {(product.top_notes || 'Gizli Formül').split(',').map((note, index) => (
-                    <span key={index} className="px-3 py-1.5 bg-background border border-foreground/10 rounded-lg text-sm">
-                      {note.trim()}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-sm font-medium text-foreground/50 uppercase tracking-widest mb-3">Kalp (Orta) Notalar</h4>
-                <div className="flex flex-wrap gap-2">
-                  {(product.heart_notes || 'Gizli Formül').split(',').map((note, index) => (
-                    <span key={index} className="px-3 py-1.5 bg-background border border-foreground/10 rounded-lg text-sm">
-                      {note.trim()}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-sm font-medium text-foreground/50 uppercase tracking-widest mb-3">Dip Notalar</h4>
-                <div className="flex flex-wrap gap-2">
-                  {(product.base_notes || 'Gizli Formül').split(',').map((note, index) => (
-                    <span key={index} className="px-3 py-1.5 bg-background border border-foreground/10 rounded-lg text-sm">
-                      {note.trim()}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+          <ProductActions 
+            sku={product.sku}
+            name={title}
+            price={displayPrice}
+            trendyolUrl={trendyolListing?.url} 
+            isOutOfStock={isOutOfStock} 
+          />
 
         </div>
       </div>

@@ -93,7 +93,7 @@ export default async function ArticleDetailPage({ params }: { params: Promise<{ 
         
         {/* Author Bio / CTA */}
         <div className="mt-20 pt-10 border-t border-foreground/10 text-center">
-          <h4 className="text-lg font-medium mb-3">PN Nöropazarlama Ekibi</h4>
+          <h4 className="text-lg font-medium mb-3">PN Koku Uzmanları Ekibi</h4>
           <p className="text-foreground/60 text-sm mb-6 max-w-lg mx-auto">
             İnsan psikolojisi ve koku kimyasını birleştirerek sizin için en doğru algıyı yaratacak formülleri geliştiriyoruz.
           </p>

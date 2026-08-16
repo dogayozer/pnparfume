@@ -20,6 +20,7 @@ export default function HomeHero() {
           loop 
           muted 
           playsInline 
+          preload="auto"
           className="w-full h-full object-cover grayscale opacity-20 dark:opacity-30"
           src="/smoke.mp4"
         />
