@@ -7,7 +7,8 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'cdn.dsmcdn.com',
       }
-    ]
+    ],
+    unoptimized: true
   },
   typescript: {
     ignoreBuildErrors: true,
