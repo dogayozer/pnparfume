@@ -55,7 +55,7 @@ export default function CartModal() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="relative w-full max-w-md h-full bg-background border-l border-foreground/10 shadow-2xl flex flex-col"
+            className="relative w-[85vw] md:w-full max-w-md h-full bg-background border-l border-foreground/10 shadow-2xl flex flex-col"
           >
             <div className="p-6 border-b border-foreground/10 flex items-center justify-between">
               <h2 className="text-xl font-medium flex items-center gap-2">

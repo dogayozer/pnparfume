@@ -111,18 +111,27 @@ export default function Navbar() {
     {/* Mobile Menu Overlay */}
     <AnimatePresence>
       {isMobileMenuOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="fixed inset-0 z-50 bg-background flex flex-col pt-24 px-6 pb-6 overflow-y-auto"
-        >
-          <button 
+        <div className="fixed inset-0 z-50 flex">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             onClick={() => setIsMobileMenuOpen(false)}
-            className="absolute top-6 right-6 p-2 text-foreground/50 hover:text-foreground transition-colors"
+            className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+          />
+          <motion.div
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '-100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="relative w-[85vw] max-w-sm h-full bg-background border-r border-foreground/10 shadow-2xl flex flex-col pt-20 px-6 pb-6 overflow-y-auto"
           >
-            <X size={28} />
-          </button>
+            <button 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="absolute top-6 right-6 p-2 text-foreground/50 hover:text-foreground transition-colors"
+            >
+              <X size={28} />
+            </button>
 
           <nav className="flex flex-col gap-6 text-2xl font-light mt-8">
             <Link href="/katalog" className="border-b border-foreground/10 pb-4">
@@ -151,7 +160,8 @@ export default function Navbar() {
             </div>
           </div>
         </motion.div>
-      )}
+      </div>
+    )}
     </AnimatePresence>
 
     <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
