@@ -9,7 +9,9 @@ import { useEffect, useRef, useState } from 'react'
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false)
-  const { messages, input, handleInputChange, handleSubmit, setInput, isLoading } = useChat()
+  const { messages, input, handleInputChange, handleSubmit, setInput, isLoading, append } = useChat({
+    onError: (err) => console.error("Chat error:", err)
+  })
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -25,13 +27,7 @@ export default function ChatWidget() {
   ]
 
   const handleQuickAction = (action: string) => {
-    // We simulate a form event to trigger handleSubmit
-    setInput(action)
-    // small delay to let state update
-    setTimeout(() => {
-      const form = document.getElementById('chat-widget-form') as HTMLFormElement
-      if (form) form.requestSubmit()
-    }, 50)
+    append({ role: 'user', content: action })
   }
 
   return (
