@@ -35,10 +35,10 @@ export default async function Home() {
 
       {/* Featured Perfume Collection */}
       <section className="pt-8 pb-20 px-6 md:px-12 max-w-7xl mx-auto w-full">
-        <div className="flex justify-between items-end mb-12">
+        <div className="flex justify-between items-end mb-8 md:mb-12">
           <div>
             <h2 className="text-3xl md:text-4xl font-light mb-4">Çok Satanlar</h2>
-            <p className="text-foreground/60 max-w-xl">
+            <p className="text-foreground/60 max-w-xl hidden md:block">
               Müşterilerimiz tarafından beğenilen, teninizle en iyi uyumu yakalayacak özel harmanlar.
             </p>
           </div>
@@ -46,8 +46,20 @@ export default async function Home() {
             Tüm Koleksiyonu Gör &rarr;
           </Link>
         </div>
+
+        {/* Mobile Filter and Sort Controls */}
+        <div className="flex items-center gap-3 mb-6 md:hidden">
+           <button className="flex-1 flex items-center justify-between border border-foreground/20 rounded px-4 py-2.5 text-[13px] font-bold bg-background">
+              Filtrele
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+           </button>
+           <button className="flex-1 flex items-center justify-between border border-foreground/20 rounded px-4 py-2.5 text-[13px] font-bold bg-background">
+              Çok Satanlar
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+           </button>
+        </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-6">
           {productsWithImages.map(product => (
             <ProductCard 
               key={product.sku} 

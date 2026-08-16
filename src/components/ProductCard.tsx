@@ -40,9 +40,9 @@ export default function ProductCard({ product }: { product: ProductProps }) {
     <Link href={`/urun/${product.sku}`}>
       <motion.div 
         whileHover={{ y: -5 }}
-        className={`group flex flex-col h-full bg-background rounded-2xl border border-foreground/5 overflow-hidden hover:border-accent-gold/40 transition-colors duration-300 ${isOutOfStock ? 'opacity-80' : ''}`}
+        className={`group flex flex-col h-full bg-background md:rounded-2xl border border-foreground/5 overflow-hidden hover:border-accent-gold/40 transition-colors duration-300 ${isOutOfStock ? 'opacity-80' : ''}`}
       >
-        <div className="relative aspect-square bg-foreground/[0.02] flex items-center justify-center p-6">
+        <div className="relative aspect-square bg-foreground/[0.02] flex items-center justify-center p-2 md:p-6">
           <div className="w-full h-full relative group-hover:scale-105 transition-transform duration-500 flex items-center justify-center">
              {product.imageUrl ? (
                <Image 
@@ -70,34 +70,36 @@ export default function ProductCard({ product }: { product: ProductProps }) {
           )}
         </div>
         
-        <div className="p-6 flex flex-col flex-grow">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-[0.2em]">
+        <div className="p-3 md:p-6 flex flex-col flex-grow">
+          <div className="flex items-center justify-between mb-1 md:mb-2">
+            <span className="text-[9px] md:text-[10px] font-bold text-foreground/40 uppercase tracking-[0.2em]">
               PN {product.sku}
             </span>
-            <span className="text-[10px] font-bold text-accent-gold uppercase tracking-widest line-clamp-1 text-right ml-2">
-              {product.families?.[0] || 'ÖZEL HARMAN'}
+            <span className="text-[9px] md:text-[10px] font-bold text-accent-gold uppercase tracking-widest line-clamp-1 text-right ml-1 md:ml-2">
+              {product.families?.[0] || 'ÖZEL'}
             </span>
           </div>
           
-          <h3 className="text-xl font-light text-foreground mb-1 group-hover:text-accent-gold transition-colors line-clamp-2 leading-snug tracking-tight">
+          <h3 className="text-sm md:text-xl font-medium md:font-light text-foreground mb-1 group-hover:text-accent-gold transition-colors line-clamp-2 leading-tight tracking-tight">
             {title}
           </h3>
-          <p className="text-xs text-foreground/50 mb-4 line-clamp-1 font-medium tracking-wide">
+          <p className="hidden md:block text-xs text-foreground/50 mb-4 line-clamp-1 font-medium tracking-wide">
             {product.families?.join(' • ') || 'Gizli Formül'}
           </p>
           
-          <div className="mt-auto pt-4 flex items-center justify-between">
-            <span className="text-sm font-medium">{product.price ? `₺${product.price}` : '₺1500'}</span>
+          <div className="mt-auto pt-3 md:pt-4 flex flex-col gap-2 md:gap-3">
+            <span className="text-base md:text-lg font-bold text-foreground">{product.price ? `${product.price.toLocaleString('tr-TR')} ₺` : '1.500 ₺'}</span>
             {!isOutOfStock ? (
               <button 
                 onClick={handleAddToCart}
-                className="w-8 h-8 rounded-full bg-foreground/5 flex items-center justify-center group-hover:bg-accent-rose group-hover:text-background transition-colors"
+                className="w-full py-2 md:py-2.5 rounded border border-foreground text-foreground text-xs md:text-sm font-bold flex items-center justify-center hover:bg-foreground hover:text-background transition-colors"
               >
-                <ShoppingCart size={14} />
+                Sepete Ekle
               </button>
             ) : (
-              <span className="text-xs font-medium text-foreground/50">Tükendi</span>
+              <button disabled className="w-full py-2 md:py-2.5 rounded bg-foreground/10 text-foreground/50 text-xs md:text-sm font-bold cursor-not-allowed">
+                Tükendi
+              </button>
             )}
           </div>
         </div>
