@@ -79,12 +79,12 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
   const title = product.seo_name ? `${product.seo_name} - PN ${product.sku}` : `PN ${product.sku}`
 
   return (
-    <div className="min-h-screen max-w-5xl mx-auto px-6 py-12 md:px-12">
-      <Link href="/katalog" className="inline-flex items-center gap-2 text-foreground/50 hover:text-accent-rose mb-12 transition-colors">
+    <div className="min-h-screen max-w-5xl mx-auto px-4 md:px-12 py-6 md:py-12">
+      <Link href="/katalog" className="inline-flex items-center gap-2 text-foreground/50 hover:text-accent-rose mb-6 md:mb-12 transition-colors text-sm md:text-base">
         <ArrowLeft size={16} /> Kataloğa Dön
       </Link>
 
-      <div className="grid md:grid-cols-2 gap-16 items-start">
+      <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-start">
         <div>
           {/* Left: Product Visual/Gallery */}
           <ProductGallery 
@@ -117,8 +117,8 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
           </div>
 
           {/* Koku Piramidi - Sol Alt Kısım (Niche Tasarım) */}
-          <div className="mt-16 pt-12 border-t border-foreground/10">
-            <div className="flex items-center gap-6 mb-8 text-foreground/50">
+          <div className="mt-8 md:mt-16 pt-8 md:pt-12 border-t border-foreground/10">
+            <div className="flex items-center gap-4 md:gap-6 mb-6 md:mb-8 text-foreground/50">
               <div className="flex flex-col">
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] mb-1">Kalıcılık</span>
                 <div className="flex gap-1">
@@ -138,7 +138,7 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
               </div>
             </div>
 
-            <h3 className="text-2xl font-light mb-8 tracking-tight">Koku Mimarisi</h3>
+            <h3 className="text-xl md:text-2xl font-light mb-6 md:mb-8 tracking-tight">Koku Mimarisi</h3>
             
             <div className="space-y-8 relative before:absolute before:inset-y-0 before:left-[5px] before:w-[1px] before:bg-gradient-to-b before:from-accent-gold/50 before:to-transparent ml-2">
               <div className="relative pl-8">
@@ -169,36 +169,36 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
         </div>
 
         {/* Right: Info */}
-        <div className="space-y-8">
+        <div className="space-y-6 md:space-y-8 mt-4 md:mt-0">
           <div>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-3">
-              <span className="text-sm font-medium tracking-widest text-accent-gold">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 md:gap-4 mb-3">
+              <span className="text-xs md:text-sm font-medium tracking-widest text-accent-gold">
                 {product.fragrance_family?.[0]?.toUpperCase() || 'ÖZEL HARMAN'}
               </span>
               <div className="flex items-center gap-3">
-                <span className="text-3xl font-light text-foreground">{displayPrice.toLocaleString('tr-TR')} ₺</span>
+                <span className="text-2xl md:text-3xl font-light text-foreground">{displayPrice.toLocaleString('tr-TR')} ₺</span>
                 {marketPrice && marketPrice > displayPrice && (
-                  <span className="text-lg text-foreground/40 line-through">{marketPrice.toLocaleString('tr-TR')} ₺</span>
+                  <span className="text-base md:text-lg text-foreground/40 line-through">{marketPrice.toLocaleString('tr-TR')} ₺</span>
                 )}
                 {displayPrice > 3000 && !isOutOfStock && (
-                  <span className="text-xs bg-foreground/10 px-2 py-1 uppercase tracking-widest text-foreground/70">Premium Ücretsiz Kargo</span>
+                  <span className="text-[10px] md:text-xs bg-foreground/10 px-2 py-1 uppercase tracking-widest text-foreground/70">Premium Kargo</span>
                 )}
               </div>
             </div>
-            <h1 className="text-3xl md:text-4xl font-light text-foreground tracking-tight leading-snug">
+            <h1 className="text-2xl md:text-4xl font-light text-foreground tracking-tight leading-snug">
               PN {product.sku}
             </h1>
             {product.seo_name && (
-              <h2 className="text-lg text-foreground/70 mt-2 font-medium leading-relaxed">
+              <h2 className="text-base md:text-lg text-foreground/70 mt-1 md:mt-2 font-medium leading-relaxed">
                 {product.seo_name}
               </h2>
             )}
-            <p className="text-xs text-foreground/40 mt-2 uppercase tracking-widest">
+            <p className="text-[10px] md:text-xs text-foreground/40 mt-1 md:mt-2 uppercase tracking-widest">
               {product.fragrance_family?.join(', ') || 'Gizli Formül'}
             </p>
           </div>
 
-          <div className="text-foreground/70 leading-relaxed text-lg font-light" dangerouslySetInnerHTML={{ __html: description }} />
+          <div className="text-foreground/80 leading-relaxed text-sm md:text-lg font-light" dangerouslySetInnerHTML={{ __html: description }} />
 
           <ProductActions 
             sku={product.sku}
