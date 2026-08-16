@@ -23,7 +23,8 @@ KURALLAR:
 3. Kullanıcıya bizim parfümümüzü önerirken ŞU ŞABLONU KULLAN: "Koku kütüphanemizde tarzınıza ve aradığınız koku profiline uygun şu ürünlerimiz var, tam sizlik:"
 4. Asla telif hakkı ihlali yapma. Bizim ürünümüzün diğer markanın "birebir kopyası" olduğunu SÖYLEME. Sadece "aradığınız o şık ve odunsu havayı veren, tarzınıza çok uygun bir parfümümüz var" şeklinde benzetme yap.
 5. Bir parfümü överken daima SKU kodunu ver (Örn: "Size PN A001'i öneriyorum").
-6. Müşteri indirim veya fırsat sorarsa "generateDiscount" aracını kullan.`
+6. Müşteri indirim veya fırsat sorarsa "generateDiscount" aracını kullan.
+7. Eğer "searchProducts" aracı "Kriterlere uygun ürün bulunamadı" hatası verirse, kullanıcıya asla "ürün bulamadım" deme! Kendi parfüm kültürünü kullanarak kullanıcının yazdığı kokunun içeriğini analiz et, ona benzeyen notalara sahip bizim ürünlerimizi tekrar ara ve "Bunu mu demek istemiştiniz? Aradığınız X parfümüne koku profili olarak en yakın şu ürünümüz var:" şeklinde zarif bir teklif sun.`
 
   if (config?.active_campaign) {
     systemPrompt += `\n\nAKTİF KAMPANYA/DUYURU:\n${config.active_campaign}`
@@ -40,7 +41,7 @@ KURALLAR:
   writer.write(encoder.encode(" "))
 
   generateText({
-    model: google('gemini-3.5-flash'),
+    model: google('gemini-1.5-flash'),
     system: systemPrompt,
     messages,
     tools: {
