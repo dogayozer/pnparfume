@@ -1,7 +1,6 @@
 // @ts-nocheck
 'use client'
 
-import { useChat } from '@ai-sdk/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Send, Sparkles, User, X, MessageSquare, Plus } from 'lucide-react'
 import Link from 'next/link'
@@ -9,9 +8,9 @@ import { useEffect, useRef, useState } from 'react'
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false)
-  const { messages, input, handleInputChange, handleSubmit, setInput, isLoading, append } = useChat({
-    onError: (err) => console.error("Chat error:", err)
-  })
+  const [messages, setMessages] = useState<any[]>([])
+  const [input, setInput] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -26,8 +25,45 @@ export default function ChatWidget() {
     "İndirim kodu istiyorum"
   ]
 
+  const handleSubmit = async (e?: React.FormEvent, customInput?: string) => {
+    if (e) e.preventDefault()
+    
+    const textToSend = customInput || input
+    if (!textToSend.trim() || isLoading) return
+    
+    const newMessages = [...messages, { id: Date.now().toString(), role: 'user', content: textToSend }]
+    setMessages(newMessages)
+    if (!customInput) setInput('')
+    setIsLoading(true)
+    
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: newMessages.map(m => ({ role: m.role, content: m.content })) })
+      })
+      
+      const rawText = await res.text()
+      const data = JSON.parse(rawText)
+      
+      const assistantMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: data.text,
+        toolResults: data.toolResults || []
+      }
+      
+      setMessages(prev => [...prev, assistantMessage])
+    } catch (err) {
+      console.error(err)
+      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', content: 'Üzgünüm, şu an bağlantı kuramıyorum. Lütfen tekrar deneyin.' }])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleQuickAction = (action: string) => {
-    append({ role: 'user', content: action })
+    handleSubmit(undefined, action)
   }
 
   return (
@@ -105,42 +141,28 @@ export default function ChatWidget() {
                     {m.content}
                     
                     {/* Tool UI */}
-                    {m.toolInvocations?.map(toolInvocation => {
-                      const { toolName, toolCallId, state } = toolInvocation;
-
-                      if (state === 'result') {
-                        if (toolName === 'searchProducts') {
-                          return (
-                            <div key={toolCallId} className="mt-3 p-3 bg-foreground/5 rounded-xl border border-foreground/10">
-                              <p className="text-[10px] font-medium text-accent-gold mb-2 tracking-widest uppercase">Bulunan Parfümler</p>
-                              <div className="space-y-2">
-                                {/* @ts-ignore */}
-                                {toolInvocation.result.map ? toolInvocation.result.map((prod: any) => (
-                                  <Link key={prod.sku} href={`/urun/${prod.sku}`} className="block p-2 bg-background rounded-md hover:border-accent-rose border border-transparent transition-colors text-xs">
-                                    <div className="font-medium">PN {prod.sku}</div>
-                                    <div className="text-[10px] text-foreground/60 line-clamp-1">{prod.mood_tag}</div>
-                                  </Link>
-                                )) : <div className="text-xs text-foreground/60">Ürün bulunamadı.</div>}
-                              </div>
-                            </div>
-                          )
-                        }
-                        if (toolName === 'generateDiscount') {
-                          return (
-                            <div key={toolCallId} className="mt-3 p-3 bg-accent-rose/10 rounded-xl border border-accent-rose/20 text-center">
-                               <div className="text-[10px] font-medium text-accent-rose mb-1 uppercase tracking-widest">Özel İndirim</div>
-                               {/* @ts-ignore */}
-                               <div className="text-lg font-bold tracking-widest">{toolInvocation.result.code}</div>
-                               {/* @ts-ignore */}
-                               <div className="text-xs mt-1 opacity-80">%{toolInvocation.result.discountPercentage} İndirim</div>
-                            </div>
-                          )
-                        }
-                      } else {
+                    {m.toolResults?.map((tr: any, idx: number) => {
+                      if (tr.toolName === 'searchProducts') {
                         return (
-                          <div key={toolCallId} className="mt-2 text-[10px] text-foreground/40 italic flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-accent-gold animate-pulse"></span>
-                            {toolName === 'searchProducts' ? 'Aranıyor...' : 'Hesaplanıyor...'}
+                          <div key={idx} className="mt-3 p-3 bg-foreground/5 rounded-xl border border-foreground/10">
+                            <p className="text-[10px] font-medium text-accent-gold mb-2 tracking-widest uppercase">Bulunan Parfümler</p>
+                            <div className="space-y-2">
+                              {Array.isArray(tr.result) && tr.result.length > 0 ? tr.result.map((prod: any) => (
+                                <Link key={prod.sku} href={`/urun/${prod.sku}`} className="block p-2 bg-background rounded-md hover:border-accent-rose border border-transparent transition-colors text-xs">
+                                  <div className="font-medium">PN {prod.sku}</div>
+                                  <div className="text-[10px] text-foreground/60 line-clamp-1">{prod.mood_tag}</div>
+                                </Link>
+                              )) : <div className="text-xs text-foreground/60">Ürün bulunamadı.</div>}
+                            </div>
+                          </div>
+                        )
+                      }
+                      if (tr.toolName === 'generateDiscount') {
+                        return (
+                          <div key={idx} className="mt-3 p-3 bg-accent-rose/10 rounded-xl border border-accent-rose/20 text-center">
+                             <div className="text-[10px] font-medium text-accent-rose mb-1 uppercase tracking-widest">Özel İndirim</div>
+                             <div className="text-lg font-bold tracking-widest">{tr.result?.code}</div>
+                             <div className="text-xs mt-1 opacity-80">%{tr.result?.discountPercentage} İndirim</div>
                           </div>
                         )
                       }
@@ -169,7 +191,7 @@ export default function ChatWidget() {
                 <input
                   type="text"
                   value={input}
-                  onChange={handleInputChange}
+                  onChange={(e) => setInput(e.target.value)}
                   placeholder="Bana bir koku tarif edin..."
                   className="flex-1 bg-foreground/5 border border-foreground/10 rounded-full px-4 py-3 text-sm focus:outline-none focus:border-accent-rose/50 transition-colors"
                   style={{ touchAction: 'manipulation' }}

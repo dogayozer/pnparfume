@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { google } from '@ai-sdk/google'
-import { streamText, tool } from 'ai'
+import { generateText, tool } from 'ai'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 
@@ -32,7 +32,14 @@ KURALLAR:
   const canGiveDiscount = config?.can_give_discount ?? true
   const discountLimit = config?.discount_limit ?? 20
 
-  const result = streamText({
+  const encoder = new TextEncoder()
+  const stream = new TransformStream()
+  const writer = stream.writable.getWriter()
+  
+  // Send a space immediately to bypass Vercel 10s timeout
+  writer.write(encoder.encode(" "))
+
+  generateText({
     model: google('gemini-3.5-flash'),
     system: systemPrompt,
     messages,
@@ -97,7 +104,14 @@ KURALLAR:
       })
     },
     maxSteps: 3
+  }).then(result => {
+    const allToolResults = result.steps?.flatMap(step => step.toolResults) || []
+    writer.write(encoder.encode(JSON.stringify({ text: result.text, toolResults: allToolResults })))
+    writer.close()
+  }).catch(err => {
+    writer.write(encoder.encode(JSON.stringify({ text: 'Üzgünüm, şu an bağlantı kuramıyorum.', toolResults: [] })))
+    writer.close()
   })
 
-  return result.toDataStreamResponse()
+  return new Response(stream.readable, { headers: { 'Content-Type': 'application/json' } })
 }
