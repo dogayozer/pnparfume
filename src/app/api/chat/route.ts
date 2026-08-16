@@ -10,22 +10,31 @@ export const maxDuration = 30
 export async function POST(req: Request) {
   const { messages } = await req.json()
 
-    const result = streamText({
+  // Fetch AI Config from DB
+  const config = await prisma.aiConfig.findFirst()
+  
+  let systemPrompt = config?.system_prompt || `Sen PN Parfüm'ün Kişisel Koku Uzmanı ve Yapay Zeka Asistanısın. 
+Adın "Aura". Müşterilerle son derece kibar, lüks ve premium bir dille konuşuyorsun.
+Küçük bir sohbet penceresinde (widget) hizmet veriyorsun, bu yüzden mesajların ÇOK KISA, net ve vurucu olmalı.
+
+KURALLAR:
+1. Kullanıcılar sana genellikle bildikleri (diğer markalara ait) ünlü parfümlerin veya tasarımcı kokularının isimlerini yazacaktır.
+2. Kullanıcının yazdığı orijinal kokunun notalarını ve tarzını anla, ardından "searchProducts" aracını kullanarak kendi veritabanımızdan buna en yakın koku ailesini veya ruh halini ara.
+3. Kullanıcıya bizim parfümümüzü önerirken ŞU ŞABLONU KULLAN: "Koku kütüphanemizde tarzınıza ve aradığınız koku profiline uygun şu ürünlerimiz var, tam sizlik:"
+4. Asla telif hakkı ihlali yapma. Bizim ürünümüzün diğer markanın "birebir kopyası" olduğunu SÖYLEME. Sadece "aradığınız o şık ve odunsu havayı veren, tarzınıza çok uygun bir parfümümüz var" şeklinde benzetme yap.
+5. Bir parfümü överken daima SKU kodunu ver (Örn: "Size PN A001'i öneriyorum").
+6. Müşteri indirim veya fırsat sorarsa "generateDiscount" aracını kullan.`
+
+  if (config?.active_campaign) {
+    systemPrompt += `\n\nAKTİF KAMPANYA/DUYURU:\n${config.active_campaign}`
+  }
+
+  const canGiveDiscount = config?.can_give_discount ?? true
+  const discountLimit = config?.discount_limit ?? 20
+
+  const result = streamText({
     model: google('gemini-3.5-flash'),
-    system: `Sen PN Parfüm'ün Kişisel Koku Uzmanı ve Yapay Zeka Asistanısın. 
-    Adın "Aura". Müşterilerle son derece kibar, lüks ve premium bir dille konuşuyorsun.
-    Küçük bir sohbet penceresinde (widget) hizmet veriyorsun, bu yüzden mesajların ÇOK KISA, net ve vurucu olmalı.
-    
-    KURALLAR:
-    1. Kullanıcılar sana genellikle bildikleri (diğer markalara ait) ünlü parfümlerin veya tasarımcı kokularının isimlerini yazacaktır.
-    2. Kullanıcının yazdığı orijinal kokunun notalarını ve tarzını anla, ardından "searchProducts" aracını kullanarak kendi veritabanımızdan buna en yakın koku ailesini veya ruh halini ara.
-    3. Kullanıcıya bizim parfümümüzü önerirken ŞU ŞABLONU KULLAN: "Koku kütüphanemizde tarzınıza ve aradığınız koku profiline uygun şu ürünlerimiz var, tam sizlik:"
-    4. Asla telif hakkı ihlali yapma. Bizim ürünümüzün diğer markanın "birebir kopyası" olduğunu SÖYLEME. Sadece "aradığınız o şık ve odunsu havayı veren, tarzınıza çok uygun bir parfümümüz var" şeklinde benzetme yap.
-    5. Bir parfümü överken daima SKU kodunu ver (Örn: "Size PN A001'i öneriyorum").
-    6. Müşteri indirim veya fırsat sorarsa "generateDiscount" aracını kullan.
-    
-    MİX ENGINE (KARIŞTIRMA):
-    Kullanıcı iki farklı parfümü üst üste sıkmak isterse veya "bunu neyle kombinleyebilirim" derse; bir parfümün üst notası ile diğerinin dip notasını zihninde karşılaştır ve ikna edici bir koku hikayesi uydurarak bunun mükemmel olacağını söyle.`,
+    system: systemPrompt,
     messages,
     tools: {
       searchProducts: tool({
@@ -59,17 +68,23 @@ export async function POST(req: Request) {
           reason: z.string().describe('İndirim verme sebebi (müşteriye söylenecek)')
         }),
         execute: async ({ discountPercentage }: any) => {
+          if (!canGiveDiscount) {
+            return { error: 'Şu anda sistem tarafından indirim kodu oluşturulmasına izin verilmiyor.' }
+          }
+          
+          const actualDiscount = Math.min(discountPercentage, discountLimit)
+          
           const code = 'PN' + Math.random().toString(36).substring(2, 8).toUpperCase()
           await prisma.coupon.create({
             data: {
               code,
               discount_type: 'percentage',
-              value: discountPercentage,
+              value: actualDiscount,
               is_ai_generated: true,
               usage_limit: 1,
             }
           })
-          return { code, discountPercentage, message: 'İndirim kodu başarıyla üretildi.' }
+          return { code, discountPercentage: actualDiscount, message: 'İndirim kodu başarıyla üretildi.' }
         }
       })
     },

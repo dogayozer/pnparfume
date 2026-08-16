@@ -281,3 +281,17 @@ model MarketplaceOrder {
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 }
+
+// ----------------------------------------------------------------------
+// YAPAY ZEKA ASİSTANI (AURA) AYARLARI
+// ----------------------------------------------------------------------
+
+model AiConfig {
+  id                String   @id @default(cuid())
+  system_prompt     String   @db.Text
+  active_campaign   String?  @db.Text
+  can_give_discount Boolean  @default(true)
+  discount_limit    Float    @default(20)
+  
+  updatedAt         DateTime @updatedAt
+}
