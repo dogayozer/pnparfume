@@ -34,10 +34,10 @@ export default async function Home() {
       <HomeHero />
 
       {/* Featured Perfume Collection */}
-      <section className="pt-8 pb-20 px-6 md:px-12 max-w-7xl mx-auto w-full">
-        <div className="flex justify-between items-end mb-8 md:mb-12">
+      <section className="pt-2 md:pt-8 pb-20 px-4 md:px-12 max-w-7xl mx-auto w-full">
+        <div className="flex justify-between items-end mb-4 md:mb-12">
           <div>
-            <h2 className="text-3xl md:text-4xl font-light mb-4">Çok Satanlar</h2>
+            <h2 className="text-2xl md:text-4xl font-light mb-2 md:mb-4">Çok Satanlar</h2>
             <p className="text-foreground/60 max-w-xl hidden md:block">
               Müşterilerimiz tarafından beğenilen, teninizle en iyi uyumu yakalayacak özel harmanlar.
             </p>
