@@ -11,7 +11,7 @@ export default function HomeHero() {
   }
 
   return (
-    <section className="relative pb-4 pt-24 flex items-center justify-center overflow-hidden px-6 border-b border-foreground/5">
+    <section className="relative pb-4 pt-8 md:pt-24 flex items-center justify-center overflow-hidden px-6 border-b border-foreground/5">
       
       {/* Background Video */}
       <div className="absolute inset-0 z-0 pointer-events-none w-full h-full">
