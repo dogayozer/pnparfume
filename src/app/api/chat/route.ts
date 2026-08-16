@@ -98,5 +98,5 @@ KURALLAR:
     },
   })
 
-  return result.toDataStreamResponse()
+  return result.toUIMessageStreamResponse()
 }
