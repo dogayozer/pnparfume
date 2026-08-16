@@ -41,7 +41,7 @@ KURALLAR:
   writer.write(encoder.encode(" "))
 
   generateText({
-    model: google('gemini-1.5-flash'),
+    model: google('gemini-1.5-flash-latest'),
     system: systemPrompt,
     messages,
     tools: {
