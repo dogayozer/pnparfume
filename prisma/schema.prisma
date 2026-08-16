@@ -1,0 +1,251 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Product {
+  sku                  String   @id
+  original_name        String
+  gender               String
+  fragrance_family     String[]
+  top_notes            String   @default("Gizli Formül")
+  heart_notes          String   @default("Gizli Formül")
+  base_notes           String   @default("Gizli Formül")
+  
+  mood_tag             String
+  persona_tag          String
+  status_tag           String
+  bottle_aesthetic_tag String
+  season_tag           String
+  time_of_day_tag      String
+  occasion_tag         String
+  
+  longevity_score      Int
+  sillage_score        Int
+  gift_safe_score      Int
+  
+  age_focus            String
+  content_tag          String
+
+  ingredients          ProductIngredient[]
+
+  // Maliyet ve Senaryo Yönetimi
+  base_cost            Float    @default(0) // Maliyetin altında satışı önlemek için
+  is_sample            Boolean  @default(false) // B2B Sampler için ücretsiz tester ürünü mü?
+
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([original_name])
+  @@index([gender])
+}
+
+model Ingredient {
+  id                  String   @id @default(cuid())
+  name                String   @unique
+  family              String
+  layer_compatibility String
+  is_anchor           Boolean  @default(false)
+  popularity          Int      @default(0)
+
+  products            ProductIngredient[]
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([name])
+}
+
+model ProductIngredient {
+  id                  String   @id @default(cuid())
+  
+  productId           String
+  product             Product  @relation(fields: [productId], references: [sku], onDelete: Cascade)
+  
+  ingredientId        String
+  ingredient          Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  
+  layer               String   // "Üst", "Kalp", "Dip"
+  layer_weight_pct    Float    // e.g. 25
+  absolute_weight_pct Float    // e.g. 12.5
+
+  @@index([productId])
+  @@index([ingredientId])
+  @@index([layer])
+}
+
+// ----------------------------------------------------------------------
+// CRM, LOYALTY & SALES (Nöropazarlama İskeleti)
+// ----------------------------------------------------------------------
+
+model Customer {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  password          String?
+  phone             String?  // WhatsApp bildirimleri için
+  name              String?
+  
+  // Nöropazarlama Profili (Asistanın satış taktikleri için)
+  budget_segment    String?  // "Premium", "Ulaşılabilir" vb.
+  dominant_mood     String?  // Müşterinin en çok tercih ettiği duygu (Örn: Çekicilik)
+  whatsapp_opt_in   Boolean  @default(false)
+  email_opt_in      Boolean  @default(false)
+  sms_opt_in        Boolean  @default(false)
+  
+  // Affiliate, B2B Sampler, Referans (Tavsiye Et Kazan) Sistemi
+  referral_code     String?  @unique
+  partner_type      String   @default("retail") // "retail", "influencer", "b2b_sampler"
+  wallet_balance    Float    @default(0)        // Influencer/Öğrenci komisyon birikim cüzdanı
+  earned_samples    Int      @default(0)        // B2B Satıcılarının hak ettiği tester (eşantiyon) kotası
+
+  coupons           Coupon[] // Kullanıcının Kupon Kasası
+  couponUsages      CouponUsage[]
+  orders            Order[]
+  notifications     Notification[]
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Coupon {
+  id                String   @id @default(cuid())
+  code              String   @unique
+  discount_type     String   // "percentage", "fixed"
+  value             Float
+  
+  ownerId           String?
+  customer          Customer? @relation(fields: [ownerId], references: [id])
+  source            String    @default("system") // "referral", "b2b", "system", "combined_shipping"
+
+  is_ai_generated   Boolean  @default(false) 
+  is_active         Boolean  @default(true)
+  usage_limit       Int?     // Örn: Sadece 1 kez
+  usage_count       Int      @default(0)
+  
+  orders            Order[]
+  usages            CouponUsage[]
+  
+  createdAt         DateTime @default(now())
+  expiresAt         DateTime? // Kuponun 3 aylık zaman aşımı takibi için
+}
+
+model CouponUsage {
+  id                 String   @id @default(cuid())
+  couponId           String
+  coupon             Coupon   @relation(fields: [couponId], references: [id])
+  
+  customerId         String?
+  customer           Customer? @relation(fields: [customerId], references: [id])
+  
+  orderId            String?
+  order              Order?    @relation(fields: [orderId], references: [id])
+  
+  ip_address         String?
+  device_fingerprint String?
+  
+  usedAt             DateTime @default(now())
+}
+
+model Order {
+  id                   String   @id @default(cuid())
+  orderNumber          String   @unique
+  
+  customerId           String?
+  customer             Customer? @relation(fields: [customerId], references: [id])
+  
+  couponId             String?
+  coupon               Coupon?   @relation(fields: [couponId], references: [id])
+  
+  totalAmount          Float
+  discountApplied      Float     @default(0)
+  
+  // Paydaş Ekonomisi (Kargo Birleştirme)
+  combinedWithOrderId  String? // Arkadaşının kargo numarası
+  shippingCostDiscount Float    @default(0) // Anında kargo indirimi
+  
+  // Ortaklık / Elçi Gelirleri (Influencer & B2B)
+  affiliateEarned      Float    @default(0) // Bu satıştan influencer cüzdanına giden bakiye
+  b2bSamplesEarned     Int      @default(0) // Bu satıştan B2B ortağının hak ettiği tester adedi
+
+  // Yapay zeka asistanı tarafından mı satıldı?
+  ai_assisted          Boolean   @default(false)
+  
+  status               String    @default("processing") // pending, processing, shipped, delivered, cancelled
+  
+  // Fraud Kontrolü (Sahtekarlık ve Self-referral önleme)
+  ip_address           String?
+  device_fingerprint   String?
+  
+  couponUsages         CouponUsage[]
+
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
+
+model Notification {
+  id                String   @id @default(cuid())
+  
+  customerId        String
+  customer          Customer @relation(fields: [customerId], references: [id])
+  
+  type              String   // "whatsapp", "email", "sms"
+  message_content   String
+  trigger_reason    String   // "cart_abandonment", "loyalty_mix_offer", "refill_reminder"
+  
+  status            String   @default("pending") // pending, sent, failed
+  
+  scheduledFor      DateTime? // İleri tarihli bildirimler için (Örn: 45 gün sonra)
+  createdAt         DateTime @default(now())
+  sentAt            DateTime?
+}
+
+// Yeni Model: Senaryo Yönetimi ve Dinamik Kurallar (Admin Panel)
+model ScenarioRule {
+  id                String   @id @default(cuid())
+  rule_key          String   @unique 
+  rule_value        Float
+  description       String?
+  is_active         Boolean  @default(true)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// ----------------------------------------------------------------------
+// B2B & OMNICHANNEL ÇOKLU MAĞAZA YÖNETİMİ
+// ----------------------------------------------------------------------
+
+model MarketplaceStore {
+  id                String   @id @default(cuid())
+  name              String   // Örn: "PN Parfüm Merkez", "Fodos Bayi"
+  platform          String   @default("trendyol") // "trendyol", "ikas", "native"
+  sellerId          String   // Trendyol Satıcı ID veya ikas store URL
+  apiKey            String
+  apiSecret         String
+  isActive          Boolean  @default(true)
+  
+  orders            MarketplaceOrder[]
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model MarketplaceOrder {
+  id                   String   @id @default(cuid())
+  trendyolOrderId      String   @unique
+  shipmentTrackingNo   String?  // Kargo takip numarası
+  status               String   @default("Created") // Sipariş durumu
+  totalPrice           Float    @default(0)
+  
+  storeId              String
+  store                MarketplaceStore @relation(fields: [storeId], references: [id])
+
+  customerName         String?
+  customerCity         String?
+
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
