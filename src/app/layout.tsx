@@ -22,6 +22,14 @@ export const metadata: Metadata = {
     locale: 'tr_TR',
     type: 'website',
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'PN Parfüm | Özel ve Niş Koku Deneyimi',
+    description: 'Yapay zeka analiz ilkeleriyle teninize en uygun imza kokuyu keşfedin.',
+  },
+  alternates: {
+    canonical: 'https://pnparfume.com',
+  },
 }
 
 export default function RootLayout({

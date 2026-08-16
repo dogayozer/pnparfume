@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/hesap/', '/api/', '/_next/'],
+      disallow: ['/hesap/', '/api/', '/_next/', '/admin/', '/sepet/'],
     },
     sitemap: 'https://pnparfume.com/sitemap.xml',
   }
