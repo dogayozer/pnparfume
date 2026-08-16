@@ -12,7 +12,6 @@ export default function HomeHighlights() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8 }}
-          transition={{ duration: 0.8 }}
           className="text-center mb-6 md:mb-16"
         >
           <h2 className="text-xl md:text-4xl font-light mb-2 md:mb-4">Neden <span className="font-medium text-accent-gold">PN Parfüm?</span></h2>
@@ -30,7 +29,6 @@ export default function HomeHighlights() {
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.6, delay: idx * 0.2 }}
               transition={{ duration: 0.6, delay: idx * 0.2 }}
               className="p-5 md:p-8 rounded-2xl md:rounded-3xl bg-background border border-foreground/5 hover:border-accent-gold/30 transition-colors duration-500 group"
             >
