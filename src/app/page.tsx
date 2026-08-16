@@ -37,13 +37,13 @@ export default async function Home() {
       <section className="pt-2 md:pt-8 pb-20 px-4 md:px-12 max-w-7xl mx-auto w-full">
         <div className="flex justify-between items-end mb-4 md:mb-12">
           <div>
-            <h2 className="text-2xl md:text-4xl font-light mb-2 md:mb-4">Çok Satanlar</h2>
+            <h2 className="text-lg md:text-4xl font-medium md:font-light mb-2 md:mb-4">Çok Satanlar</h2>
             <p className="text-foreground/60 max-w-xl hidden md:block">
               Müşterilerimiz tarafından beğenilen, teninizle en iyi uyumu yakalayacak özel harmanlar.
             </p>
           </div>
-          <Link href="/katalog" className="hidden md:flex text-sm font-medium hover:text-accent-rose transition-colors animate-pulse">
-            Tüm Koleksiyonu Gör &rarr;
+          <Link href="/katalog" className="text-[11px] md:text-sm font-medium hover:text-accent-rose transition-colors pb-2 md:pb-0 underline underline-offset-4">
+            Tüm Ürünler &rarr;
           </Link>
         </div>
 
