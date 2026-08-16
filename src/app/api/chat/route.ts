@@ -53,7 +53,7 @@ KURALLAR:
         }),
         execute: async ({ query, gender }: any) => {
           try {
-            const products = await prisma.product.findMany({
+            let products = await prisma.product.findMany({
               where: {
                 OR: [
                   { sku: { contains: query, mode: 'insensitive' } },
@@ -67,7 +67,15 @@ KURALLAR:
               select: { sku: true, original_name: true, gender: true, fragrance_family: true, mood_tag: true }
             })
             
-            return products.length > 0 ? products : { error: 'Kriterlere uygun ürün bulunamadı.' }
+            // Eğer spesifik aramada ürün bulunamazsa, herhangi 3 ürünü getir (boş dönmemesi için)
+            if (products.length === 0) {
+              products = await prisma.product.findMany({
+                take: 3,
+                select: { sku: true, original_name: true, gender: true, fragrance_family: true, mood_tag: true }
+              })
+            }
+            
+            return products.length > 0 ? products : { error: 'Veritabanında henüz hiç ürün yok.' }
           } catch (e: any) {
             return { error: 'Database search error: ' + e.message }
           }
