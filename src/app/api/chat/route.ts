@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   const { messages } = await req.json()
 
     const result = streamText({
-    model: google('gemini-2.5-flash'),
+    model: google('gemini-1.5-flash'),
     system: `Sen PN Parfüm'ün Kişisel Koku Uzmanı ve Yapay Zeka Asistanısın. 
     Adın "Aura". Müşterilerle son derece kibar, lüks ve premium bir dille konuşuyorsun.
     Küçük bir sohbet penceresinde (widget) hizmet veriyorsun, bu yüzden mesajların ÇOK KISA, net ve vurucu olmalı.
