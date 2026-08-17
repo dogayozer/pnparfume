@@ -42,7 +42,7 @@ export default function ProductCard({ product }: { product: ProductProps }) {
         whileHover={{ y: -5 }}
         className={`group flex flex-col h-full bg-background md:rounded-2xl border border-foreground/5 overflow-hidden hover:border-accent-gold/40 transition-colors duration-300 ${isOutOfStock ? 'opacity-80' : ''}`}
       >
-        <div className="relative aspect-square bg-foreground/[0.02] flex items-center justify-center p-2 md:p-6">
+        <div className="relative aspect-[2/3] bg-foreground/[0.02] flex items-center justify-center p-2 md:p-6">
           <div className="w-full h-full relative group-hover:scale-105 transition-transform duration-500 flex items-center justify-center">
              {product.imageUrl ? (
                <Image 

@@ -68,16 +68,13 @@ export default function Navbar() {
               </motion.span>
             </AnimatePresence>
           </Link>
+          <Link href="/kurumsal/iletisim" className="text-sm tracking-wide text-foreground hover:text-accent-gold transition-colors">
+            İletişim
+          </Link>
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">
-          <Link 
-            href="/asistan"
-            className="flex items-center gap-2 text-xs md:text-sm font-medium bg-foreground text-background pl-2 pr-3 md:pr-4 py-1.5 rounded-full hover:bg-accent-rose transition-colors duration-300"
-          >
-            <img src="/aura-avatar.jpg" alt="Aura AI" className="w-5 h-5 md:w-6 md:h-6 rounded-full object-cover border border-background/20" />
-            <span className="hidden sm:inline">Asistan</span>
-          </Link>
+
           <button 
             onClick={() => setIsSearchOpen(true)}
             className="p-1.5 md:p-2 text-foreground/80 hover:text-accent-gold transition-colors"

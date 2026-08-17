@@ -60,7 +60,7 @@ export default function ProductGallery({ images, title, isOutOfStock, sku }: Pro
 
   if (!images || images.length === 0) {
     return (
-      <div className={`relative aspect-[4/5] bg-foreground/[0.02] rounded-3xl overflow-hidden flex items-center justify-center border border-foreground/5 ${isOutOfStock ? 'opacity-80' : ''}`}>
+      <div className={`relative aspect-[2/3] bg-foreground/[0.02] rounded-3xl overflow-hidden flex items-center justify-center border border-foreground/5 ${isOutOfStock ? 'opacity-80' : ''}`}>
         <div className="absolute inset-0 z-0 opacity-30">
           <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-accent-gold rounded-full mix-blend-multiply filter blur-[96px] animate-blob"></div>
           <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-accent-rose rounded-full mix-blend-multiply filter blur-[96px] animate-blob animation-delay-2000"></div>
@@ -81,7 +81,7 @@ export default function ProductGallery({ images, title, isOutOfStock, sku }: Pro
     <div className="flex flex-col gap-4">
       {/* Main Image */}
       <div 
-        className={`relative aspect-[4/5] bg-foreground/[0.02] rounded-3xl overflow-hidden flex items-center justify-center border border-foreground/5 group ${isOutOfStock ? 'opacity-80' : ''}`}
+        className={`relative aspect-[2/3] bg-foreground/[0.02] rounded-3xl overflow-hidden flex items-center justify-center border border-foreground/5 group ${isOutOfStock ? 'opacity-80' : ''}`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onTouchStart={handleTouchStart}

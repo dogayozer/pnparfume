@@ -8,6 +8,19 @@ import ProductActions from '@/components/ProductActions'
 
 export const revalidate = 86400 // Cache for 24 hours (super fast loading)
 
+function parseDescription(desc: string) {
+  if (desc.includes('<p>') || desc.includes('<div>') || desc.includes('<br>')) return desc;
+  
+  if (desc.includes(';')) {
+    const lines = desc.split(';').map(s => s.trim().replace(/^-/, '').trim()).filter(Boolean);
+    if (lines.length > 1) {
+      return `<ul class="list-disc pl-5 space-y-2">\n${lines.map(line => `<li>${line}</li>`).join('\n')}\n</ul>`;
+    }
+  }
+  
+  return `<p>${desc}</p>`;
+}
+
 const getSeasonIcon = (tag: string | null) => {
   if (!tag) return <CalendarRange size={14} />
   if (tag.includes('Kış') || tag.includes('Sonbahar')) return <Leaf size={14} />
@@ -55,7 +68,7 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
   const imageUrl = trendyolListing?.images?.[0]
   const displayPrice = trendyolListing?.price || product.base_cost
   const marketPrice = trendyolListing?.marketPrice
-  const description = trendyolListing?.description || `
+  const description = trendyolListing?.description ? parseDescription(trendyolListing.description) : `
     <div class="space-y-4">
       <p><strong>Duygusal Etki:</strong> Çevrenizde <em>${product.mood_tag || 'etkileyici'}</em> bir izlenim bırakmak için özel olarak formüle edilmiştir.</p>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 p-4 bg-foreground/5 rounded-2xl border border-foreground/10">
@@ -120,7 +133,9 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
           <div className="mt-8 md:mt-16 pt-8 md:pt-12 border-t border-foreground/10">
             <div className="flex items-center gap-4 md:gap-6 mb-6 md:mb-8 text-foreground/50">
               <div className="flex flex-col">
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] mb-1">Kalıcılık</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] mb-1">
+                  Kalıcılık <span className="text-accent-gold ml-1">({product.longevity_score || 0}/10)</span>
+                </span>
                 <div className="flex gap-1">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <div key={i} className={`h-1 w-4 rounded-full ${i < Math.ceil((product.longevity_score || 0) / 2) ? 'bg-accent-gold' : 'bg-foreground/10'}`}></div>
@@ -129,7 +144,9 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
               </div>
               <span className="text-foreground/20">|</span>
               <div className="flex flex-col">
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] mb-1">Silaj (İz)</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] mb-1">
+                  Silaj (İz) <span className="text-accent-gold ml-1">({product.sillage_score || 0}/10)</span>
+                </span>
                 <div className="flex gap-1">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <div key={i} className={`h-1 w-4 rounded-full ${i < Math.ceil((product.sillage_score || 0) / 2) ? 'bg-accent-gold' : 'bg-foreground/10'}`}></div>

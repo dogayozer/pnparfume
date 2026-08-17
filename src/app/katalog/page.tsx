@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import ProductCard from '@/components/ProductCard'
 import FilterSidebar from '@/components/catalog/FilterSidebar'
 import MobileFilterSort from '@/components/catalog/MobileFilterSort'
+import Pagination from '@/components/catalog/Pagination'
 
 export default async function KatalogPage({
   searchParams,
@@ -15,6 +16,8 @@ export default async function KatalogPage({
   const gender = typeof params.gender === 'string' ? params.gender : undefined
   const persona = typeof params.persona === 'string' ? params.persona : undefined
   const family = typeof params.family === 'string' ? params.family : undefined
+  const pageParam = typeof params.page === 'string' ? parseInt(params.page, 10) : 1
+  const currentPage = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam
 
   const whereClause: any = {
     publish_status: {
@@ -54,6 +57,9 @@ export default async function KatalogPage({
   }
 
   const products = processedProducts
+  const ITEMS_PER_PAGE = 24
+  const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE)
+  const paginatedProducts = products.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
 
   return (
     <div className="min-h-screen px-6 py-12 md:px-12 max-w-7xl mx-auto">
@@ -78,7 +84,7 @@ export default async function KatalogPage({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map(product => (
+            {paginatedProducts.map(product => (
               <ProductCard 
                 key={product.sku} 
                 product={{
@@ -100,6 +106,10 @@ export default async function KatalogPage({
               <h3 className="text-lg font-medium mb-2">Ürün Bulunamadı</h3>
               <p className="text-foreground/50">Seçtiğiniz filtrelere uygun parfüm bulunmuyor. Lütfen filtreleri esnetmeyi deneyin.</p>
             </div>
+          )}
+
+          {products.length > 0 && (
+            <Pagination totalPages={totalPages} currentPage={currentPage} />
           )}
         </main>
       </div>
