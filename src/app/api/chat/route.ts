@@ -79,14 +79,14 @@ DİĞER KURALLAR:
                 ]
               },
               take: 3,
-              select: { sku: true, original_name: true, gender: true, fragrance_family: true, mood_tag: true }
+              select: { sku: true, original_name: true, gender: true, fragrance_family: true, mood_tag: true, price: true }
             })
             
             // Eğer spesifik aramada ürün bulunamazsa, herhangi 3 ürünü getir (boş dönmemesi için)
             if (products.length === 0) {
               products = await prisma.product.findMany({
                 take: 3,
-                select: { sku: true, original_name: true, gender: true, fragrance_family: true, mood_tag: true }
+                select: { sku: true, original_name: true, gender: true, fragrance_family: true, mood_tag: true, price: true }
               })
             }
             

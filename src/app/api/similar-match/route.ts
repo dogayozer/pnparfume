@@ -19,7 +19,6 @@ export async function POST(req: Request) {
 
     const allProducts = await prisma.product.findMany({
       where: { publish_status: { not: 'DRAFT' } },
-      select: {
         sku: true,
         original_name: true,
         gender: true,
@@ -27,7 +26,8 @@ export async function POST(req: Request) {
         top_notes: true,
         heart_notes: true,
         base_notes: true,
-        mood_tag: true
+        mood_tag: true,
+        price: true
       }
     })
 
