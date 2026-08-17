@@ -177,6 +177,29 @@ export default function ChatWidget() {
     const textToSend = customInput || input
     if (!textToSend.trim() || isLoading) return
     
+    const lowerText = textToSend.toLowerCase()
+    
+    // Niyet Yakalama (Intent Interception)
+    // Eğer kullanıcı manuel olarak "öner" yazarsa sihirbazı başlat
+    if (flowMode === 'initial' || flowMode === 'chat') {
+      const isWizardIntent = /öner|tavsiye|hangi parfüm|koku seç|yardım/i.test(lowerText) && !/gibi|benzer|muadil/i.test(lowerText)
+      const isSimilarIntent = /gibi|benzer|muadil/i.test(lowerText)
+
+      if (isWizardIntent) {
+        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', content: textToSend }])
+        setInput('')
+        setFlowMode('wizard')
+        setTimeout(() => addWizardStep('gender'), 300)
+        return
+      }
+      
+      if (isSimilarIntent) {
+        setFlowMode('similar')
+        // Doğrudan backend'e "similar" olarak gitmesi için flowMode'u similar yapıp aşağıdan devam etmesine izin veriyoruz
+        // Veya daha iyisi, similar match endpointine gönderelim:
+      }
+    }
+
     const newMessages = [...messages, { id: Date.now().toString(), role: 'user', content: textToSend }]
     setMessages(newMessages)
     if (!customInput) setInput('')
