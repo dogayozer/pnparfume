@@ -142,12 +142,13 @@ export default function ChatWidget() {
                     
                     {/* Tool UI */}
                     {m.toolResults?.map((tr: any, idx: number) => {
+                      const resultData = tr.result || tr.output;
                       if (tr.toolName === 'searchProducts') {
                         return (
                           <div key={idx} className="mt-3 p-3 bg-foreground/5 rounded-xl border border-foreground/10">
                             <p className="text-[10px] font-medium text-accent-gold mb-2 tracking-widest uppercase">Bulunan Parfümler</p>
                             <div className="space-y-2">
-                              {Array.isArray(tr.result) && tr.result.length > 0 ? tr.result.map((prod: any) => (
+                              {Array.isArray(resultData) && resultData.length > 0 ? resultData.map((prod: any) => (
                                 <Link key={prod.sku} href={`/urun/${prod.sku}`} className="block p-2 bg-background rounded-md hover:border-accent-rose border border-transparent transition-colors text-xs">
                                   <div className="font-medium">PN {prod.sku}</div>
                                   <div className="text-[10px] text-foreground/60 line-clamp-1">{prod.mood_tag}</div>
@@ -161,11 +162,12 @@ export default function ChatWidget() {
                         return (
                           <div key={idx} className="mt-3 p-3 bg-accent-rose/10 rounded-xl border border-accent-rose/20 text-center">
                              <div className="text-[10px] font-medium text-accent-rose mb-1 uppercase tracking-widest">Özel İndirim</div>
-                             <div className="text-lg font-bold tracking-widest">{tr.result?.code}</div>
-                             <div className="text-xs mt-1 opacity-80">%{tr.result?.discountPercentage} İndirim</div>
+                             <div className="text-lg font-bold tracking-widest">{resultData?.code}</div>
+                             <div className="text-xs mt-1 opacity-80">%{resultData?.discountPercentage} İndirim</div>
                           </div>
                         )
                       }
+                      return null
                     })}
                   </div>
                 </div>
