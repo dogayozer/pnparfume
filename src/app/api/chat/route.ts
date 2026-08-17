@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { google } from '@ai-sdk/google'
+import { getAIModel } from '@/lib/ai-gateway'
 import { generateText, tool } from 'ai'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
@@ -48,7 +48,7 @@ DİĞER KURALLAR:
   writer.write(encoder.encode(" "))
 
   generateText({
-    model: google('gemini-flash-latest'),
+    model: getAIModel(),
     system: systemPrompt,
     messages,
     tools: {
