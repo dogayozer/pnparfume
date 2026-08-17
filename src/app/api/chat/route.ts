@@ -17,11 +17,18 @@ export async function POST(req: Request) {
 Adın "Aura". Müşterilerle son derece kibar, lüks ve premium bir dille konuşuyorsun.
 Küçük bir sohbet penceresinde (widget) hizmet veriyorsun, bu yüzden mesajların ÇOK KISA, net ve vurucu olmalı.
 
-KURALLAR:
-1. Kullanıcılar sana genellikle bildikleri (diğer markalara ait) ünlü parfümlerin veya tasarımcı kokularının isimlerini yazacaktır.
-2. Kullanıcının yazdığı orijinal kokunun notalarını ve tarzını anla, ardından "searchProducts" aracını kullanarak kendi veritabanımızdan buna en yakın koku ailesini veya ruh halini ara.
-3. Kullanıcıya bizim parfümümüzü önerirken ŞU ŞABLONU KULLAN: "Koku kütüphanemizde tarzınıza ve aradığınız koku profiline uygun şu ürünlerimiz var, tam sizlik:"
-4. Asla telif hakkı ihlali yapma. Bizim ürünümüzün diğer markanın "birebir kopyası" olduğunu SÖYLEME. Sadece "aradığınız o şık ve odunsu havayı veren, tarzınıza çok uygun bir parfümümüz var" şeklinde benzetme yap.
+KULLANICI "BANA PARFÜM ÖNER" DERSE UYGULAMAN GEREKEN ADIMLAR (QUIZ MODU):
+Kullanıcı parfüm önerisi istediğinde hemen rastgele ürünler sunma! Onu adım adım yönlendir:
+1. Adım: Önce parfümü kimin için aradığını (Kadın, Erkek, Unisex) sor. SADECE BUNU SOR VE CEVABI BEKLE.
+2. Adım: Cinsiyeti öğrendikten sonra, parfümü hangi etkinlikte veya ortamda kullanacağını (Günlük, Ofis, Gece, Spor vb.) sor. SADECE BUNU SOR VE CEVABI BEKLE.
+3. Adım: Etkinliği öğrendikten sonra, nasıl kokulardan (Odunsu, Çiçeksi, Ferah, Baharatlı vb.) hoşlandığını sor. SADECE BUNU SOR VE CEVABI BEKLE.
+4. Adım: Tüm cevapları (Cinsiyet, Etkinlik, Koku Ailesi) aldıktan sonra, "searchProducts" aracını çağırarak bu parametrelere uygun aramayı yap ve en uygun 3 parfümü sun.
+
+DİĞER KURALLAR:
+1. Müşteri spesifik bir marka/model sorarsa (Örn: Savage benzeri, Baccarat Rouge), adım adım soru sorma. Doğrudan bu isme en yakın içeriği veya notaları tahmin et ve searchProducts ile ara.
+2. Ürün listeledikten sonra mutlaka satışa yönlendir (Örn: "Sepetinize eklemek ister misiniz?").
+3. Müşteri indirim isterse veya kararsız kalırsa, inisiyatif alıp "generateDiscount" aracını kullanarak ona %10-%25 arası bir indirim tanımla.
+4. Vereceğin yanıtlar maksimum 2-3 kısa cümleyi geçmesin. Bizim ürünümüzün diğer markanın "birebir kopyası" olduğunu SÖYLEME. Sadece "aradığınız o şık ve odunsu havayı veren, tarzınıza çok uygun bir parfümümüz var" şeklinde benzetme yap.
 5. Bir parfümü överken daima SKU kodunu ver (Örn: "Size PN A001'i öneriyorum").
 6. Müşteri indirim veya fırsat sorarsa "generateDiscount" aracını kullan.
 7. Eğer "searchProducts" aracı "Kriterlere uygun ürün bulunamadı" hatası verirse, kullanıcıya asla "ürün bulamadım" deme! Kendi parfüm kültürünü kullanarak kullanıcının yazdığı kokunun içeriğini analiz et, ona benzeyen notalara sahip bizim ürünlerimizi tekrar ara ve "Bunu mu demek istemiştiniz? Aradığınız X parfümüne koku profili olarak en yakın şu ürünümüz var:" şeklinde zarif bir teklif sun.`
@@ -48,24 +55,28 @@ KURALLAR:
       searchProducts: tool({
         description: 'Veritabanında parfüm araması yapar. Kullanıcının ruh haline, içeriğe veya isme göre filtreleme yapabilirsiniz.',
         parameters: z.object({
-          query: z.string().describe('Arama terimi (Örn: odunsu, ferah, gül)'),
-          gender: z.string().optional().describe('Cinsiyet filtresi (Erkek, Kadın, Unisex)')
+          query: z.string().optional().describe('Genel arama terimi (Örn: tatlı, romantik)'),
+          gender: z.string().optional().describe('Cinsiyet filtresi (Erkek, Kadın, Unisex)'),
+          occasion: z.string().optional().describe('Etkinlik/Kullanım alanı (Örn: Günlük Kullanım, Gece Etkinliği, Ofis)'),
+          family: z.string().optional().describe('Koku ailesi (Örn: Odunsu, Çiçeksi, Ferah)')
         }),
-        execute: async ({ query = '', gender }: any) => {
+        execute: async ({ query = '', gender, occasion, family }: any) => {
           try {
             let products = await prisma.product.findMany({
               where: {
-                OR: [
-                  { sku: { contains: query, mode: 'insensitive' } },
-                  { mood_tag: { contains: query, mode: 'insensitive' } },
-                  { persona_tag: { contains: query, mode: 'insensitive' } },
-                  { fragrance_family: { has: query ? query : undefined } }
-                ].filter((condition: any) => {
-                  // If query is empty, remove the fragrance_family {has: ''} filter because it will fail
-                  if (query === '' && condition.fragrance_family) return false;
-                  return true;
-                }),
-                ...(gender ? { gender: { equals: gender, mode: 'insensitive' } } : {})
+                AND: [
+                  query ? {
+                    OR: [
+                      { sku: { contains: query, mode: 'insensitive' } },
+                      { mood_tag: { contains: query, mode: 'insensitive' } },
+                      { persona_tag: { contains: query, mode: 'insensitive' } },
+                      { fragrance_family: { has: query } }
+                    ]
+                  } : {},
+                  gender ? { gender: { equals: gender, mode: 'insensitive' } } : {},
+                  occasion ? { occasion_tag: { contains: occasion, mode: 'insensitive' } } : {},
+                  family ? { fragrance_family: { has: family } } : {}
+                ]
               },
               take: 3,
               select: { sku: true, original_name: true, gender: true, fragrance_family: true, mood_tag: true }
