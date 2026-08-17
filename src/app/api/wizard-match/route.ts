@@ -70,10 +70,10 @@ export async function POST(req: Request) {
       products: matched 
     })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Wizard Match API Error:', error)
     return NextResponse.json({ 
-      text: 'Şu anda sistemlerimizde yoğunluk var. Lütfen birkaç dakika sonra tekrar deneyin.', 
+      text: 'DEBUG HATA DETAYI: ' + (error.message || String(error)), 
       products: [] 
     })
   }
