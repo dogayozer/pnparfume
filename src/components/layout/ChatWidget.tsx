@@ -48,6 +48,7 @@ export default function ChatWidget() {
         role: 'wizard',
         content: 'Sonuçları daraltmak ister misiniz?',
         options: [
+          'Sonuçları Katalogda İncele',
           'Mevsim: Kış', 
           'Mevsim: Yaz', 
           'Etkinlik: Gece / Davet', 
@@ -73,6 +74,18 @@ export default function ChatWidget() {
       if (value === 'Filtreleme İstemiyorum') {
         setFlowMode('initial')
         setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'Harika! Yukarıdaki listeden beğendiğiniz ürünleri detaylı inceleyebilirsiniz. Başka bir konuda yardımcı olabilir miyim?' }])
+        return
+      }
+
+      if (value === 'Sonuçları Katalogda İncele') {
+        const queryParams = new URLSearchParams()
+        if (wizardFilters.gender && wizardFilters.gender !== 'Farketmez') {
+          queryParams.append('gender', wizardFilters.gender)
+        }
+        if (wizardFilters.family && wizardFilters.family !== 'Farketmez') {
+          queryParams.append('family', wizardFilters.family.split('/')[0].trim())
+        }
+        window.location.href = `/katalog?${queryParams.toString()}`
         return
       }
 
