@@ -62,21 +62,8 @@ export async function POST(req: Request) {
     // Sort randomly and take up to 12 to allow local filtering
     matched = matched.sort(() => 0.5 - Math.random()).slice(0, 12)
 
-    // 4. LLM Call: Very short presentation without listing all 12 products
-    const prompt = `Kullanıcı aşağıdaki filtrelere göre parfüm arıyor:
-Cinsiyet: ${filters.gender}
-Koku Ailesi: ${filters.family}
-
-Sistemde toplam ${matched.length} ürün bulundu.
-GÖREV: Kullanıcıya bu ürünleri sunduğunu belirten sıcak, 1-2 cümlelik çok kısa bir giriş mesajı yaz.
-KESİN KURAL: Asla ürün kodlarını veya notaları listeleme! Sadece "İşte size uygun olabilecek X ürün. Dilerseniz aşağıdaki butonlardan daraltma yapabilirsiniz." tarzında doğal bir giriş yaz.`;
-
-    const model = getAIModel();
-    const { text } = await generateText({
-      model,
-      prompt,
-      temperature: 0.7,
-    });
+    // 4. Static Response: No LLM needed for this step
+    const text = `Harika bir seçim! ${filters.gender !== 'Farketmez' ? filters.gender : ''} ${filters.family !== 'Farketmez' ? filters.family : ''} tarzında sizin için ${matched.length} adet parfüm buldum. Dilerseniz aşağıdaki butonları kullanarak sonuçları daraltabilirsiniz.`;
 
     return NextResponse.json({ 
       text: text, 
