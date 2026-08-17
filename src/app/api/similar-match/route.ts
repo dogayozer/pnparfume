@@ -44,7 +44,7 @@ export async function POST(req: Request) {
       }
     })
 
-    let matchedProducts = []
+    let matchedProducts: any[] = []
 
     // 2. Marka eşleşmesi
     if (intent.brand) {
@@ -122,7 +122,6 @@ KESİN KURAL: Barkod, fiyat, stok gibi verileri asla yazma. Çok uzun listeler y
     const { text } = await generateText({
       model,
       prompt,
-      maxTokens: 250,
       temperature: 0.7,
     })
 

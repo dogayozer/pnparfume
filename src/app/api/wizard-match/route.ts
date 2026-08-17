@@ -75,7 +75,6 @@ KESİN KURAL: Asla ürün kodlarını veya notaları listeleme! Sadece "İşte s
     const { text } = await generateText({
       model,
       prompt,
-      maxTokens: 150,
       temperature: 0.7,
     });
 
