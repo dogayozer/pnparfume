@@ -69,7 +69,7 @@ export async function POST(req: Request) {
     // 3. Fallback: If 0 matches, return static text and link
     if (matched.length === 0) {
       return NextResponse.json({ 
-        text: `Seçimlerinize (${filters.family || 'Farketmez'}, ${filters.occasion || 'Farketmez'}, ${filters.gender || 'Farketmez'}) tam olarak uyan bir ürün bulamadım. Ancak [Katalog](/katalog) sayfamızda diğer harika kokularımızı keşfedebilirsiniz!`, 
+        text: `Bu kriterlere (${filters.family || 'Farketmez'}, ${filters.occasion || 'Farketmez'}) tam uyan bir ürün bulamadım, ama katalogda daha fazla seçenek görebilirsin: https://pnparfume.com/katalog`, 
         products: [] 
       })
     }
