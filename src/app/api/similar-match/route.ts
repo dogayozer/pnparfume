@@ -45,7 +45,43 @@ export async function POST(req: Request) {
       })
     }
 
-    // FAST PATH başarısız olduysa LLM kullan
+    // FAST PATH başarısız olduysa, kullanıcının yanlış yazmış olma ihtimaline karşı Web Araması (Sıfır LLM maliyeti)
+    if (userMsgLower.length > 3) {
+      try {
+        const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(lastUserMessage + ' perfume')}`
+        const searchRes = await fetch(searchUrl, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+        })
+        const html = await searchRes.text()
+        const titles = [...html.matchAll(/<h2 class="result__title">\s*<a[^>]*>(.*?)<\/a>\s*<\/h2>/gi)]
+          .map(m => m[1].replace(/<\/?[^>]+(>|$)/g, "").trim())
+
+        let suggestedName = ''
+        for (const title of titles) {
+          const titleLower = title.toLowerCase()
+          for (const p of allProducts) {
+            if (p.original_name && titleLower.includes(p.original_name.toLowerCase()) && p.original_name.length > 3) {
+              suggestedName = p.original_name
+              break
+            }
+          }
+          if (suggestedName) break
+        }
+
+        if (suggestedName) {
+          return NextResponse.json({
+            type: 'did_you_mean',
+            suggestion: suggestedName,
+            text: `Şunu mu demek istediniz: ${suggestedName}?`,
+            products: []
+          })
+        }
+      } catch (e) {
+        console.error('Spelling check error:', e)
+      }
+    }
+
+    // WEB ARAMASI da başarısız olduysa LLM kullan
     const model = getAIModel()
 
     // 1. Niyet Çıkarma (Intent Extraction via JSON)

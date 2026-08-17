@@ -70,6 +70,18 @@ export default function ChatWidget() {
     // Add user message
     setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', content: value }])
 
+    if (step === 'did_you_mean') {
+      const suggestionMsg = messages.find(m => m.step === 'did_you_mean')
+      if (value === 'Evet' && suggestionMsg?.suggestion) {
+        setFlowMode('similar')
+        handleSubmit(undefined, suggestionMsg.suggestion)
+      } else {
+        setFlowMode('initial')
+        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'Anladım. Rica etsem aradığınızı biraz daha detaylı tarif edebilir misiniz?' }])
+      }
+      return
+    }
+
     if (step === 'refinement') {
       if (value === 'Filtreleme İstemiyorum') {
         setFlowMode('initial')
@@ -231,17 +243,28 @@ export default function ChatWidget() {
       
       const data = await res.json()
       
-      const assistantMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: data.text,
-        toolResults: data.products ? [{ toolName: 'searchProducts', result: data.products }] : data.toolResults || []
-      }
-      
-      setMessages(prev => [...prev, assistantMessage])
-      
-      if (flowMode === 'similar') {
-        setFlowMode('initial') // Reset to initial after one similar search
+      if (data.type === 'did_you_mean') {
+        const assistantMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'wizard',
+          content: data.text,
+          options: ['Evet', 'Hayır'],
+          step: 'did_you_mean',
+          suggestion: data.suggestion
+        }
+        setMessages(prev => [...prev, assistantMessage])
+        // Akışa devam etmesi için flowMode sıfırlanmıyor
+      } else {
+        const assistantMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: data.text,
+          toolResults: data.products ? [{ toolName: 'searchProducts', result: data.products }] : data.toolResults || []
+        }
+        setMessages(prev => [...prev, assistantMessage])
+        if (flowMode === 'similar') {
+          setFlowMode('initial')
+        }
       }
     } catch (err) {
       console.error(err)
