@@ -82,6 +82,24 @@ export default function ChatWidget() {
       return
     }
 
+    if (step === 'show_results') {
+      if (value === 'Sonuçları Gör') {
+        setMessages(prev => [...prev, {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: 'İşte size özel önerilerimiz:',
+          toolResults: wizardProducts.length > 0 ? [{ toolName: 'searchProducts', result: wizardProducts }] : []
+        }])
+        
+        if (wizardProducts.length > 0) {
+           setTimeout(() => addWizardStep('refinement'), 800)
+        } else {
+           setFlowMode('initial')
+        }
+      }
+      return
+    }
+
     if (step === 'refinement') {
       if (value === 'Filtreleme İstemiyorum') {
         setFlowMode('initial')
@@ -158,18 +176,22 @@ export default function ChatWidget() {
         
         setWizardProducts(data.products || [])
 
-        setMessages(prev => [...prev, {
-          id: Date.now().toString(),
-          role: 'assistant',
-          content: data.text,
-          toolResults: data.products && data.products.length > 0 ? [{ toolName: 'searchProducts', result: data.products }] : []
-        }])
-
-        // Eğer ürün bulunduysa daraltma (refinement) adımlarını başlat
         if (data.products && data.products.length > 0) {
-           setTimeout(() => addWizardStep('refinement'), 800)
+          setMessages(prev => [...prev, {
+            id: Date.now().toString(),
+            role: 'wizard',
+            content: data.text || `Aramanıza uygun ${data.products.length} ürünümüz var.`,
+            options: ['Sonuçları Gör'],
+            step: 'show_results'
+          }])
         } else {
-           setFlowMode('initial')
+          setMessages(prev => [...prev, {
+            id: Date.now().toString(),
+            role: 'assistant',
+            content: data.text || 'Maalesef bu kriterlere uygun ürün bulamadık.',
+            toolResults: []
+          }])
+          setFlowMode('initial')
         }
 
       } catch (error) {

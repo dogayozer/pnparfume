@@ -63,7 +63,7 @@ export async function POST(req: Request) {
     matched = matched.sort(() => 0.5 - Math.random()).slice(0, 12)
 
     // 4. Static Response: No LLM needed for this step
-    const text = `Harika bir seçim! ${filters.gender !== 'Farketmez' ? filters.gender : ''} ${filters.family !== 'Farketmez' ? filters.family : ''} tarzında sizin için ${matched.length} adet parfüm buldum. Dilerseniz aşağıdaki butonları kullanarak sonuçları daraltabilirsiniz.`;
+    const text = `Aramanıza uygun ${matched.length} adet ürünümüz var.`;
 
     return NextResponse.json({ 
       text: text, 
