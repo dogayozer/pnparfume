@@ -41,21 +41,6 @@ export async function POST(req: Request) {
         }
       }
 
-      // Occasion filter (naive mapping)
-      if (filters.occasion && filters.occasion !== 'Farketmez' && p.occasion_tag) {
-        const occLower = filters.occasion.toLowerCase()
-        const pOccLower = p.occasion_tag.toLowerCase()
-        
-        let hasMatch = false
-        if (occLower.includes('günlük') && (pOccLower.includes('günlük') || pOccLower.includes('gündüz'))) hasMatch = true
-        else if (occLower.includes('gece') && (pOccLower.includes('gece') || pOccLower.includes('davet'))) hasMatch = true
-        else if (occLower.includes('ofis') && (pOccLower.includes('ofis') || pOccLower.includes('iş'))) hasMatch = true
-        else if (occLower.includes('spor') && (pOccLower.includes('spor') || pOccLower.includes('dinamik'))) hasMatch = true
-        else if (occLower.includes('romantik') && (pOccLower.includes('romantik') || pOccLower.includes('randevu'))) hasMatch = true
-        
-        if (!hasMatch) match = false
-      }
-
       // Family filter
       if (filters.family && filters.family !== 'Farketmez' && p.fragrance_family) {
         const famLower = filters.family.toLowerCase()
@@ -69,31 +54,28 @@ export async function POST(req: Request) {
     // 3. Fallback: If 0 matches, return static text and link
     if (matched.length === 0) {
       return NextResponse.json({ 
-        text: `Bu kriterlere (${filters.family || 'Farketmez'}, ${filters.occasion || 'Farketmez'}) tam uyan bir ürün bulamadım, ama katalogda daha fazla seçenek görebilirsin: https://pnparfume.com/katalog`, 
+        text: `Bu kriterlere (${filters.family || 'Farketmez'}, ${filters.gender || 'Farketmez'}) tam uyan bir ürün bulamadım, ama katalogda daha fazla seçenek görebilirsin: https://pnparfume.com/katalog`, 
         products: [] 
       })
     }
 
-    // Sort randomly and take top 3
-    matched = matched.sort(() => 0.5 - Math.random()).slice(0, 3)
+    // Sort randomly and take up to 12 to allow local filtering
+    matched = matched.sort(() => 0.5 - Math.random()).slice(0, 12)
 
-    // 4. LLM Call: Very short presentation (budget optimized)
+    // 4. LLM Call: Very short presentation without listing all 12 products
     const prompt = `Kullanıcı aşağıdaki filtrelere göre parfüm arıyor:
 Cinsiyet: ${filters.gender}
-Etkinlik: ${filters.occasion}
 Koku Ailesi: ${filters.family}
 
-Sistemde eşleşen şu 1-3 parfümü buldum:
-${matched.map(p => `- PN ${p.sku} (Notalar: ${p.top_notes}, ${p.heart_notes}, ${p.base_notes})`).join('\n')}
-
-GÖREV: Sadece bu ürünleri ön plana çıkaran 2-3 cümlelik çok kısa ve cezbedici bir öneri yaz. Ürünlerin kodlarını ve birkaç notayı mentionla.
-KESİN KURAL: Barkod, fiyat veya stok gibi bilgiler verme. Listenin çok uzun olmamasını sağla.`;
+Sistemde toplam ${matched.length} ürün bulundu.
+GÖREV: Kullanıcıya bu ürünleri sunduğunu belirten sıcak, 1-2 cümlelik çok kısa bir giriş mesajı yaz.
+KESİN KURAL: Asla ürün kodlarını veya notaları listeleme! Sadece "İşte size uygun olabilecek X ürün. Dilerseniz aşağıdaki butonlardan daraltma yapabilirsiniz." tarzında doğal bir giriş yaz.`;
 
     const model = getAIModel();
     const { text } = await generateText({
       model,
       prompt,
-      maxTokens: 250,
+      maxTokens: 150,
       temperature: 0.7,
     });
 

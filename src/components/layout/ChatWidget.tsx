@@ -14,7 +14,8 @@ export default function ChatWidget() {
   
   // 'initial' | 'wizard' | 'similar' | 'chat'
   const [flowMode, setFlowMode] = useState('initial')
-  const [wizardFilters, setWizardFilters] = useState({ gender: '', occasion: '', family: '' })
+  const [wizardFilters, setWizardFilters] = useState({ gender: '', family: '' })
+  const [wizardProducts, setWizardProducts] = useState<any[]>([])
   
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -33,14 +34,6 @@ export default function ChatWidget() {
         options: ['Kadın', 'Erkek', 'Unisex', 'Farketmez'],
         step: 'gender'
       }])
-    } else if (step === 'occasion') {
-      setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        role: 'wizard',
-        content: 'Parfümü genellikle hangi ortamlarda kullanacaksınız?',
-        options: ['Günlük Kullanım', 'Özel Gece / Davet', 'İş / Ofis', 'Spor / Dinamik', 'Romantik Buluşma', 'Farketmez'],
-        step: 'occasion'
-      }])
     } else if (step === 'family') {
       setMessages(prev => [...prev, {
         id: Date.now().toString(),
@@ -48,6 +41,23 @@ export default function ChatWidget() {
         content: 'Hangi koku ailesi size daha çekici geliyor?',
         options: ['Çiçeksi', 'Odunsu', 'Oryantal', 'Ferah / Narenciye', 'Baharatlı', 'Gurme / Tatlı', 'Farketmez'],
         step: 'family'
+      }])
+    } else if (step === 'refinement') {
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        role: 'wizard',
+        content: 'Sonuçları daraltmak ister misiniz?',
+        options: [
+          'Mevsim: Kış', 
+          'Mevsim: Yaz', 
+          'Etkinlik: Gece / Davet', 
+          'Etkinlik: Günlük', 
+          'Etkinlik: Spor', 
+          'Karakter: Çekici / Seksi', 
+          'Karakter: Ferah / Temiz', 
+          'Filtreleme İstemiyorum'
+        ],
+        step: 'refinement'
       }])
     }
   }
@@ -59,20 +69,57 @@ export default function ChatWidget() {
     // Add user message
     setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', content: value }])
 
+    if (step === 'refinement') {
+      if (value === 'Filtreleme İstemiyorum') {
+        setFlowMode('initial')
+        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'Harika! Yukarıdaki listeden beğendiğiniz ürünleri detaylı inceleyebilirsiniz. Başka bir konuda yardımcı olabilir miyim?' }])
+        return
+      }
+
+      // Lokal Filtreleme (Sıfır LLM, Sıfır Backend)
+      let filtered = [...wizardProducts]
+      const valLower = value.toLowerCase()
+
+      if (valLower.includes('kış')) filtered = filtered.filter(p => p.season_tag?.toLowerCase().includes('kış') || p.season_tag?.toLowerCase().includes('sonbahar'))
+      else if (valLower.includes('yaz')) filtered = filtered.filter(p => p.season_tag?.toLowerCase().includes('yaz') || p.season_tag?.toLowerCase().includes('ilkbahar'))
+      else if (valLower.includes('gece')) filtered = filtered.filter(p => p.occasion_tag?.toLowerCase().includes('gece') || p.occasion_tag?.toLowerCase().includes('davet'))
+      else if (valLower.includes('günlük')) filtered = filtered.filter(p => p.occasion_tag?.toLowerCase().includes('günlük') || p.occasion_tag?.toLowerCase().includes('ofis'))
+      else if (valLower.includes('spor')) filtered = filtered.filter(p => p.occasion_tag?.toLowerCase().includes('spor') || p.occasion_tag?.toLowerCase().includes('dinamik'))
+      else if (valLower.includes('çekici')) filtered = filtered.filter(p => p.mood_tag?.toLowerCase().includes('çekici') || p.mood_tag?.toLowerCase().includes('seksi') || p.mood_tag?.toLowerCase().includes('etkileyici'))
+      else if (valLower.includes('ferah')) filtered = filtered.filter(p => p.mood_tag?.toLowerCase().includes('ferah') || p.mood_tag?.toLowerCase().includes('temiz') || p.mood_tag?.toLowerCase().includes('enerjik'))
+
+      // Eğer çok fazla daralttıysa ve ürün kalmadıysa
+      if (filtered.length === 0) {
+        setMessages(prev => [...prev, { 
+          id: Date.now().toString(), 
+          role: 'assistant', 
+          content: `Maalesef "${value}" filtresine uyan ürün kalmadı. Bir önceki listedeki ürünlere göz atabilirsiniz.`
+        }])
+        setTimeout(() => addWizardStep('refinement'), 500)
+        return
+      }
+
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: `İşte "${value}" kriterine göre daraltılmış sonuçlar:`,
+        toolResults: [{ toolName: 'searchProducts', result: filtered }]
+      }])
+      
+      // Tekrar daraltma imkanı sun
+      setTimeout(() => addWizardStep('refinement'), 500)
+      return
+    }
+
     const updatedFilters = { ...wizardFilters }
 
     if (step === 'gender') {
       updatedFilters.gender = value
       setWizardFilters(updatedFilters)
-      setTimeout(() => addWizardStep('occasion'), 300)
-    } else if (step === 'occasion') {
-      updatedFilters.occasion = value
-      setWizardFilters(updatedFilters)
       setTimeout(() => addWizardStep('family'), 300)
     } else if (step === 'family') {
       updatedFilters.family = value
       setWizardFilters(updatedFilters)
-      setFlowMode('initial') // Reset mode after wizard is done
       
       // CALL WIZARD MATCH API
       setIsLoading(true)
@@ -83,14 +130,26 @@ export default function ChatWidget() {
           body: JSON.stringify({ filters: updatedFilters })
         })
         const data = await res.json()
+        
+        setWizardProducts(data.products || [])
+
         setMessages(prev => [...prev, {
           id: Date.now().toString(),
           role: 'assistant',
           content: data.text,
-          toolResults: data.products ? [{ toolName: 'searchProducts', result: data.products }] : []
+          toolResults: data.products && data.products.length > 0 ? [{ toolName: 'searchProducts', result: data.products }] : []
         }])
+
+        // Eğer ürün bulunduysa daraltma (refinement) adımlarını başlat
+        if (data.products && data.products.length > 0) {
+           setTimeout(() => addWizardStep('refinement'), 800)
+        } else {
+           setFlowMode('initial')
+        }
+
       } catch (error) {
         setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'Üzgünüm, sonuçları getirirken bir hata oluştu.' }])
+        setFlowMode('initial')
       } finally {
         setIsLoading(false)
       }
@@ -159,7 +218,8 @@ export default function ChatWidget() {
   const resetChat = () => {
     setMessages([])
     setFlowMode('initial')
-    setWizardFilters({ gender: '', occasion: '', family: '' })
+    setWizardFilters({ gender: '', family: '' })
+    setWizardProducts([])
   }
 
   return (
@@ -247,7 +307,19 @@ export default function ChatWidget() {
                     {m.role === 'user' ? <User size={14} /> : <img src="/aura-avatar.jpg" alt="Aura AI" className="w-full h-full object-cover" />}
                   </div>
                   <div className={`max-w-[85%] rounded-2xl p-3 text-sm ${m.role === 'user' ? 'bg-foreground/5 rounded-tr-sm' : 'bg-background border border-foreground/10 shadow-sm rounded-tl-sm'}`}>
-                    {m.content && <p className="mb-2">{m.content}</p>}
+                    {m.content && (
+                       m.content.includes('https://') ? (
+                          <p className="mb-2">
+                             {m.content.split(/(https:\/\/[^\s]+)/g).map((part, i) => 
+                                part.startsWith('https://') 
+                                ? <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-accent-gold underline underline-offset-2 break-all">{part}</a>
+                                : part
+                             )}
+                          </p>
+                       ) : (
+                          <p className="mb-2">{m.content}</p>
+                       )
+                    )}
                     
                     {/* Wizard Options UI */}
                     {m.role === 'wizard' && m.options && m.options.length > 0 && (
@@ -270,8 +342,8 @@ export default function ChatWidget() {
                       if (tr.toolName === 'searchProducts') {
                         return (
                           <div key={idx} className="mt-3 p-3 bg-foreground/5 rounded-xl border border-foreground/10">
-                            <p className="text-[10px] font-medium text-accent-gold mb-2 tracking-widest uppercase">Önerilen Parfümler</p>
-                            <div className="space-y-2">
+                            <p className="text-[10px] font-medium text-accent-gold mb-2 tracking-widest uppercase">Önerilen Parfümler ({Array.isArray(resultData) ? resultData.length : 0})</p>
+                            <div className="space-y-2 max-h-[250px] overflow-y-auto pr-1 custom-scrollbar">
                               {Array.isArray(resultData) && resultData.length > 0 ? resultData.map((prod: any) => (
                                 <Link key={prod.sku} href={`/urun/${prod.sku}`} className="block p-2 bg-background rounded-md hover:border-accent-rose border border-transparent transition-colors text-xs shadow-sm">
                                   <div className="flex items-center justify-between mb-1">
@@ -329,6 +401,11 @@ export default function ChatWidget() {
           </motion.div>
         )}
       </AnimatePresence>
+      <style dangerouslySetInnerHTML={{__html: `
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
+      `}} />
     </>
   )
 }
