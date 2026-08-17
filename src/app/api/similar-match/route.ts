@@ -133,9 +133,9 @@ KESİN KURAL: Barkod, fiyat, stok gibi verileri asla yazma. Çok uzun listeler y
 
   } catch (error) {
     console.error('Similar Match API Error:', error)
-    return NextResponse.json(
-      { error: 'Sunucu hatası oluştu.' },
-      { status: 500 }
-    )
+    return NextResponse.json({ 
+      text: 'Şu anda sistemlerimizde yoğunluk var. Lütfen birkaç dakika sonra tekrar deneyin.', 
+      products: [] 
+    })
   }
 }

@@ -86,9 +86,9 @@ KESİN KURAL: Asla ürün kodlarını veya notaları listeleme! Sadece "İşte s
 
   } catch (error) {
     console.error('Wizard Match API Error:', error)
-    return NextResponse.json(
-      { error: 'Sunucu hatası oluştu.' },
-      { status: 500 }
-    )
+    return NextResponse.json({ 
+      text: 'Şu anda sistemlerimizde yoğunluk var. Lütfen birkaç dakika sonra tekrar deneyin.', 
+      products: [] 
+    })
   }
 }

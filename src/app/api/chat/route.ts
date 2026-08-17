@@ -131,9 +131,12 @@ DİĞER KURALLAR:
   }).then(result => {
     const allToolResults = result.steps?.flatMap(step => step.toolResults) || []
     writer.write(encoder.encode(JSON.stringify({ text: result.text, toolResults: allToolResults })))
-    writer.close()
   }).catch(err => {
-    writer.write(encoder.encode(JSON.stringify({ text: 'Hata: ' + (err?.message || String(err)), toolResults: [] })))
+    console.error("Chat API Error:", err)
+    writer.write(encoder.encode(JSON.stringify({ 
+      text: 'Şu anda sistemlerimizde yoğunluk var. Lütfen birkaç dakika sonra tekrar deneyin.', 
+      toolResults: [] 
+    })))
     writer.close()
   })
 
