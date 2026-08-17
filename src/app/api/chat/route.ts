@@ -51,7 +51,7 @@ KURALLAR:
           query: z.string().describe('Arama terimi (Örn: odunsu, ferah, gül)'),
           gender: z.string().optional().describe('Cinsiyet filtresi (Erkek, Kadın, Unisex)')
         }),
-        execute: async ({ query, gender }: any) => {
+        execute: async ({ query = '', gender }: any) => {
           try {
             let products = await prisma.product.findMany({
               where: {
@@ -59,8 +59,12 @@ KURALLAR:
                   { sku: { contains: query, mode: 'insensitive' } },
                   { mood_tag: { contains: query, mode: 'insensitive' } },
                   { persona_tag: { contains: query, mode: 'insensitive' } },
-                  { fragrance_family: { has: query } }
-                ],
+                  { fragrance_family: { has: query ? query : undefined } }
+                ].filter((condition: any) => {
+                  // If query is empty, remove the fragrance_family {has: ''} filter because it will fail
+                  if (query === '' && condition.fragrance_family) return false;
+                  return true;
+                }),
                 ...(gender ? { gender: { equals: gender, mode: 'insensitive' } } : {})
               },
               take: 3,
