@@ -17,19 +17,6 @@ export async function POST(req: Request) {
 
     const lastUserMessage = messages[messages.length - 1].content
 
-    const model = getAIModel()
-
-    // 1. Niyet Çıkarma (Intent Extraction via JSON)
-    const { object: intent } = await generateObject({
-      model,
-      schema: z.object({
-        brand: z.string().nullable().describe("Kullanıcının bahsettiği bilinen bir parfüm markası veya ismi varsa buraya yazın, yoksa null."),
-        notes: z.array(z.string()).describe("Kullanıcının istediği kokunun notalarını (limon, vanilya, odunsu vs.) bir dizi olarak yazın."),
-        vibe: z.string().nullable().describe("Kullanıcının istediği genel hissiyat veya etki (ferah, ağır, seksi, vb.).")
-      }),
-      prompt: `Kullanıcının şu parfüm arama mesajını analiz et: "${lastUserMessage}"`
-    })
-
     const allProducts = await prisma.product.findMany({
       where: { publish_status: { not: 'DRAFT' } },
       select: {
@@ -44,7 +31,35 @@ export async function POST(req: Request) {
       }
     })
 
-    let matchedProducts: any[] = []
+    // FAST PATH: Doğrudan veritabanındaki original_name ile basit metin eşleşmesi yap (Sıfır LLM maliyeti)
+    const userMsgLower = lastUserMessage.toLowerCase().trim()
+    let matchedProducts = allProducts.filter(p => p.original_name && (userMsgLower.includes(p.original_name.toLowerCase()) || p.original_name.toLowerCase().includes(userMsgLower)))
+
+    // Eğer kullanıcı sadece "good girl" yazdıysa ve veritabanında bulduysak, LLM'i tamamen atla!
+    if (matchedProducts.length > 0 && userMsgLower.length > 3) {
+      // Sadece en iyi 3 eşleşmeyi al
+      matchedProducts = matchedProducts.slice(0, 3)
+      return NextResponse.json({ 
+        text: `Harika, kastettiğiniz kokuyu buldum! İşte kendi koleksiyonumuzdaki en yakın alternatifleri:`, 
+        products: matchedProducts 
+      })
+    }
+
+    // FAST PATH başarısız olduysa LLM kullan
+    const model = getAIModel()
+
+    // 1. Niyet Çıkarma (Intent Extraction via JSON)
+    const { object: intent } = await generateObject({
+      model,
+      schema: z.object({
+        brand: z.string().nullable().describe("Kullanıcının bahsettiği bilinen bir parfüm markası veya ismi varsa buraya yazın, yoksa null."),
+        notes: z.array(z.string()).describe("Kullanıcının istediği kokunun notalarını (limon, vanilya, odunsu vs.) bir dizi olarak yazın."),
+        vibe: z.string().nullable().describe("Kullanıcının istediği genel hissiyat veya etki (ferah, ağır, seksi, vb.).")
+      }),
+      prompt: `Kullanıcının şu parfüm arama mesajını analiz et: "${lastUserMessage}"`
+    })
+
+    // Fast Path'i geçip LLM'e düşen sorgularda marka eşleşmesi kontrolü
 
     // 2. Marka eşleşmesi
     if (intent.brand) {
