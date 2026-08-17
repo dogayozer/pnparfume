@@ -182,7 +182,7 @@ export default function ChatWidget() {
     // Niyet Yakalama (Intent Interception)
     // Eğer kullanıcı manuel olarak "öner" yazarsa sihirbazı başlat
     if (flowMode === 'initial' || flowMode === 'chat') {
-      const isWizardIntent = /öner|tavsiye|hangi parfüm|koku seç|yardım/i.test(lowerText) && !/gibi|benzer|muadil/i.test(lowerText)
+      const isWizardIntent = /öner|oner|tavsiye|tavsıye|hangi parfüm|hangi parfum|koku seç|koku sec|yardım|yardim/i.test(lowerText) && !/gibi|benzer|muadil/i.test(lowerText)
       const isSimilarIntent = /gibi|benzer|muadil/i.test(lowerText)
 
       if (isWizardIntent) {
