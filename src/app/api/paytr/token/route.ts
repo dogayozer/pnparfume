@@ -120,6 +120,6 @@ export async function POST(req: Request) {
     
   } catch (err: any) {
     console.error("Checkout token generation error:", err)
-    return NextResponse.json({ error: 'Sunucu hatası, lütfen daha sonra tekrar deneyin' }, { status: 500 })
+    return NextResponse.json({ error: 'Sunucu hatası: ' + err.message + ' | Stack: ' + err.stack }, { status: 500 })
   }
 }
