@@ -48,8 +48,21 @@ export default async function Home({
       
       <HomeHero />
 
+      {/* PayTR Test Section */}
+      <section className="pt-8 px-4 md:px-12 max-w-7xl mx-auto w-full">
+        <div className="bg-accent-gold/10 border border-accent-gold/20 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div>
+            <h2 className="text-xl font-medium text-accent-gold mb-2">PayTR Sanal POS Testi</h2>
+            <p className="text-sm text-foreground/70">Ödeme altyapısını test etmek için 1 TL'lik deneme ürününü sepetinize ekleyin. (Kargo ücretsizdir)</p>
+          </div>
+          <Link href="/urun/PAYTR" className="bg-accent-gold text-background px-6 py-3 rounded-xl font-medium hover:bg-accent-gold/90 transition-colors whitespace-nowrap">
+            1 TL Test Ürününü İncele
+          </Link>
+        </div>
+      </section>
+
       {/* Featured Perfume Collection */}
-      <section className="pt-2 md:pt-8 pb-20 px-4 md:px-12 max-w-7xl mx-auto w-full">
+      <section className="pt-8 pb-20 px-4 md:px-12 max-w-7xl mx-auto w-full">
         <div className="flex justify-between items-end mb-4 md:mb-12">
           <div>
             <h2 className="text-lg md:text-4xl font-medium md:font-light mb-2 md:mb-4">Çok Satanlar</h2>

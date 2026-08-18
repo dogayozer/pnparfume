@@ -23,12 +23,12 @@ export default function ProductCard({ product }: { product: ProductProps }) {
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault() // Prevent Link navigation
-    if (product.publishStatus === 'OUT_OF_STOCK') return
+    if (product.publishStatus === 'OUT_OF_STOCK' || !product.price || product.price <= 0) return
     
     addToCart({
       sku: product.sku,
       name: product.seoName || product.families?.join(', ') || 'Özel Harman',
-      price: product.price || 1500, // Default price if null
+      price: product.price,
       quantity: 1
     })
   }
@@ -88,8 +88,10 @@ export default function ProductCard({ product }: { product: ProductProps }) {
           </p>
           
           <div className="mt-auto pt-3 md:pt-4 flex flex-col gap-2 md:gap-3">
-            <span className="text-base md:text-lg font-bold text-foreground">{product.price ? `${product.price.toLocaleString('tr-TR')} ₺` : '1.500 ₺'}</span>
-            {!isOutOfStock ? (
+            <span className="text-base md:text-lg font-bold text-foreground">
+              {product.price && product.price > 0 ? `${product.price.toLocaleString('tr-TR')} ₺` : 'Fiyat Belirlenmedi'}
+            </span>
+            {!isOutOfStock && product.price && product.price > 0 ? (
               <button 
                 onClick={handleAddToCart}
                 className="w-full py-2 md:py-2.5 rounded border border-foreground text-foreground text-xs md:text-sm font-bold flex items-center justify-center hover:bg-foreground hover:text-background transition-colors"
@@ -98,7 +100,7 @@ export default function ProductCard({ product }: { product: ProductProps }) {
               </button>
             ) : (
               <button disabled className="w-full py-2 md:py-2.5 rounded bg-foreground/10 text-foreground/50 text-xs md:text-sm font-bold cursor-not-allowed">
-                Tükendi
+                {isOutOfStock ? 'Tükendi' : 'Satışa Kapalı'}
               </button>
             )}
           </div>

@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowLeft, Trash2, Tag, Truck, Info, Users, ShieldCheck, Check, Clock } from 'lucide-react'
+import { ArrowLeft, Trash2, Tag, Truck, Info, Users, ShieldCheck, Check, Clock, X, CreditCard } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
 
 export default function CartPage() {
@@ -19,6 +19,17 @@ export default function CartPage() {
   // VIP Urgency State
   const [timeLeft, setTimeLeft] = useState(3599) // 59:59
   const [selectedTester, setSelectedTester] = useState<string | null>(null)
+
+  // Checkout Modal & PayTR State
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false)
+  const [checkoutForm, setCheckoutForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: ''
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [paytrToken, setPaytrToken] = useState<string | null>(null)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -53,20 +64,68 @@ export default function CartPage() {
 
   const total = subtotal - multiItemDiscount - couponDiscount + shippingFee
 
-  // WhatsApp Manuel Sipariş Hazırlığı
+  // WhatsApp Manuel Sipariş Hazırlığı (Yedek olarak durabilir)
   const whatsappNumber = "905323913141"
   const cartText = items.map(i => `- ${i.quantity}x PN ${i.sku} (${i.name}) : ${i.price * i.quantity} TL`).join('%0A')
-  const whatsappMessage = `Merhaba, PN Parfüm'den sipariş vermek istiyorum.%0A%0ASepetim:%0A${cartText}%0A%0A🎁 İndirimler & Kargo: -${multiItemDiscount + couponDiscount - shippingFee} TL%0A💳 Toplam Tutar: ${total} TL%0A%0A(Sanal POS kurulumunuz devam ettiği için manuel sipariş oluşturmak istedim, yardımcı olabilir misiniz?)`
+  const whatsappMessage = `Merhaba, PN Parfüm'den sipariş vermek istiyorum.%0A%0ASepetim:%0A${cartText}%0A%0A🎁 İndirimler & Kargo: -${multiItemDiscount + couponDiscount - shippingFee} TL%0A💳 Toplam Tutar: ${total} TL`
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`
 
-  const applyCoupon = () => {
-    if (couponCode.toUpperCase() === 'HOSGELDIN150' || couponCode.toUpperCase() === 'HOŞGELDİN150') {
-      setAppliedCoupon({ code: couponCode.toUpperCase(), discount: 150 })
-      setCouponCode('')
-    } else if (couponCode.length > 3) {
-      // Rastgele bir kod girdiyse %10 indirim (mock amaçlı)
-      setAppliedCoupon({ code: couponCode.toUpperCase(), discount: Math.floor(subtotal * 0.1) })
-      setCouponCode('')
+  const handleCheckoutSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+
+    try {
+      const res = await fetch('/api/paytr/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer: checkoutForm,
+          cart: items,
+          totalAmount: total,
+          discountApplied: multiItemDiscount + couponDiscount,
+          shippingFee: shippingFee,
+          couponCode: appliedCoupon?.code,
+          friendOrderCode: shippingDiscountApplied ? friendOrderCode : null
+        })
+      })
+
+      const data = await res.json()
+      if (data.token) {
+        setPaytrToken(data.token)
+      } else {
+        alert('Ödeme başlatılırken bir hata oluştu: ' + (data.error || 'Bilinmeyen hata'))
+      }
+    } catch (err) {
+      alert('Sistem hatası, lütfen daha sonra tekrar deneyin.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const applyCoupon = async () => {
+    if (!couponCode) return;
+    
+    try {
+      const res = await fetch('/api/checkout/coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponCode })
+      })
+      const data = await res.json()
+      
+      if (res.ok && data.value) {
+        // value contains fixed discount for now based on our db setup
+        let discountAmount = data.value;
+        if (data.type === 'percentage') {
+          discountAmount = Math.floor(subtotal * (data.value / 100));
+        }
+        setAppliedCoupon({ code: couponCode.toUpperCase(), discount: discountAmount })
+        setCouponCode('')
+      } else {
+        alert(data.error || 'Geçersiz kupon kodu')
+      }
+    } catch (err) {
+      alert('Kupon kontrol edilirken bir hata oluştu.')
     }
   }
 
@@ -272,20 +331,12 @@ export default function CartPage() {
                 </div>
               </div>
 
-              <div className="mb-4 p-4 bg-[#25D366]/10 border border-[#25D366]/20 rounded-xl">
-                <p className="text-xs text-[#25D366] font-medium leading-relaxed">
-                  Sanal POS kurulumumuz devam etmektedir. Sizin için müşteri temsilcimize iletilmek üzere bir manuel sipariş mesajı hazırladık.
-                </p>
-              </div>
-
-              <a 
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full flex items-center justify-center gap-3 bg-[#25D366] text-white py-5 uppercase tracking-widest text-sm font-medium hover:bg-[#1da851] transition-colors rounded-xl shadow-lg"
+              <button 
+                onClick={() => setIsCheckoutModalOpen(true)}
+                className="w-full flex items-center justify-center gap-3 bg-foreground text-background py-5 uppercase tracking-widest text-sm font-medium hover:bg-accent-gold transition-colors rounded-xl shadow-lg"
               >
-                WhatsApp İle Sipariş Ver
-              </a>
+                Kredi Kartı İle Güvenli Öde
+              </button>
 
               <div className="flex items-center justify-center gap-2 mt-6 text-xs text-foreground/40">
                 <ShieldCheck size={14} /> Manuel Onaylı Güvenli Sipariş
@@ -295,6 +346,111 @@ export default function CartPage() {
 
         </div>
       </div>
+
+      {/* Checkout Modal */}
+      {isCheckoutModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+          <div className="bg-background border border-foreground/10 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="sticky top-0 bg-background border-b border-foreground/10 px-6 py-4 flex justify-between items-center z-10">
+              <h2 className="text-xl font-medium flex items-center gap-2">
+                <CreditCard size={20} className="text-accent-gold" /> Güvenli Ödeme
+              </h2>
+              <button 
+                onClick={() => setIsCheckoutModalOpen(false)}
+                className="p-2 text-foreground/50 hover:text-foreground transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {paytrToken ? (
+                <div className="w-full min-h-[500px]">
+                  <iframe
+                    src={`https://www.paytr.com/odeme/guvenli/${paytrToken}`}
+                    id="paytriframe"
+                    frameBorder="0"
+                    scrolling="no"
+                    style={{ width: '100%', height: '600px' }}
+                  ></iframe>
+                </div>
+              ) : (
+                <form onSubmit={handleCheckoutSubmit} className="space-y-4">
+                  <p className="text-sm text-foreground/60 mb-6">Siparişinizi tamamlamak için lütfen teslimat ve fatura bilgilerinizi giriniz. (3D Secure ile güvenle korunmaktadır)</p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Ad Soyad</label>
+                      <input 
+                        required 
+                        type="text" 
+                        value={checkoutForm.name}
+                        onChange={e => setCheckoutForm({...checkoutForm, name: e.target.value})}
+                        className="w-full bg-foreground/[0.02] border border-foreground/10 rounded-lg p-3 text-sm focus:border-accent-gold outline-none"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Telefon</label>
+                      <input 
+                        required 
+                        type="tel" 
+                        value={checkoutForm.phone}
+                        onChange={e => setCheckoutForm({...checkoutForm, phone: e.target.value})}
+                        className="w-full bg-foreground/[0.02] border border-foreground/10 rounded-lg p-3 text-sm focus:border-accent-gold outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">E-Posta Adresi</label>
+                    <input 
+                      required 
+                      type="email" 
+                      value={checkoutForm.email}
+                      onChange={e => setCheckoutForm({...checkoutForm, email: e.target.value})}
+                      className="w-full bg-foreground/[0.02] border border-foreground/10 rounded-lg p-3 text-sm focus:border-accent-gold outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Teslimat Adresi</label>
+                    <textarea 
+                      required 
+                      rows={3}
+                      value={checkoutForm.address}
+                      onChange={e => setCheckoutForm({...checkoutForm, address: e.target.value})}
+                      className="w-full bg-foreground/[0.02] border border-foreground/10 rounded-lg p-3 text-sm focus:border-accent-gold outline-none resize-none"
+                    />
+                  </div>
+
+                  <div className="pt-2">
+                    <label className="flex items-start gap-3 cursor-pointer group">
+                      <input 
+                        required
+                        type="checkbox" 
+                        className="mt-1 w-4 h-4 rounded border-foreground/20 text-accent-gold focus:ring-accent-gold focus:ring-offset-background"
+                      />
+                      <span className="text-xs text-foreground/70 leading-relaxed">
+                        <a href="/sozlesmeler.html" target="_blank" className="text-accent-gold hover:underline">Mesafeli Satış Sözleşmesi</a> ve <a href="/sozlesmeler.html" target="_blank" className="text-accent-gold hover:underline">Ön Bilgilendirme Formu</a>'nu okudum, onaylıyorum. (Cayma hakkı istisnalarını kabul ediyorum).
+                      </span>
+                    </label>
+                  </div>
+
+                  <div className="pt-4">
+                    <button 
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full bg-accent-gold text-background py-4 uppercase tracking-widest text-sm font-medium rounded-lg hover:bg-accent-gold/90 transition-colors disabled:opacity-50"
+                    >
+                      {isSubmitting ? 'Hazırlanıyor...' : `Ödemeye Geç (${total} TL)`}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
