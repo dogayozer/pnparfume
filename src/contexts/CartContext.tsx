@@ -7,6 +7,9 @@ export interface CartItem {
   name: string
   price: number
   quantity: number
+  size?: string
+  selectedScents?: string[]
+  imageUrl?: string
 }
 
 interface CartContextType {

@@ -204,14 +204,30 @@ export default function CartPage() {
                 </div>
                 <div className="flex-1 flex flex-col justify-center">
                   <div className="flex justify-between items-start mb-1">
-                    <h3 className="text-xl font-medium text-foreground">PN {item.sku}</h3>
+                    <h3 className="text-xl font-medium text-foreground">
+                      {item.sku.startsWith('DISCOVERY') ? item.name : `PN ${item.sku}`}
+                    </h3>
                     <button onClick={() => removeFromCart(item.sku)} className="text-foreground/40 hover:text-accent-rose transition-colors">
                       <Trash2 size={18} />
                     </button>
                   </div>
-                  <p className="text-sm text-foreground/50 mb-3">{item.name}</p>
+                  <p className="text-sm text-foreground/50 mb-2">{item.name}</p>
+
+                  {/* 5'li Discovery Set Alt Liste Gösterimi */}
+                  {item.selectedScents && item.selectedScents.length > 0 && (
+                    <div className="my-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl space-y-1">
+                      <div className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Kutu İçeriği (5x10ml):</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs text-foreground/80 font-mono">
+                        {item.selectedScents.map((s, idx) => (
+                          <div key={idx} className="flex items-center gap-1.5">
+                            <span className="text-amber-500 font-bold">•</span> {s} (10ml)
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   
-                  <div className="mt-auto">
+                  <div className="mt-auto pt-2">
                     <span className="text-lg font-light text-foreground">{item.price * item.quantity} TL</span>
                     <span className="text-xs text-foreground/40 ml-2">({item.quantity} Adet)</span>
                   </div>

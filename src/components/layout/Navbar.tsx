@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, User, Sparkles, ShoppingBag, Menu, X } from 'lucide-react'
+import { Search, User, Sparkles, ShoppingBag, Menu, X, Gift } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import SearchModal from '@/components/SearchModal'
@@ -69,6 +69,10 @@ export default function Navbar() {
         <div className="hidden md:flex items-center space-x-8">
           <Link href="/katalog" className="text-sm tracking-wide text-foreground hover:text-accent-gold transition-colors">
             Parfüm Koleksiyonu
+          </Link>
+          <Link href="/mix/discovery-set" className="text-sm tracking-wide text-amber-500 font-medium hover:text-amber-400 transition-colors flex items-center gap-1.5 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+            <Gift size={14} />
+            5'li Keşif Kutusu
           </Link>
           <Link href="/mix" className="text-sm tracking-wide text-foreground hover:text-accent-gold transition-colors">
             Mix Parfüm Tasarımı
@@ -163,6 +167,10 @@ export default function Navbar() {
           <nav className="flex flex-col gap-6 text-2xl font-light mt-8">
             <Link href="/katalog" className="border-b border-foreground/10 pb-4">
               Parfüm Koleksiyonu
+            </Link>
+            <Link href="/mix/discovery-set" className="border-b border-foreground/10 pb-4 text-amber-500 font-normal flex items-center justify-between">
+              <span>5'li Keşif Kutusu</span>
+              <span className="text-xs bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">Özel Set</span>
             </Link>
             <Link href="/mix" className="border-b border-foreground/10 pb-4">
               Mix Parfüm Tasarımı <span className="text-xs ml-2 text-accent-gold uppercase tracking-widest">(Yakında)</span>
