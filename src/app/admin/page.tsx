@@ -76,9 +76,27 @@ const CARGO_COMPANIES = [
 ]
 
 // Sistem Versiyon ve Değişiklik Günlüğü (Changelog)
-const SYSTEM_VERSION = 'v2.7.0'
+const SYSTEM_VERSION = 'v2.8.0'
 const SYSTEM_BUILD_DATE = '2026.08.20'
 const CHANGELOG = [
+  {
+    version: 'v2.8.0',
+    code: 'CRITICAL-AUDIT-20260820-A',
+    date: '20.08.2026',
+    type: 'Güvenlik & Bütünlük (Major)',
+    badgeColor: 'bg-rose-50 text-rose-700 border-rose-200',
+    title: 'Kritik Güvenlik, Idempotency, Stok & Performans Paketi',
+    changes: [
+      'PayTR Callback Idempotency: Mükerrer webhook bildirimlerinde çift SMS ve çift komisyon tetiklenmesi engellendi.',
+      'Atomik Stok Düşümü: Ödeme onaylandığında DB transaction içinde yarış durumu (race condition) korumalı stok eksiltme eklendi.',
+      'OrderItem Modeli & Senkronizasyon: Sipariş kalemleri ilişkisel modele bağlanarak iade ve stok takibi güçlendirildi.',
+      'Admin Brute-Force Koruması: IP bazlı 5 hatalı deneme sonrası 15 dakikalık akıllı kilit mekanizması getirildi.',
+      'Cart-Sync Debounce: Sepet senkronizasyonuna 1.5 sn gecikme eklenerek Neon DB compute kota tüketimi %80 düşürüldü.',
+      'Aura AI İstismar & Maliyet Koruması: /api/chat endpointine rate limit, sunucu taraflı kupon tavanı ve 24 saatlik süre sınırı eklendi.',
+      'Dinamik Komisyon: %15 affiliate komisyonu ScenarioRule (AFFILIATE_COMMISSION_RATE) üzerinden dinamik hale getirildi.',
+      'İade/İptal Komisyon Geri Alımı: İptal veya iadelerde elçiye ödenen komisyonun cüzdandan güvenle düşülmesi sağlandı.'
+    ]
+  },
   {
     version: 'v2.7.0',
     code: 'MAJOR-20260820-E',

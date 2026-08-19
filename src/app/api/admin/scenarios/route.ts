@@ -1,12 +1,32 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+const DEFAULT_RULES = [
+  { rule_key: 'FREE_SHIPPING_LIMIT', rule_value: 500, description: 'Ücretsiz Kargo Barajı (TL)' },
+  { rule_key: 'AFFILIATE_COMMISSION_RATE', rule_value: 15, description: 'Marka Elçisi Komisyon Oranı (%)' },
+  { rule_key: 'SECOND_ITEM_DISCOUNT', rule_value: 250, description: '2. Ürün Sepet İndirimi (TL)' },
+  { rule_key: 'VIP_COUPON_PERCENT', rule_value: 15, description: 'Sipariş Teslimat VIP İndirim Kuponu (%)' }
+]
+
 // Bütün senaryo kurallarını getirir
 export async function GET() {
   try {
-    const scenarios = await prisma.scenarioRule.findMany({
+    let scenarios = await prisma.scenarioRule.findMany({
       orderBy: { rule_key: 'asc' }
     })
+
+    // Seed defaults if empty
+    if (scenarios.length === 0) {
+      for (const r of DEFAULT_RULES) {
+        await prisma.scenarioRule.upsert({
+          where: { rule_key: r.rule_key },
+          update: {},
+          create: r
+        })
+      }
+      scenarios = await prisma.scenarioRule.findMany({ orderBy: { rule_key: 'asc' } })
+    }
+
     return NextResponse.json(scenarios)
   } catch (error) {
     console.error('Senaryolar çekilemedi:', error)
@@ -24,9 +44,10 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Eksik veri' }, { status: 400 })
     }
 
-    const updatedRule = await prisma.scenarioRule.update({
+    const updatedRule = await prisma.scenarioRule.upsert({
       where: { rule_key },
-      data: { rule_value: parseFloat(rule_value) }
+      update: { rule_value: parseFloat(rule_value) },
+      create: { rule_key, rule_value: parseFloat(rule_value), description: rule_key }
     })
 
     return NextResponse.json({ message: 'Kural başarıyla güncellendi', updatedRule })

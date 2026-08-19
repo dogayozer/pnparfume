@@ -2,8 +2,40 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 
+// In-memory rate limiting map: IP -> { attempts: number, resetAt: number }
+const loginAttempts = new Map<string, { attempts: number; resetAt: number }>()
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const record = loginAttempts.get(ip)
+
+  if (!record || now > record.resetAt) {
+    loginAttempts.set(ip, { attempts: 1, resetAt: now + 15 * 60 * 1000 })
+    return true
+  }
+
+  if (record.attempts >= 5) {
+    return false
+  }
+
+  record.attempts += 1
+  return true
+}
+
+function resetRateLimit(ip: string) {
+  loginAttempts.delete(ip)
+}
+
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown-ip'
+
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json({ 
+        error: 'Çok fazla hatalı giriş denemesi yapıldı. Güvenliğiniz için hesabınız 15 dakika kilitlendi.' 
+      }, { status: 429 })
+    }
+
     const { username, password } = await req.json()
 
     if (!username || !password) {
@@ -35,6 +67,9 @@ export async function POST(req: Request) {
     if (!isMatch) {
       return NextResponse.json({ error: 'Kullanıcı adı veya şifre hatalı' }, { status: 401 })
     }
+
+    // Reset rate limit on successful login
+    resetRateLimit(ip)
 
     return NextResponse.json({
       success: true,

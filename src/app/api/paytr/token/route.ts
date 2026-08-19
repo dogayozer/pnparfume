@@ -16,6 +16,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Ödeme altyapısı yapılandırma hatası" }, { status: 500 })
     }
 
+    // 🔴 Dynamic Affiliate Commission Rate from ScenarioRule
+    let commissionRate = 0.15
+    try {
+      const commRule = await prisma.scenarioRule.findUnique({
+        where: { rule_key: 'AFFILIATE_COMMISSION_RATE' }
+      })
+      if (commRule && commRule.is_active && commRule.rule_value > 0) {
+        commissionRate = commRule.rule_value > 1 ? commRule.rule_value / 100 : commRule.rule_value
+      }
+    } catch {}
+
     // Check referral / ambassador code
     let referrerId: string | null = null
     let affiliateEarned = 0
@@ -33,8 +44,7 @@ export async function POST(req: Request) {
       })
       if (referrer && referrer.id !== (userId || null)) {
         referrerId = referrer.id
-        // %15 Affiliate / Marka Elçisi Komisyonu
-        affiliateEarned = Math.round((totalAmount || 0) * 0.15)
+        affiliateEarned = Math.round((totalAmount || 0) * commissionRate)
         if (referrer.partner_type === 'b2b_sampler') {
           b2bSamplesEarned = 1
         }
@@ -47,7 +57,15 @@ export async function POST(req: Request) {
     // PayTR expects kuruş (multiply by 100)
     const payment_amount = Math.round(totalAmount * 100) 
 
-    // Save to Database
+    // Save to Database with explicit OrderItem records
+    const orderItemsData = Array.isArray(cart) ? cart.map((item: any) => ({
+      sku: (item.sku || item.id || '').toString(),
+      name: item.name || `PN ${item.sku}`,
+      price: Number(item.price) || 0,
+      quantity: Number(item.quantity) || 1,
+      size: item.size || '50ml'
+    })) : []
+
     const newOrder = await prisma.order.create({
       data: {
         orderNumber: merchant_oid,
@@ -65,7 +83,10 @@ export async function POST(req: Request) {
         affiliateEarned: affiliateEarned,
         b2bSamplesEarned: b2bSamplesEarned,
         combinedWithOrderId: friendOrderCode || null,
-        shippingCostDiscount: shippingFee === 0 && !friendOrderCode ? 100 : 0
+        shippingCostDiscount: shippingFee === 0 && !friendOrderCode ? 100 : 0,
+        orderItems: {
+          create: orderItemsData
+        }
       }
     })
 
@@ -135,7 +156,6 @@ export async function POST(req: Request) {
     try {
       const result = JSON.parse(resultText)
       if (result.status === 'success') {
-        // Update order with the token if needed
         await prisma.order.update({
           where: { orderNumber: merchant_oid },
           data: { paytrToken: result.token }

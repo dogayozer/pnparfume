@@ -235,9 +235,27 @@ model Order {
   device_fingerprint   String?
   
   couponUsages         CouponUsage[]
+  orderItems           OrderItem[]
 
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  sku        String
+  name       String
+  price      Float
+  quantity   Int      @default(1)
+  size       String?  // "50ml", "100ml", "10ml"
+  imageUrl   String?
+
+  createdAt  DateTime @default(now())
+
+  @@index([orderId])
+  @@index([sku])
 }
 
 model Notification {

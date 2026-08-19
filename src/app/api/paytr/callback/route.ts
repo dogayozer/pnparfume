@@ -31,21 +31,62 @@ export async function POST(req: Request) {
       return new NextResponse('OK') 
     }
 
-    if (status === 'success') {
-      const order = await prisma.order.update({
-        where: { orderNumber: merchant_oid },
-        data: { status: 'paid' }
-      })
-      console.log(`Order ${merchant_oid} paid successfully via PayTR.`)
+    // Find order
+    const existingOrder = await prisma.order.findUnique({
+      where: { orderNumber: merchant_oid },
+      include: { orderItems: true }
+    })
 
-      // Trigger Automated SMS / WhatsApp Notification
+    if (!existingOrder) {
+      console.error(`Order not found: ${merchant_oid}`)
+      return new NextResponse('OK')
+    }
+
+    // 🔴 1. IDEMPOTENCY CHECK: If already processed, return OK immediately (Prevent duplicate SMS & Commissions)
+    if (existingOrder.status === 'paid' || existingOrder.status === 'shipped' || existingOrder.status === 'delivered') {
+      console.log(`Order ${merchant_oid} already paid/processed (Idempotent callback ignore).`)
+      return new NextResponse('OK', { status: 200 })
+    }
+
+    if (status === 'success') {
+      // 🔴 2. ATOMIC STOCK REDUCTION & ORDER STATUS UPDATE IN A TRANSACTION
+      await prisma.$transaction(async (tx) => {
+        // Update order status
+        await tx.order.update({
+          where: { orderNumber: merchant_oid },
+          data: { status: 'paid' }
+        })
+
+        // Decrement stock for items
+        const rawItems = (existingOrder.items as any[]) || []
+        for (const item of rawItems) {
+          const sku = (item.sku || item.id || '').toString().trim()
+          const quantity = Number(item.quantity) || 1
+
+          if (sku) {
+            await tx.marketplaceListing.updateMany({
+              where: {
+                productId: sku,
+                stock: { gte: quantity }
+              },
+              data: {
+                stock: { decrement: quantity }
+              }
+            })
+          }
+        }
+      })
+
+      console.log(`Order ${merchant_oid} marked as paid and stock decremented.`)
+
+      // Trigger Automated SMS / WhatsApp Notification (Only once!)
       try {
         await sendOrderCreatedNotification({
           orderNumber: merchant_oid,
-          customerName: order.customerName || 'Değerli Müşterimiz',
-          phone: order.customerPhone,
-          customerId: order.customerId,
-          totalAmount: order.totalAmount
+          customerName: existingOrder.customerName || 'Değerli Müşterimiz',
+          phone: existingOrder.customerPhone,
+          customerId: existingOrder.customerId,
+          totalAmount: existingOrder.totalAmount
         })
       } catch (notifErr) {
         console.error('Notification dispatch error in PayTR callback:', notifErr)

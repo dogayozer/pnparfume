@@ -83,6 +83,21 @@ export async function PUT(req: Request) {
       }
     }
 
+    // 🔴 Refund or Cancellation: Revert affiliate commission if previously paid
+    if ((status === 'refunded' || status === 'cancelled') && currentOrder.referrerId && currentOrder.isCommissionPaid && currentOrder.affiliateEarned > 0) {
+      try {
+        await prisma.customer.update({
+          where: { id: currentOrder.referrerId },
+          data: {
+            wallet_balance: { decrement: currentOrder.affiliateEarned }
+          }
+        })
+        updateData.isCommissionPaid = false
+      } catch (e) {
+        console.error('Commission rollback error on refund:', e)
+      }
+    }
+
     const updated = await prisma.order.update({
       where: { id: orderId },
       data: updateData,

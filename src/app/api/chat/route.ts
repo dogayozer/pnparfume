@@ -8,8 +8,36 @@ import { getProductKasapImage } from '@/lib/kasapImages'
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30
 
+// In-memory rate limiting map for chat: IP -> { count: number, resetAt: number }
+const chatRateLimits = new Map<string, { count: number; resetAt: number }>()
+
+function checkChatRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const record = chatRateLimits.get(ip)
+
+  if (!record || now > record.resetAt) {
+    chatRateLimits.set(ip, { count: 1, resetAt: now + 60 * 1000 })
+    return true
+  }
+
+  if (record.count >= 20) { // max 20 messages per minute
+    return false
+  }
+
+  record.count += 1
+  return true
+}
+
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown-ip'
+    if (!checkChatRateLimit(ip)) {
+      return new Response(JSON.stringify({ 
+        text: 'Çok fazla istek gönderdiniz. Lütfen bir dakika sonra tekrar deneyin.', 
+        toolResults: [] 
+      }), { status: 429, headers: { 'Content-Type': 'application/json' } })
+    }
+
     const { messages } = await req.json()
 
     // Fetch AI Config from DB
@@ -127,7 +155,8 @@ SATIŞ KAPATMA VE İNDİRİM:
                 return { error: 'İndirim tanımlanamıyor' }
               }
               
-              const actualDiscount = Math.min(discountPercentage, discountLimit)
+              // 🔴 Hard enforce server-side discount cap
+              const actualDiscount = Math.min(Number(discountPercentage) || 10, Number(discountLimit) || 20)
               const code = 'AURA' + Math.random().toString(36).substring(2, 7).toUpperCase()
               
               await prisma.coupon.create({
@@ -135,9 +164,11 @@ SATIŞ KAPATMA VE İNDİRİM:
                   code,
                   discount_type: 'percentage',
                   value: actualDiscount,
+                  source: 'ai_aura',
                   is_ai_generated: true,
                   is_active: true,
-                  usage_limit: 1
+                  usage_limit: 1,
+                  expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours expiry
                 }
               })
 

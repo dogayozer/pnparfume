@@ -33,23 +33,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // Save to local storage and sync with account if logged in
+  // Save to local storage and sync with account if logged in (Debounced 1500ms for Neon compute savings)
   useEffect(() => {
     localStorage.setItem('pn_cart', JSON.stringify(items))
 
-    const savedUser = localStorage.getItem('user')
-    if (savedUser) {
-      try {
-        const user = JSON.parse(savedUser)
-        if (user && user.id) {
-          fetch('/api/user/cart-sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: user.id, cart: items })
-          }).catch(() => {})
-        }
-      } catch (e) {}
-    }
+    const timer = setTimeout(() => {
+      const savedUser = localStorage.getItem('user')
+      if (savedUser) {
+        try {
+          const user = JSON.parse(savedUser)
+          if (user && user.id) {
+            fetch('/api/user/cart-sync', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: user.id, cart: items })
+            }).catch(() => {})
+          }
+        } catch (e) {}
+      }
+    }, 1500)
+
+    return () => clearTimeout(timer)
   }, [items])
 
   const addToCart = (item: CartItem) => {
