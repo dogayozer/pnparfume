@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Wallet, Gift, Users, Copy, Check, Package, Clock, ShieldCheck, Info, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react'
 
@@ -37,6 +37,63 @@ const mockUser = {
 }
 
 export default function ProfilePage() {
+
+  const [user, setUser] = useState<any>(null)
+  
+  // Address Update State
+  const [addressData, setAddressData] = useState({ phone: '', address: '' })
+  const [addressMsg, setAddressMsg] = useState<{type: 'success' | 'error', text: string} | null>(null)
+  const [addressLoading, setAddressLoading] = useState(false)
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user')
+    if (savedUser) {
+      const parsed = JSON.parse(savedUser)
+      setUser(parsed)
+      setAddressData({
+        phone: parsed.phone || '',
+        address: parsed.address || ''
+      })
+    } else {
+      window.location.href = '/hesap'
+    }
+  }, [])
+
+  const handleAddressUpdate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user) return
+    
+    setAddressLoading(true)
+    setAddressMsg(null)
+    try {
+      const res = await fetch('/api/user/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          phone: addressData.phone,
+          address: addressData.address
+        })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      
+      // Update local storage
+      const updatedUser = { ...user, ...data.user }
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+      setUser(updatedUser)
+      
+      setAddressMsg({ type: 'success', text: 'Bilgileriniz başarıyla güncellendi!' })
+    } catch (err: any) {
+      setAddressMsg({ type: 'error', text: err.message || 'Güncelleme hatası' })
+    } finally {
+      setAddressLoading(false)
+    }
+  }
+
+  // Use user if available, fallback to mockUser for structure
+  const displayUser = user ? { ...mockUser, name: user.name, email: user.email } : mockUser
+
   const [copied, setCopied] = useState(false)
   const [activeTab, setActiveTab] = useState<'ozet' | 'kuponlar' | 'siparisler' | 'b2b' | 'ayarlar'>('ozet')
   
@@ -78,8 +135,8 @@ export default function ProfilePage() {
     }, 1500)
   }
 
-  const activeOrders = mockUser.orders.filter(o => o.status === 'Hazırlanıyor' || o.status === 'Kargoya Verildi')
-  const pastOrders = mockUser.orders.filter(o => o.status === 'Teslim Edildi' || o.status === 'İptal Edildi')
+  const activeOrders = displayUser.orders.filter(o => o.status === 'Hazırlanıyor' || o.status === 'Kargoya Verildi')
+  const pastOrders = displayUser.orders.filter(o => o.status === 'Teslim Edildi' || o.status === 'İptal Edildi')
 
   return (
     <div className="min-h-screen bg-background pt-24 pb-20">
@@ -91,7 +148,7 @@ export default function ProfilePage() {
 
         <div className="mb-12">
           <h1 className="text-4xl font-light tracking-wide mb-2 text-foreground">Hesabım</h1>
-          <p className="text-foreground/60 font-light">Hoş geldin, {mockUser.name}</p>
+          <p className="text-foreground/60 font-light">Hoş geldin, {displayUser.name}</p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-12">
@@ -148,7 +205,7 @@ export default function ProfilePage() {
                       <Wallet size={120} />
                     </div>
                     <p className="text-sm uppercase tracking-widest text-foreground/60 mb-2">Cüzdan Bakiyesi</p>
-                    <h2 className="text-5xl font-light text-accent-gold mb-4">{mockUser.wallet_balance} TL</h2>
+                    <h2 className="text-5xl font-light text-accent-gold mb-4">{displayUser.wallet_balance} TL</h2>
                     <p className="text-sm text-foreground/70 leading-relaxed font-light max-w-[200px]">
                       Bu bakiyeyi sonraki alışverişlerinizde kargo hariç ürün bedelinden düşebilirsiniz.
                     </p>
@@ -160,7 +217,7 @@ export default function ProfilePage() {
                       <p className="text-sm uppercase tracking-widest text-foreground/60 mb-2">Özel Davet (Elçilik) Kodunuz</p>
                       <div className="flex items-center gap-4 mt-4">
                         <div className="px-6 py-4 bg-foreground/5 border border-foreground/10 rounded-xl font-mono text-xl tracking-wider text-foreground">
-                          {mockUser.referral_code}
+                          {displayUser.referral_code}
                         </div>
                         <button 
                           onClick={copyCode}
@@ -188,12 +245,12 @@ export default function ProfilePage() {
                     <p className="text-foreground/60 text-sm mt-1 font-light">Size özel tanımlanan hediye kodları ve davetiyeler.</p>
                   </div>
                   <div className="bg-accent-gold/10 text-accent-gold px-4 py-2 rounded-full text-sm font-medium">
-                    {mockUser.coupons.length} Aktif Kupon
+                    {displayUser.coupons.length} Aktif Kupon
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {mockUser.coupons.map((coupon, i) => (
+                  {displayUser.coupons.map((coupon, i) => (
                     <div key={i} className="border border-foreground/10 border-dashed rounded-2xl p-6 relative overflow-hidden bg-background">
                       <div className="absolute -right-4 -top-4 w-16 h-16 bg-accent-rose/10 rounded-full blur-xl"></div>
                       <div className="flex justify-between items-start mb-6">
@@ -303,7 +360,47 @@ export default function ProfilePage() {
                   <p className="text-foreground/60 text-sm font-light">Şifrenizi ve hesap güvenliğinizi buradan yönetebilirsiniz.</p>
                 </div>
 
-                <div className="bg-background border border-foreground/10 rounded-3xl p-8">
+                
+                  <div className="bg-background border border-foreground/10 rounded-3xl p-8 mb-8">
+                    <h3 className="text-lg font-medium mb-6">İletişim ve Teslimat Bilgileri</h3>
+                    
+                    {addressMsg && (
+                      <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 text-sm border ${addressMsg.type === 'success' ? 'bg-green-500/10 text-green-700 border-green-500/20' : 'bg-red-500/10 text-red-700 border-red-500/20'}`}>
+                        <AlertCircle size={18} /> <span>{addressMsg.text}</span>
+                      </div>
+                    )}
+
+                    <form onSubmit={handleAddressUpdate} className="space-y-5">
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-foreground/80">Telefon Numarası</label>
+                        <input 
+                          type="tel"
+                          required
+                          value={addressData.phone}
+                          onChange={e => setAddressData({...addressData, phone: e.target.value})}
+                          className="w-full bg-foreground/5 border border-transparent focus:border-accent-gold focus:bg-background rounded-xl px-4 py-3 text-foreground transition-colors outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-foreground/80">Açık Adres (Siparişler için)</label>
+                        <textarea 
+                          required
+                          rows={3}
+                          value={addressData.address}
+                          onChange={e => setAddressData({...addressData, address: e.target.value})}
+                          className="w-full bg-foreground/5 border border-transparent focus:border-accent-gold focus:bg-background rounded-xl px-4 py-3 text-foreground transition-colors outline-none resize-none"
+                          placeholder="Mahalle, Sokak, No, Daire, İlçe/İl"
+                        />
+                      </div>
+                      <div className="pt-2">
+                        <button disabled={addressLoading} type="submit" className="w-full bg-foreground text-background py-3 rounded-xl font-medium hover:bg-accent-gold transition-colors disabled:opacity-50">
+                          {addressLoading ? 'Güncelleniyor...' : 'Bilgilerimi Kaydet'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+
+                  <div className="bg-background border border-foreground/10 rounded-3xl p-8">
                   <h3 className="text-lg font-medium mb-6">Şifre Değiştirme</h3>
                   
                   {pwdMsg && (

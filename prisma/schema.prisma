@@ -114,6 +114,7 @@ model Customer {
   password          String?
   phone             String?  // WhatsApp bildirimleri için
   name              String?
+  address           String?
   
   // Demografi & Profilleme
   birth_year        Int?     // Kayıtta zorunlu hale getirilecek (UI seviyesinde)

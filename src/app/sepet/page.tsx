@@ -20,6 +20,7 @@ export default function CartPage() {
   const [timeLeft, setTimeLeft] = useState(3599) // 59:59
   const [selectedTester, setSelectedTester] = useState<string | null>(null)
 
+
   // Checkout Modal & PayTR State
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false)
   const [checkoutForm, setCheckoutForm] = useState({
@@ -28,6 +29,23 @@ export default function CartPage() {
     phone: '',
     address: ''
   })
+  
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user')
+    if (savedUser) {
+      try {
+        const user = JSON.parse(savedUser)
+        setCheckoutForm(prev => ({
+          ...prev,
+          name: user.name || prev.name,
+          email: user.email || prev.email,
+          phone: user.phone || prev.phone,
+          address: user.address || prev.address
+        }))
+      } catch (e) {}
+    }
+  }, [])
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [paytrToken, setPaytrToken] = useState<string | null>(null)
 
