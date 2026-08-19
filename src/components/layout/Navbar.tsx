@@ -38,8 +38,18 @@ export default function Navbar() {
     }
   }, [])
 
-  // Close mobile menu on route change
+  // Capture referral code from URL
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const ref = params.get('ref') || params.get('elci')
+      if (ref) {
+        localStorage.setItem('pn_referral_code', ref.trim().toUpperCase())
+      }
+    }
+  }, [])
 
+  // Close mobile menu on route change
   useEffect(() => {
     setIsMobileMenuOpen(false)
   }, [pathname])

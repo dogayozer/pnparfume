@@ -9,6 +9,9 @@ export async function GET() {
         customer: {
           select: { id: true, name: true, email: true, phone: true }
         },
+        referrer: {
+          select: { id: true, name: true, email: true, phone: true, referral_code: true, partner_type: true }
+        },
         coupon: {
           select: { code: true, value: true, discount_type: true }
         }
@@ -31,11 +34,32 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: 'Sipariş ID gereklidir' }, { status: 400 })
     }
 
+    const currentOrder = await prisma.order.findUnique({
+      where: { id: orderId }
+    })
+
+    if (!currentOrder) {
+      return NextResponse.json({ error: 'Sipariş bulunamadı' }, { status: 404 })
+    }
+
     const updateData: any = {}
     if (status !== undefined) updateData.status = status
     if (cargoCompany !== undefined) updateData.cargoCompany = cargoCompany
     if (trackingCode !== undefined) updateData.trackingCode = trackingCode
     if (customerAddress !== undefined) updateData.customerAddress = customerAddress
+
+    // Check if status changed to 'delivered' and commission needs to be paid
+    if ((status === 'delivered' || status === 'paid') && currentOrder.referrerId && !currentOrder.isCommissionPaid && currentOrder.affiliateEarned > 0) {
+      // Pay commission to ambassador
+      await prisma.customer.update({
+        where: { id: currentOrder.referrerId },
+        data: {
+          wallet_balance: { increment: currentOrder.affiliateEarned },
+          earned_samples: currentOrder.b2bSamplesEarned > 0 ? { increment: currentOrder.b2bSamplesEarned } : undefined
+        }
+      })
+      updateData.isCommissionPaid = true
+    }
 
     const updated = await prisma.order.update({
       where: { id: orderId },
@@ -43,6 +67,9 @@ export async function PUT(req: Request) {
       include: {
         customer: {
           select: { id: true, name: true, email: true, phone: true }
+        },
+        referrer: {
+          select: { id: true, name: true, email: true, phone: true, referral_code: true }
         },
         coupon: {
           select: { code: true, value: true, discount_type: true }

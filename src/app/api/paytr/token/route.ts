@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { customer, cart, totalAmount, discountApplied, shippingFee, couponCode, friendOrderCode } = body
+    const { customer, cart, totalAmount, discountApplied, shippingFee, couponCode, friendOrderCode, userId, referralCode } = body
 
     const merchant_id = process.env.PAYTR_MERCHANT_ID
     const merchant_key = process.env.PAYTR_MERCHANT_KEY
@@ -14,6 +14,31 @@ export async function POST(req: Request) {
     if (!merchant_id || !merchant_key || !merchant_salt) {
       console.error("PayTR credentials missing in .env")
       return NextResponse.json({ error: "Ödeme altyapısı yapılandırma hatası" }, { status: 500 })
+    }
+
+    // Check referral / ambassador code
+    let referrerId: string | null = null
+    let affiliateEarned = 0
+    let b2bSamplesEarned = 0
+    const cleanRef = referralCode ? referralCode.trim().toUpperCase() : null
+
+    if (cleanRef) {
+      const referrer = await prisma.customer.findFirst({
+        where: {
+          OR: [
+            { referral_code: cleanRef },
+            { referral_code: referralCode.trim() }
+          ]
+        }
+      })
+      if (referrer && referrer.id !== (userId || null)) {
+        referrerId = referrer.id
+        // %15 Affiliate / Marka Elçisi Komisyonu
+        affiliateEarned = Math.round((totalAmount || 0) * 0.15)
+        if (referrer.partner_type === 'b2b_sampler') {
+          b2bSamplesEarned = 1
+        }
+      }
     }
 
     // Generate Order ID
@@ -34,7 +59,11 @@ export async function POST(req: Request) {
         customerEmail: customer.email,
         customerPhone: customer.phone,
         customerAddress: customer.address,
-          customerId: userId || null,
+        customerId: userId || null,
+        referrerId: referrerId,
+        referralCode: cleanRef,
+        affiliateEarned: affiliateEarned,
+        b2bSamplesEarned: b2bSamplesEarned,
         combinedWithOrderId: friendOrderCode || null,
         shippingCostDiscount: shippingFee === 0 && !friendOrderCode ? 100 : 0
       }
@@ -71,7 +100,7 @@ export async function POST(req: Request) {
     // Generate Token (Data = hash_str + merchant_salt, Key = merchant_key)
     const paytr_token = crypto.createHmac('sha256', merchant_key).update(hash_str + merchant_salt).digest('base64')
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://pnparfume.com'
 
     const formData = new URLSearchParams()
     formData.append('merchant_id', merchant_id)

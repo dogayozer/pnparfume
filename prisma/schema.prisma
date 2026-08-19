@@ -136,7 +136,8 @@ model Customer {
 
   coupons           Coupon[] // Kullanıcının Kupon Kasası
   couponUsages      CouponUsage[]
-  orders            Order[]
+  orders            Order[]       @relation("CustomerOrders")
+  referredOrders    Order[]       @relation("ReferralOrders")
   notifications     Notification[]
   
   // Oturum & Canlı Sepet Takibi
@@ -191,7 +192,12 @@ model Order {
   orderNumber          String   @unique
   
   customerId           String?
-  customer             Customer? @relation(fields: [customerId], references: [id])
+  customer             Customer? @relation("CustomerOrders", fields: [customerId], references: [id])
+  
+  referrerId           String?
+  referrer             Customer? @relation("ReferralOrders", fields: [referrerId], references: [id])
+  referralCode         String?
+  isCommissionPaid     Boolean   @default(false)
   
   couponId             String?
   coupon               Coupon?   @relation(fields: [couponId], references: [id])

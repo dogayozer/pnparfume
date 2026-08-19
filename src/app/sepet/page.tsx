@@ -98,13 +98,14 @@ export default function CartPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           customer: checkoutForm,
-            userId: JSON.parse(localStorage.getItem('user') || '{}').id || null,
+          userId: JSON.parse(localStorage.getItem('user') || '{}').id || null,
           cart: items,
           totalAmount: total,
           discountApplied: multiItemDiscount + couponDiscount,
           shippingFee: shippingFee,
           couponCode: appliedCoupon?.code,
-          friendOrderCode: shippingDiscountApplied ? friendOrderCode : null
+          friendOrderCode: shippingDiscountApplied ? friendOrderCode : null,
+          referralCode: localStorage.getItem('pn_referral_code') || appliedCoupon?.code || null
         })
       })
 
