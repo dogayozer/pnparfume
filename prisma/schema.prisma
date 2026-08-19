@@ -194,6 +194,14 @@ model Order {
   totalAmount          Float
   discountApplied      Float     @default(0)
   
+  // PayTR & Guest Checkout
+  items                Json?
+  customerName         String?
+  customerEmail        String?
+  customerPhone        String?
+  customerAddress      String?
+  paytrToken           String?
+  
   // Paydaş Ekonomisi (Kargo Birleştirme)
   combinedWithOrderId  String? // Arkadaşının kargo numarası
   shippingCostDiscount Float    @default(0) // Anında kargo indirimi
@@ -205,7 +213,7 @@ model Order {
   // Yapay zeka asistanı tarafından mı satıldı?
   ai_assisted          Boolean   @default(false)
   
-  status               String    @default("processing") // pending, processing, shipped, delivered, cancelled
+  status               String    @default("pending") // pending, processing, paid, shipped, delivered, cancelled
   
   // Fraud Kontrolü (Sahtekarlık ve Self-referral önleme)
   ip_address           String?
