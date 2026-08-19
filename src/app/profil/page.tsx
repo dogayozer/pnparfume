@@ -441,21 +441,7 @@ export default function ProfilePage() {
                           </div>
                         </div>
                       </div>
-
-                      {/* Sipariş İçeriği (Yeni eklendi) */}
-                      <div className="w-full">
-                        <p className="text-xs uppercase tracking-widest text-foreground/50 mb-3">Sipariş İçeriği</p>
-                        <ul className="space-y-2">
-                          {order.items.map((item, idx) => (
-                            <li key={idx} className="flex justify-between items-center text-sm">
-                              <span className="text-foreground/80 font-light">{item.name}</span>
-                              <span className="font-mono text-xs text-foreground/40">{item.sku}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
 
                   {(orderSubTab === 'aktif' ? activeOrders : pastOrders).length === 0 && (
                     <div className="text-center py-12 text-foreground/40 font-light">
