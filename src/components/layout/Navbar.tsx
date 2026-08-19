@@ -13,6 +13,8 @@ const KURUMSAL_TEXTS = ['Kurumsal', 'İş Ortaklığı', 'Dijital Bayilik']
 export default function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [user, setUser] = useState<any>(null)
+
   const { items, setIsCartOpen } = useCart()
   const [kurumsalIndex, setKurumsalIndex] = useState(0)
   const pathname = usePathname()
@@ -26,7 +28,18 @@ export default function Navbar() {
     return () => clearInterval(interval)
   }, [])
 
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user')
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser))
+      } catch (e) {}
+    }
+  }, [])
+
   // Close mobile menu on route change
+
   useEffect(() => {
     setIsMobileMenuOpen(false)
   }, [pathname])
@@ -81,9 +94,16 @@ export default function Navbar() {
           >
             <Search size={20} />
           </button>
-          <Link href="/hesap" className="hidden sm:block p-1.5 md:p-2 text-foreground/80 hover:text-accent-gold transition-colors">
-            <User size={20} />
-          </Link>
+          {user ? (
+            <Link href="/profil" className="hidden sm:flex items-center gap-2 p-1.5 md:p-2 text-foreground/80 hover:text-accent-gold transition-colors text-xs font-medium uppercase tracking-widest">
+              <User size={18} />
+              <span className="hidden lg:inline">{user.name.split(' ')[0]}</span>
+            </Link>
+          ) : (
+            <Link href="/hesap" className="hidden sm:block p-1.5 md:p-2 text-foreground/80 hover:text-accent-gold transition-colors">
+              <User size={20} />
+            </Link>
+          )}
           <button 
             onClick={() => setIsCartOpen(true)}
             className="p-1.5 md:p-2 text-foreground/80 hover:text-accent-gold transition-colors relative"
@@ -144,10 +164,17 @@ export default function Navbar() {
             <Link href="/kurumsal/girisimcilere-ozel" className="border-b border-foreground/10 pb-4">
               Kurumsal & Bayilik
             </Link>
-            <Link href="/hesap" className="border-b border-foreground/10 pb-4 flex items-center gap-3">
-              <User size={24} />
-              Hesabım
-            </Link>
+            {user ? (
+              <Link href="/profil" className="border-b border-foreground/10 pb-4 flex items-center gap-3">
+                <User size={24} />
+                {user.name} (Profil)
+              </Link>
+            ) : (
+              <Link href="/hesap" className="border-b border-foreground/10 pb-4 flex items-center gap-3">
+                <User size={24} />
+                Hesabım
+              </Link>
+            )}
           </nav>
 
           <div className="mt-auto pt-12 flex flex-col gap-4">

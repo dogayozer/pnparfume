@@ -106,6 +106,12 @@ export default function ProfilePage() {
   const [pwdLoading, setPwdLoading] = useState(false)
   const [pwdMsg, setPwdMsg] = useState<{type: 'success' | 'error', text: string} | null>(null)
 
+
+  const handleLogout = () => {
+    localStorage.removeItem('user')
+    window.location.href = '/'
+  }
+
   const copyCode = () => {
     navigator.clipboard.writeText(mockUser.referral_code)
     setCopied(true)
@@ -470,7 +476,21 @@ export default function ProfilePage() {
                     </div>
                   </form>
                 </div>
-              </div>
+              
+                    <div className="mt-8 pt-8 border-t border-foreground/10 flex justify-between items-center">
+                      <div>
+                        <h3 className="text-lg font-medium text-red-600">Oturumu Kapat</h3>
+                        <p className="text-sm text-foreground/60 mt-1">Geçerli cihazdan güvenle çıkış yapın.</p>
+                      </div>
+                      <button 
+                        onClick={handleLogout}
+                        className="bg-red-500/10 text-red-600 px-6 py-3 rounded-xl font-medium hover:bg-red-500 hover:text-white transition-colors"
+                      >
+                        Çıkış Yap
+                      </button>
+                    </div>
+                  </div>
+
             )}
 
             {activeTab === 'b2b' && (
