@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     }
 
     // Generate Order ID
-    const merchant_oid = 'PN-' + Date.now() + Math.floor(Math.random() * 1000)
+    const merchant_oid = 'PN' + Date.now() + Math.floor(Math.random() * 1000)
     
     // PayTR expects kuruş (multiply by 100)
     const payment_amount = Math.round(totalAmount * 100) 
