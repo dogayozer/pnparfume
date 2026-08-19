@@ -312,3 +312,13 @@ model AiConfig {
   
   updatedAt         DateTime @updatedAt
 }
+
+model AdminUser {
+  id        String   @id @default(cuid())
+  username  String   @unique @default("admin")
+  password  String   // bcrypt hashed
+  name      String   @default("PN Yönetici")
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

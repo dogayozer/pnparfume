@@ -1,0 +1,110 @@
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import bcrypt from 'bcryptjs'
+
+export async function POST(req: Request) {
+  try {
+    const { username, password } = await req.json()
+
+    if (!username || !password) {
+      return NextResponse.json({ error: 'Kullanıcı adı ve şifre gereklidir' }, { status: 400 })
+    }
+
+    // Check if any admin exists, if not seed default admin
+    let admin = await prisma.adminUser.findFirst({
+      where: { username }
+    })
+
+    if (!admin) {
+      const totalAdmins = await prisma.adminUser.count()
+      if (totalAdmins === 0 && username === 'admin') {
+        const hashedPassword = await bcrypt.hash('pn2026!', 10)
+        admin = await prisma.adminUser.create({
+          data: {
+            username: 'admin',
+            password: hashedPassword,
+            name: 'PN Yönetici'
+          }
+        })
+      } else {
+        return NextResponse.json({ error: 'Kullanıcı adı veya şifre hatalı' }, { status: 401 })
+      }
+    }
+
+    const isMatch = await bcrypt.compare(password, admin.password)
+    if (!isMatch) {
+      return NextResponse.json({ error: 'Kullanıcı adı veya şifre hatalı' }, { status: 401 })
+    }
+
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: admin.id,
+        username: admin.username,
+        name: admin.name
+      },
+      token: `admin_session_${admin.id}_${Date.now()}`
+    })
+  } catch (error) {
+    console.error('Admin login error:', error)
+    return NextResponse.json({ error: 'Sunucu hatası oluştu' }, { status: 500 })
+  }
+}
+
+export async function PUT(req: Request) {
+  try {
+    const { currentPassword, newUsername, newPassword, newName } = await req.json()
+
+    if (!currentPassword) {
+      return NextResponse.json({ error: 'Mevcut şifrenizi girmelisiniz' }, { status: 400 })
+    }
+
+    // Get primary admin
+    let admin = await prisma.adminUser.findFirst()
+
+    if (!admin) {
+      // Create with default first
+      const hashedPassword = await bcrypt.hash('pn2026!', 10)
+      admin = await prisma.adminUser.create({
+        data: {
+          username: 'admin',
+          password: hashedPassword,
+          name: 'PN Yönetici'
+        }
+      })
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, admin.password)
+    if (!isMatch) {
+      return NextResponse.json({ error: 'Mevcut şifreniz hatalı' }, { status: 401 })
+    }
+
+    const updateData: any = {}
+    if (newUsername && newUsername.trim()) updateData.username = newUsername.trim()
+    if (newName && newName.trim()) updateData.name = newName.trim()
+    if (newPassword && newPassword.trim()) {
+      if (newPassword.trim().length < 6) {
+        return NextResponse.json({ error: 'Yeni şifre en az 6 karakter olmalıdır' }, { status: 400 })
+      }
+      updateData.password = await bcrypt.hash(newPassword.trim(), 10)
+    }
+
+    const updated = await prisma.adminUser.update({
+      where: { id: admin.id },
+      data: updateData
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: 'Yönetici hesap bilgileri başarıyla güncellendi',
+      user: {
+        id: updated.id,
+        username: updated.username,
+        name: updated.name
+      }
+    })
+  } catch (error) {
+    console.error('Admin update error:', error)
+    return NextResponse.json({ error: 'Hesap bilgileri güncellenemedi' }, { status: 500 })
+  }
+}

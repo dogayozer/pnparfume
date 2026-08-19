@@ -5,9 +5,10 @@ import {
   Settings, Save, AlertCircle, RefreshCw, Box, Users, TrendingUp, 
   Sparkles, Server, PackagePlus, UploadCloud, Percent, Truck, 
   CheckCircle, Clock, XCircle, ExternalLink, MessageCircle, Eye, 
-  Search, Filter, MapPin, User, Phone, Mail, Calendar, ChevronRight, 
+  EyeOff, Search, Filter, MapPin, User, Phone, Mail, Calendar, ChevronRight, 
   X, Package, Check, Copy, ArrowRight, ShoppingCart, Award, Gift, 
-  CreditCard, Tag, Edit3, ShieldCheck
+  CreditCard, Tag, Edit3, ShieldCheck, Key, Lock, History, Info, 
+  CheckSquare, Square
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 
@@ -74,6 +75,116 @@ const CARGO_COMPANIES = [
   'Özel Kurye / Diğer'
 ]
 
+// Sistem Versiyon ve Değişiklik Günlüğü (Changelog)
+const SYSTEM_VERSION = 'v2.5.0'
+const SYSTEM_BUILD_DATE = '2026.08.20'
+const CHANGELOG = [
+  {
+    version: 'v2.5.0',
+    code: 'MAJOR-20260820-A',
+    date: '20.08.2026',
+    type: 'Büyük Değişim (Major)',
+    badgeColor: 'bg-rose-50 text-rose-700 border-rose-200',
+    title: 'Admin Güvenlik & Versiyon Takip Sistemi',
+    changes: [
+      'Admin girişinde şifre gizle/göster (göz ikonu) ve "Beni Hatırla" kalıcı oturum özelliği eklendi.',
+      'Admin kendi kullanıcı adı ve şifresini yönetebilme / değiştirebilme paneli (AdminUser DB modeli) eklendi.',
+      'Sistem sürüm ve küçük/büyük değişim kodlarının takip edildiği interaktif Versiyon Günlüğü (Changelog) oluşturuldu.'
+    ]
+  },
+  {
+    version: 'v2.4.2',
+    code: 'MINOR-20260820-B',
+    date: '20.08.2026',
+    type: 'Özellik (Minor)',
+    badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    title: 'Müşteriler & Marka Elçileri Yönetimi',
+    changes: [
+      'Hesap adı soyadı, telefon, e-posta, sisteme son giriş tarihi takibi.',
+      'Canlı sepet doluluk ve terk edilmiş sepet tespiti (ürünler, adetler, sepet tutarı).',
+      'Müşteriye tek tıkla sepet hatırlatması veya destek içeren doğrudan WhatsApp mesajı açma butonu.',
+      'Influencer marka elçisi komisyon cüzdanı ve B2B tester hak ediş kotası düzenleme paneli.'
+    ]
+  },
+  {
+    version: 'v2.4.0',
+    code: 'MAJOR-20260820-C',
+    date: '20.08.2026',
+    type: 'Büyük Değişim (Major)',
+    badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
+    title: 'Sipariş Yönetimi & Lojistik Takip Modülü',
+    changes: [
+      'Tüm siparişlerin listelendiği, filtrelendiği ve arandığı yeni Sipariş Yönetimi sekmesi.',
+      'Kargo firması seçimi ve Kargo Takip Kodu tanımlama penceresi.',
+      'Sipariş durumu akışı: İşleme Al (Hazırlanıyor), Kargoya Verildi, Teslim Edildi, İptal.',
+      'Müşteri profilinde kargo firması ve takip numarasının anlık gösterimi.'
+    ]
+  },
+  {
+    version: 'v2.3.5',
+    code: 'PATCH-20260819-A',
+    date: '19.08.2026',
+    type: 'Geliştirme / Düzeltme (Patch)',
+    badgeColor: 'bg-blue-50 text-blue-700 border-blue-200',
+    title: 'Görsel Dağıtım & Sepet Kampanya Optimizasyonu',
+    changes: [
+      'kasaptanetyiyelim.com/pnio görsel kaynağı için SSL uyumlu HTTPS Proxy API rotası geliştirildi.',
+      'Çok satanlar ve katalog ürünleri yeni yüksek kaliteli parfüm görselleriyle dinamik eşleştirildi.',
+      'Sepet VIP hoşgeldin indirim sayacı 10 dakikaya (600s) ayarlandı.'
+    ]
+  },
+  {
+    version: 'v2.3.0',
+    code: 'MAJOR-20260818-A',
+    date: '18.08.2026',
+    type: 'Büyük Değişim (Major)',
+    badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    title: 'PayTR Canlı Sanal POS & Müşteri Adres Yönetimi',
+    changes: [
+      'PayTR HMAC-SHA256 token imzalama algoritması canlı API standartlarına göre optimize edildi.',
+      'Müşteri profil sayfasında teslimat adresi güncelleme ve aktif sipariş adresi düzenleme özelliği eklendi.',
+      'Dinamik Navbar kullanıcı oturum durumu entegre edildi.'
+    ]
+  },
+  {
+    version: 'v2.2.0',
+    code: 'MINOR-20260817-A',
+    date: '17.08.2026',
+    type: 'Özellik (Minor)',
+    badgeColor: 'bg-amber-50 text-amber-700 border-amber-200',
+    title: 'Excel Toplu Ürün Aktarımı & Toplu Fiyatlandırma',
+    changes: [
+      'Chunking algoritması ile binlerce ürünün Excel dosyalarından sisteme tek tıkla aktarımı.',
+      'Pazaryerleri ve ana site için tek tıkla % Zam / % İndirim toplu fiyat güncelleme motoru.'
+    ]
+  },
+  {
+    version: 'v2.1.0',
+    code: 'MINOR-20260816-A',
+    date: '16.08.2026',
+    type: 'Özellik (Minor)',
+    badgeColor: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+    title: 'Pazaryeri & Bayi API Entegrasyonları',
+    changes: [
+      'Trendyol ve Hepsiburada mağaza satıcı API anahtarları yönetimi.',
+      'Pazaryeri sipariş senkronizasyonu ve kargo takip numarası eşleme.'
+    ]
+  },
+  {
+    version: 'v2.0.0',
+    code: 'MAJOR-20260815-A',
+    date: '15.08.2026',
+    type: 'Büyük Değişim (Major)',
+    badgeColor: 'bg-slate-50 text-slate-700 border-slate-200',
+    title: 'PN Parfüm Core Platformu & Nöropazarlama Mimarisi',
+    changes: [
+      'Next.js 16 App Router & PostgreSQL Neon DB tam entegrasyonu.',
+      'Yapay Zeka Koku Asistanı (Aura) & Koku Piramidi algoritması.',
+      'Dinamik Senaryo Kuralları ve arkadaş kargo birleştirme mimarisi.'
+    ]
+  }
+]
+
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'scenarios' | 'ai' | 'orders' | 'customers' | 'reports' | 'api' | 'products'>('orders')
   const [loading, setLoading] = useState(false)
@@ -82,9 +193,24 @@ export default function AdminDashboard() {
 
   // Auth states
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [username, setUsername] = useState('')
+  const [username, setUsername] = useState('admin')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(true)
   const [loginError, setLoginError] = useState('')
+  const [adminUser, setAdminUser] = useState<{ id?: string, username?: string, name?: string } | null>(null)
+
+  // Modals
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [showVersionModal, setShowVersionModal] = useState(false)
+  
+  // Password Change Form States
+  const [currentPassInput, setCurrentPassInput] = useState('')
+  const [newUsernameInput, setNewUsernameInput] = useState('')
+  const [newPassInput, setNewPassInput] = useState('')
+  const [newPassConfirm, setNewPassConfirm] = useState('')
+  const [showCurrentPass, setShowCurrentPass] = useState(false)
+  const [showNewPass, setShowNewPass] = useState(false)
 
   // Data states
   const [rules, setRules] = useState<ScenarioRule[]>([])
@@ -136,6 +262,20 @@ export default function AdminDashboard() {
 
   const showMsg = (type: 'success'|'error', text: string) => { setMessage({type, text}); setTimeout(() => setMessage(null), 4000) }
 
+  // Check saved session on mount ("Beni Hatırla")
+  useEffect(() => {
+    const savedSession = localStorage.getItem('pn_admin_session')
+    const savedUser = localStorage.getItem('pn_admin_user')
+    if (savedSession && savedUser) {
+      try {
+        setAdminUser(JSON.parse(savedUser))
+        setIsAuthenticated(true)
+      } catch (e) {
+        localStorage.removeItem('pn_admin_session')
+      }
+    }
+  }, [])
+
   const fetchData = async (endpoint: string, setter: any) => {
     setLoading(true)
     try {
@@ -157,6 +297,90 @@ export default function AdminDashboard() {
       fetchData('/api/admin/marketplace/orders', setMarketOrders)
     }
   }, [activeTab, isAuthenticated])
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoginError('')
+    setLoading(true)
+
+    try {
+      const res = await fetch('/api/admin/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      })
+
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setIsAuthenticated(true)
+        setAdminUser(data.user)
+        setNewUsernameInput(data.user.username || 'admin')
+        
+        // Handle "Beni Hatırla"
+        if (rememberMe) {
+          localStorage.setItem('pn_admin_session', data.token)
+          localStorage.setItem('pn_admin_user', JSON.stringify(data.user))
+        } else {
+          localStorage.removeItem('pn_admin_session')
+          localStorage.removeItem('pn_admin_user')
+        }
+      } else {
+        setLoginError(data.error || 'Kullanıcı adı veya şifre hatalı.')
+      }
+    } catch (err) {
+      setLoginError('Bağlantı hatası oluştu.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('pn_admin_session')
+    localStorage.removeItem('pn_admin_user')
+    setIsAuthenticated(false)
+    setPassword('')
+    setAdminUser(null)
+  }
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (newPassInput && newPassInput !== newPassConfirm) {
+      showMsg('error', 'Yeni şifre ve şifre tekrarı uyuşmuyor.')
+      return
+    }
+
+    setSavingId('change_pass')
+    try {
+      const res = await fetch('/api/admin/auth', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: currentPassInput,
+          newUsername: newUsernameInput,
+          newPassword: newPassInput
+        })
+      })
+
+      const data = await res.json()
+      if (res.ok && data.success) {
+        showMsg('success', 'Yönetici giriş bilgileri başarıyla güncellendi.')
+        setAdminUser(data.user)
+        if (rememberMe) {
+          localStorage.setItem('pn_admin_user', JSON.stringify(data.user))
+        }
+        setShowPasswordModal(false)
+        setCurrentPassInput('')
+        setNewPassInput('')
+        setNewPassConfirm('')
+      } else {
+        showMsg('error', data.error || 'Şifre güncellenemedi.')
+      }
+    } catch {
+      showMsg('error', 'Sunucu hatası oluştu.')
+    } finally {
+      setSavingId(null)
+    }
+  }
 
   const handleUpdateRule = async (rule_key: string, newValue: number) => {
     setSavingId(rule_key)
@@ -470,29 +694,36 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (username === 'admin' && password === 'pn2026!') {
-      setIsAuthenticated(true)
-      setLoginError('')
-    } else {
-      setLoginError('Kullanıcı adı veya şifre hatalı.')
-    }
-  }
-
+  // ===================== GIRIS EKRANI =====================
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-xl max-w-md w-full p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900">PN Parfüm Yönetim</h1>
-            <p className="text-sm text-gray-500 mt-1">Lütfen devam etmek için giriş yapın</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 flex items-center justify-center p-6">
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-2xl max-w-md w-full p-8 md:p-10 relative overflow-hidden">
+          {/* Top Version Indicator */}
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md">PN</div>
+              <span className="font-bold text-gray-900 text-base">PN Parfüm</span>
+            </div>
+            <button 
+              onClick={() => setShowVersionModal(true)} 
+              className="inline-flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-mono font-semibold px-2.5 py-1 rounded-full transition-colors"
+            >
+              <Info size={12} /> {SYSTEM_VERSION}
+            </button>
           </div>
+
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-gray-900">Yönetici Paneli</h1>
+            <p className="text-xs text-gray-500 mt-1">Lütfen devam etmek için oturum açın</p>
+          </div>
+
           {loginError && (
-            <div className="mb-6 p-4 rounded-xl bg-red-50 text-red-600 border border-red-200 text-sm flex items-center gap-2">
-              <AlertCircle size={18} /> {loginError}
+            <div className="mb-6 p-4 rounded-xl bg-red-50 text-red-700 border border-red-200 text-xs flex items-center gap-2">
+              <AlertCircle size={16} /> {loginError}
             </div>
           )}
+
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wider">Kullanıcı Adı</label>
@@ -505,34 +736,131 @@ export default function AdminDashboard() {
                 required 
               />
             </div>
+
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wider">Şifre</label>
-              <input 
-                type="password" 
-                value={password} 
-                onChange={e => setPassword(e.target.value)} 
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-                placeholder="••••••••" 
-                required 
-              />
+              <div className="relative">
+                <input 
+                  type={showPassword ? 'text' : 'password'} 
+                  value={password} 
+                  onChange={e => setPassword(e.target.value)} 
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-4 pr-11 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" 
+                  placeholder="••••••••" 
+                  required 
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                  title={showPassword ? 'Şifreyi Gizle' : 'Şifreyi Göster'}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
-            <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-xl transition-colors mt-2">
-              Giriş Yap
+
+            {/* Beni Hatırla */}
+            <div className="flex items-center justify-between pt-1">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input 
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={e => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
+                />
+                <span className="text-xs text-gray-600 font-medium">Beni Hatırla</span>
+              </label>
+
+              <button 
+                type="button" 
+                onClick={() => setShowVersionModal(true)} 
+                className="text-[11px] text-gray-400 hover:text-indigo-600 transition-colors"
+              >
+                Sürüm Detayları
+              </button>
+            </div>
+
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-xl transition-colors mt-2 shadow-lg shadow-indigo-600/20 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+            >
+              {loading ? <RefreshCw className="animate-spin" size={16} /> : null}
+              {loading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
             </button>
           </form>
         </div>
+
+        {/* Versiyon Modalı (Login ekranı için) */}
+        {showVersionModal && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
+              <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                <div className="flex items-center gap-3">
+                  <History className="text-indigo-600" size={22} />
+                  <div>
+                    <h3 className="font-bold text-gray-900">PN Parfüm Sürüm & Değişiklik Günlüğü</h3>
+                    <p className="text-xs text-gray-500">Güncel Sürüm: {SYSTEM_VERSION} (Build {SYSTEM_BUILD_DATE})</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowVersionModal(false)} className="p-2 text-gray-400 hover:text-gray-700 rounded-full">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="p-6 overflow-y-auto space-y-6 flex-1">
+                {CHANGELOG.map((rel, idx) => (
+                  <div key={idx} className="bg-gray-50/80 rounded-2xl p-5 border border-gray-100 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-gray-900 text-base">{rel.version}</span>
+                        <span className="font-mono text-[11px] bg-gray-200 text-gray-700 px-2 py-0.5 rounded font-semibold">{rel.code}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${rel.badgeColor}`}>{rel.type}</span>
+                        <span className="text-xs text-gray-400 font-mono">{rel.date}</span>
+                      </div>
+                    </div>
+
+                    <h4 className="text-sm font-semibold text-gray-800">{rel.title}</h4>
+
+                    <ul className="space-y-1.5 text-xs text-gray-600 list-disc list-inside">
+                      {rel.changes.map((c, cIdx) => (
+                        <li key={cIdx}>{c}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     )
   }
 
+  // ===================== ANA ADMIN ARAYUZU =====================
   return (
     <div className="min-h-screen bg-gray-50/50 flex">
       {/* Sol Sidebar */}
       <div className="w-64 bg-white border-r border-gray-200 p-6 flex flex-col justify-between">
         <div>
-          <div className="flex items-center gap-3 mb-8 px-2">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold tracking-wider text-sm">PN</div>
-            <span className="font-semibold text-gray-900">PN Panel</span>
+          <div className="flex items-center justify-between mb-8 px-2">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold tracking-wider text-sm shadow">PN</div>
+              <div>
+                <span className="font-bold text-gray-900 text-sm block">PN Panel</span>
+                <span className="text-[10px] text-gray-400 font-mono">{SYSTEM_VERSION}</span>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setShowVersionModal(true)} 
+              className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+              title="Sürüm Geçmişi (Changelog)"
+            >
+              <History size={16} />
+            </button>
           </div>
           
           <nav className="space-y-1">
@@ -597,9 +925,23 @@ export default function AdminDashboard() {
           </nav>
         </div>
 
-        <div className="pt-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
-          <span>PN Parfüm v2.5</span>
-          <button onClick={() => setIsAuthenticated(false)} className="hover:text-red-600 transition-colors">Çıkış</button>
+        <div className="pt-4 border-t border-gray-100 space-y-2">
+          {/* Admin Güvenlik & Şifre Yönetimi Butonu */}
+          <button 
+            onClick={() => setShowPasswordModal(true)}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors font-medium border border-gray-200"
+          >
+            <Key size={14} className="text-indigo-600" /> Şifre & Güvenlik
+          </button>
+
+          <div className="flex items-center justify-between text-xs text-gray-400 px-1 pt-1">
+            <button onClick={() => setShowVersionModal(true)} className="hover:text-indigo-600 font-mono transition-colors">
+              {SYSTEM_VERSION}
+            </button>
+            <button onClick={handleLogout} className="hover:text-red-600 font-medium transition-colors">
+              Çıkış Yap
+            </button>
+          </div>
         </div>
       </div>
 
@@ -616,9 +958,26 @@ export default function AdminDashboard() {
               {activeTab === 'reports' && 'Performans Raporları'}
               {activeTab === 'api' && 'Pazaryeri & Bayi Entegrasyonları'}
             </h1>
+
+            {/* Versiyon Rozeti */}
+            <button 
+              onClick={() => setShowVersionModal(true)}
+              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-mono font-medium transition-colors"
+              title="Değişiklik Günlüğü (Changelog)"
+            >
+              <Info size={12} /> {SYSTEM_VERSION}
+            </button>
           </div>
           
           <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setShowPasswordModal(true)}
+              className="p-2 text-gray-500 hover:text-indigo-600 bg-gray-50 hover:bg-indigo-50 rounded-lg transition-colors border border-gray-200 flex items-center gap-1.5 text-xs font-medium"
+              title="Şifre Değiştir"
+            >
+              <Key size={14} /> <span className="hidden sm:inline">Şifre Değiştir</span>
+            </button>
+
             <button 
               onClick={() => {
                 if (activeTab === 'orders') fetchData('/api/admin/orders', setOrders)
@@ -921,13 +1280,11 @@ export default function AdminDashboard() {
 
                               return (
                                 <tr key={c.id} className="hover:bg-gray-50/70 transition-colors">
-                                  {/* İsim & E-posta */}
                                   <td className="px-6 py-4">
                                     <div className="font-semibold text-gray-900">{c.name || 'İsimsiz Üye'}</div>
                                     <div className="text-xs text-gray-500 font-mono">{c.email}</div>
                                   </td>
 
-                                  {/* Telefon & WhatsApp */}
                                   <td className="px-6 py-4">
                                     {c.phone ? (
                                       <div className="flex items-center gap-2">
@@ -947,7 +1304,6 @@ export default function AdminDashboard() {
                                     )}
                                   </td>
 
-                                  {/* Üyelik Rolü */}
                                   <td className="px-6 py-4">
                                     {getPartnerBadge(c.partner_type)}
                                     {c.referral_code && (
@@ -955,7 +1311,6 @@ export default function AdminDashboard() {
                                     )}
                                   </td>
 
-                                  {/* Son Giriş Tarihi */}
                                   <td className="px-6 py-4 text-xs text-gray-600">
                                     {c.lastLogin ? (
                                       <div>
@@ -971,7 +1326,6 @@ export default function AdminDashboard() {
                                     )}
                                   </td>
 
-                                  {/* Sepet Durumu */}
                                   <td className="px-6 py-4 text-xs">
                                     {cartCount > 0 ? (
                                       <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-full text-xs font-semibold">
@@ -985,7 +1339,6 @@ export default function AdminDashboard() {
                                     )}
                                   </td>
 
-                                  {/* Cüzdan / Bakiye */}
                                   <td className="px-6 py-4">
                                     <span className="font-bold text-emerald-600 text-sm">{c.wallet_balance} TL</span>
                                     {c.earned_samples > 0 && (
@@ -993,12 +1346,10 @@ export default function AdminDashboard() {
                                     )}
                                   </td>
 
-                                  {/* Kayıt Tarihi */}
                                   <td className="px-6 py-4 text-xs text-gray-500 whitespace-nowrap">
                                     {new Date(c.createdAt).toLocaleDateString('tr-TR')}
                                   </td>
 
-                                  {/* İşlemler */}
                                   <td className="px-6 py-4 text-right whitespace-nowrap">
                                     <button
                                       onClick={() => handleOpenCustomerDetail(c)}
@@ -1171,6 +1522,160 @@ export default function AdminDashboard() {
           )}
         </main>
       </div>
+
+      {/* ===================== ADMIN SIFRE & GUVENLIK MODALI ===================== */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
+                  <ShieldCheck size={20} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">Admin Hesap & Şifre Yönetimi</h3>
+                  <p className="text-xs text-gray-500">Yönetici kimlik bilgilerinizi güncelleyin</p>
+                </div>
+              </div>
+              <button onClick={() => setShowPasswordModal(false)} className="p-2 text-gray-400 hover:text-gray-600">
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Mevcut Şifreniz *</label>
+                <div className="relative">
+                  <input 
+                    type={showCurrentPass ? 'text' : 'password'}
+                    value={currentPassInput} 
+                    onChange={e => setCurrentPassInput(e.target.value)}
+                    placeholder="Mevcut yönetici şifreniz"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-3 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPass(!showCurrentPass)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showCurrentPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-gray-100">
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Kullanıcı Adı</label>
+                <input 
+                  type="text" 
+                  value={newUsernameInput} 
+                  onChange={e => setNewUsernameInput(e.target.value)}
+                  placeholder="admin"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Yeni Şifre (Değiştirmek istemiyorsanız boş bırakın)</label>
+                <div className="relative">
+                  <input 
+                    type={showNewPass ? 'text' : 'password'}
+                    value={newPassInput} 
+                    onChange={e => setNewPassInput(e.target.value)}
+                    placeholder="En az 6 karakter"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-3 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPass(!showNewPass)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showNewPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              {newPassInput && (
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Yeni Şifre Tekrar</label>
+                  <input 
+                    type="password"
+                    value={newPassConfirm} 
+                    onChange={e => setNewPassConfirm(e.target.value)}
+                    placeholder="Yeni şifreyi tekrar girin"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+              )}
+
+              <div className="pt-3 flex gap-3">
+                <button 
+                  type="button" 
+                  onClick={() => setShowPasswordModal(false)} 
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl text-xs font-medium transition-colors"
+                >
+                  Vazgeç
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={savingId === 'change_pass'}
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl text-xs font-medium transition-colors shadow-sm disabled:opacity-50"
+                >
+                  {savingId === 'change_pass' ? 'Kaydediliyor...' : 'Bilgileri Güncelle'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ===================== VERSIYON & CHANGELOG MODALI ===================== */}
+      {showVersionModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
+                  <History size={20} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">PN Parfüm Sürüm & Değişiklik Günlüğü</h3>
+                  <p className="text-xs text-gray-500">Güncel Canlı Versiyon: <span className="font-mono font-bold text-indigo-600">{SYSTEM_VERSION}</span> (Build {SYSTEM_BUILD_DATE})</p>
+                </div>
+              </div>
+              <button onClick={() => setShowVersionModal(false)} className="p-2 text-gray-400 hover:text-gray-700 rounded-full">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-5 flex-1">
+              {CHANGELOG.map((rel, idx) => (
+                <div key={idx} className="bg-gray-50/80 rounded-2xl p-5 border border-gray-100 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-gray-900 text-base">{rel.version}</span>
+                      <span className="font-mono text-[11px] bg-gray-200 text-gray-700 px-2 py-0.5 rounded font-semibold">{rel.code}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${rel.badgeColor}`}>{rel.type}</span>
+                      <span className="text-xs text-gray-400 font-mono">{rel.date}</span>
+                    </div>
+                  </div>
+
+                  <h4 className="text-sm font-semibold text-gray-800">{rel.title}</h4>
+
+                  <ul className="space-y-1.5 text-xs text-gray-600 list-disc list-inside">
+                    {rel.changes.map((c, cIdx) => (
+                      <li key={cIdx}>{c}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ===================== SIPARIS DETAY MODALI ===================== */}
       {selectedOrder && (
