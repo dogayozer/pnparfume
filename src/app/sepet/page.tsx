@@ -17,7 +17,7 @@ export default function CartPage() {
   const [shippingDiscountApplied, setShippingDiscountApplied] = useState(false)
   
   // VIP Urgency State
-  const [timeLeft, setTimeLeft] = useState(3599) // 59:59
+  const [timeLeft, setTimeLeft] = useState(600) // 10:00
   const [selectedTester, setSelectedTester] = useState<string | null>(null)
 
 
