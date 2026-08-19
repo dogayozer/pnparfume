@@ -23,6 +23,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Hatalı şifre.' }, { status: 401 })
     }
 
+    // Update last login timestamp
+    await prisma.customer.update({
+      where: { id: user.id },
+      data: { lastLogin: new Date() }
+    })
+
     const { password: _, ...userWithoutPassword } = user
 
     return NextResponse.json({

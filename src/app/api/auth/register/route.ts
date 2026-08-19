@@ -35,7 +35,8 @@ export async function POST(request: Request) {
         phone: phone || null,
         password: hashedPassword,
         email_opt_in: emailConsent || false,
-        sms_opt_in: smsConsent || false
+        sms_opt_in: smsConsent || false,
+        lastLogin: new Date()
       }
     })
 

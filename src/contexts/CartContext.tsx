@@ -33,9 +33,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // Save to local storage
+  // Save to local storage and sync with account if logged in
   useEffect(() => {
     localStorage.setItem('pn_cart', JSON.stringify(items))
+
+    const savedUser = localStorage.getItem('user')
+    if (savedUser) {
+      try {
+        const user = JSON.parse(savedUser)
+        if (user && user.id) {
+          fetch('/api/user/cart-sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id, cart: items })
+          }).catch(() => {})
+        }
+      } catch (e) {}
+    }
   }, [items])
 
   const addToCart = (item: CartItem) => {

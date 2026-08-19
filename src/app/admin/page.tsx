@@ -6,7 +6,8 @@ import {
   Sparkles, Server, PackagePlus, UploadCloud, Percent, Truck, 
   CheckCircle, Clock, XCircle, ExternalLink, MessageCircle, Eye, 
   Search, Filter, MapPin, User, Phone, Mail, Calendar, ChevronRight, 
-  X, Package, Check, Copy, ArrowRight
+  X, Package, Check, Copy, ArrowRight, ShoppingCart, Award, Gift, 
+  CreditCard, Tag, Edit3, ShieldCheck
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 
@@ -32,7 +33,31 @@ type Order = {
   customer?: { id?: string; name?: string | null; email?: string; phone?: string | null } | null
   coupon?: { code?: string; value?: number; discount_type?: string } | null
 }
-type Customer = { id: string; name: string | null; email: string; partner_type: string; wallet_balance: number; earned_samples: number; createdAt: string }
+type Customer = { 
+  id: string
+  name: string | null
+  email: string
+  phone?: string | null
+  address?: string | null
+  birth_year?: number | null
+  birth_date?: string | null
+  profession?: string | null
+  budget_segment?: string | null
+  dominant_mood?: string | null
+  whatsapp_opt_in?: boolean
+  email_opt_in?: boolean
+  sms_opt_in?: boolean
+  referral_code?: string | null
+  partner_type: string
+  wallet_balance: number
+  earned_samples: number
+  lastLogin?: string | null
+  cart?: any
+  createdAt: string
+  updatedAt?: string
+  orders?: any[]
+  coupons?: any[]
+}
 type ReportData = { totalRevenue: number; totalOrders: number; totalCustomers: number; aiAssistedPercentage: number }
 type MarketplaceStore = { id: string; name: string; platform: string; sellerId: string; isActive: boolean; createdAt: string }
 type MarketplaceOrder = { id: string; trendyolOrderId: string; status: string; totalPrice: number; store: { name: string; platform: string }; createdAt: string }
@@ -78,6 +103,29 @@ export default function AdminDashboard() {
   const [cargoCompanyInput, setCargoCompanyInput] = useState('Yurtiçi Kargo')
   const [trackingCodeInput, setTrackingCodeInput] = useState('')
   const [copiedAddr, setCopiedAddr] = useState(false)
+
+  // Customer Management States
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
+  const [customerSearch, setCustomerSearch] = useState('')
+  const [customerFilter, setCustomerFilter] = useState('all')
+  const [customerModalTab, setCustomerModalTab] = useState<'profile' | 'partner' | 'cart' | 'history'>('profile')
+  const [editCustomerData, setEditCustomerData] = useState<{
+    partner_type: string
+    wallet_balance: number
+    earned_samples: number
+    phone: string
+    name: string
+    address: string
+    profession: string
+  }>({
+    partner_type: 'retail',
+    wallet_balance: 0,
+    earned_samples: 0,
+    phone: '',
+    name: '',
+    address: '',
+    profession: ''
+  })
 
   // New store form state
   const [newStore, setNewStore] = useState({ name: '', platform: 'trendyol', sellerId: '', apiKey: '', apiSecret: '' })
@@ -175,6 +223,49 @@ export default function AdminDashboard() {
     } finally {
       setSavingId(null)
     }
+  }
+
+  const handleUpdateCustomer = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedCustomer) return
+    setSavingId('save_customer')
+
+    try {
+      const res = await fetch('/api/admin/customers', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerId: selectedCustomer.id,
+          ...editCustomerData
+        })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        showMsg('success', 'Müşteri bilgileri güncellendi.')
+        setCustomers(prev => prev.map(c => c.id === selectedCustomer.id ? { ...c, ...data.customer } : c))
+        setSelectedCustomer(prev => prev ? { ...prev, ...data.customer } : null)
+      } else {
+        showMsg('error', data.error || 'Güncelleme başarısız')
+      }
+    } catch {
+      showMsg('error', 'Sunucu hatası')
+    } finally {
+      setSavingId(null)
+    }
+  }
+
+  const handleOpenCustomerDetail = (c: Customer) => {
+    setSelectedCustomer(c)
+    setEditCustomerData({
+      partner_type: c.partner_type || 'retail',
+      wallet_balance: c.wallet_balance || 0,
+      earned_samples: c.earned_samples || 0,
+      phone: c.phone || '',
+      name: c.name || '',
+      address: c.address || '',
+      profession: c.profession || ''
+    })
+    setCustomerModalTab('profile')
   }
 
   const handleAddStore = async (e: React.FormEvent) => {
@@ -280,11 +371,9 @@ export default function AdminDashboard() {
   // Filtered Orders Calculation
   const filteredOrders = useMemo(() => {
     return orders.filter(o => {
-      // Status Filter
       if (orderStatusFilter !== 'all' && o.status !== orderStatusFilter) {
         return false
       }
-      // Search Filter
       if (orderSearch.trim()) {
         const q = orderSearch.toLowerCase()
         const matchOrderNo = o.orderNumber?.toLowerCase().includes(q)
@@ -312,6 +401,47 @@ export default function AdminDashboard() {
     }
   }, [orders])
 
+  // Filtered Customers Calculation
+  const filteredCustomers = useMemo(() => {
+    return customers.filter(c => {
+      if (customerFilter === 'influencer' && c.partner_type !== 'influencer') return false
+      if (customerFilter === 'b2b_sampler' && c.partner_type !== 'b2b_sampler') return false
+      if (customerFilter === 'retail' && c.partner_type !== 'retail') return false
+      if (customerFilter === 'cart_full') {
+        const cartItems = Array.isArray(c.cart) ? c.cart : []
+        if (cartItems.length === 0) return false
+      }
+      if (customerFilter === 'recent_login') {
+        if (!c.lastLogin) return false
+        const diffHours = (Date.now() - new Date(c.lastLogin).getTime()) / (1000 * 60 * 60)
+        if (diffHours > 24) return false
+      }
+
+      if (customerSearch.trim()) {
+        const q = customerSearch.toLowerCase()
+        const matchName = (c.name || '').toLowerCase().includes(q)
+        const matchEmail = (c.email || '').toLowerCase().includes(q)
+        const matchPhone = (c.phone || '').toLowerCase().includes(q)
+        const matchRef = (c.referral_code || '').toLowerCase().includes(q)
+        const matchProf = (c.profession || '').toLowerCase().includes(q)
+        if (!matchName && !matchEmail && !matchPhone && !matchRef && !matchProf) {
+          return false
+        }
+      }
+      return true
+    })
+  }, [customers, customerFilter, customerSearch])
+
+  const customerCounts = useMemo(() => {
+    return {
+      all: customers.length,
+      influencer: customers.filter(c => c.partner_type === 'influencer').length,
+      b2b_sampler: customers.filter(c => c.partner_type === 'b2b_sampler').length,
+      retail: customers.filter(c => c.partner_type === 'retail').length,
+      cart_full: customers.filter(c => Array.isArray(c.cart) && c.cart.length > 0).length,
+    }
+  }, [customers])
+
   const getStatusBadge = (status: string) => {
     switch(status) {
       case 'pending':
@@ -326,6 +456,17 @@ export default function AdminDashboard() {
         return <span className="inline-flex items-center gap-1 bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-full text-xs font-semibold"><XCircle size={12} /> İptal Edildi</span>
       default:
         return <span className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs font-semibold">{status}</span>
+    }
+  }
+
+  const getPartnerBadge = (partner_type: string) => {
+    switch(partner_type) {
+      case 'influencer':
+        return <span className="inline-flex items-center gap-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-2.5 py-0.5 rounded-full text-[11px] font-bold shadow-sm"><Award size={12} /> Influencer Elçi</span>
+      case 'b2b_sampler':
+        return <span className="inline-flex items-center gap-1 bg-purple-100 text-purple-800 border border-purple-200 px-2.5 py-0.5 rounded-full text-[11px] font-semibold"><Gift size={12} /> B2B Sampler</span>
+      default:
+        return <span className="bg-gray-100 text-gray-600 px-2.5 py-0.5 rounded-full text-[11px] font-medium">Bireysel Müşteri</span>
     }
   }
 
@@ -408,6 +549,18 @@ export default function AdminDashboard() {
             </button>
 
             <button 
+              onClick={() => setActiveTab('customers')} 
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-medium text-sm transition-colors ${activeTab === 'customers' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
+            >
+              <div className="flex items-center gap-3">
+                <Users size={18} /> Müşteriler & Elçiler
+              </div>
+              {customerCounts.influencer > 0 && (
+                <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{customerCounts.influencer} Elçi</span>
+              )}
+            </button>
+
+            <button 
               onClick={() => setActiveTab('scenarios')} 
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors ${activeTab === 'scenarios' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
             >
@@ -429,13 +582,6 @@ export default function AdminDashboard() {
             </button>
 
             <button 
-              onClick={() => setActiveTab('customers')} 
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors ${activeTab === 'customers' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
-            >
-              <Users size={18} /> Müşteriler
-            </button>
-
-            <button 
               onClick={() => setActiveTab('reports')} 
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors ${activeTab === 'reports' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
             >
@@ -452,7 +598,7 @@ export default function AdminDashboard() {
         </div>
 
         <div className="pt-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
-          <span>PN Parfüm v2.4</span>
+          <span>PN Parfüm v2.5</span>
           <button onClick={() => setIsAuthenticated(false)} className="hover:text-red-600 transition-colors">Çıkış</button>
         </div>
       </div>
@@ -463,10 +609,10 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-4">
             <h1 className="font-semibold text-gray-900 text-lg">
               {activeTab === 'orders' && 'Sipariş Yönetimi & Lojistik'}
+              {activeTab === 'customers' && 'Müşteriler, Elçiler & Cüzdan Yönetimi'}
               {activeTab === 'scenarios' && 'Senaryo Kuralları'}
               {activeTab === 'products' && 'Toplu Fiyat & Excel Ürün Yönetimi'}
               {activeTab === 'ai' && 'Nöropazarlama & Yapay Zeka'}
-              {activeTab === 'customers' && 'Müşteri Listesi'}
               {activeTab === 'reports' && 'Performans Raporları'}
               {activeTab === 'api' && 'Pazaryeri & Bayi Entegrasyonları'}
             </h1>
@@ -476,8 +622,8 @@ export default function AdminDashboard() {
             <button 
               onClick={() => {
                 if (activeTab === 'orders') fetchData('/api/admin/orders', setOrders)
-                else if (activeTab === 'scenarios') fetchData('/api/admin/scenarios', setRules)
                 else if (activeTab === 'customers') fetchData('/api/admin/customers', setCustomers)
+                else if (activeTab === 'scenarios') fetchData('/api/admin/scenarios', setRules)
                 else if (activeTab === 'reports') fetchData('/api/admin/reports', setReports)
               }} 
               disabled={loading} 
@@ -496,7 +642,7 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {loading && !rules.length && !orders.length ? (
+          {loading && !rules.length && !orders.length && !customers.length ? (
             <div className="h-64 flex items-center justify-center text-gray-400">
               <RefreshCw className="animate-spin mr-2" size={20} /> Yükleniyor...
             </div>
@@ -591,7 +737,6 @@ export default function AdminDashboard() {
 
                               return (
                                 <tr key={o.id} className="hover:bg-gray-50/70 transition-colors">
-                                  {/* Sipariş No */}
                                   <td className="px-6 py-4">
                                     <div className="font-mono font-semibold text-gray-900 text-xs">{o.orderNumber}</div>
                                     {o.combinedWithOrderId && (
@@ -600,14 +745,10 @@ export default function AdminDashboard() {
                                       </span>
                                     )}
                                   </td>
-
-                                  {/* Müşteri */}
                                   <td className="px-6 py-4">
                                     <div className="font-medium text-gray-900">{customerDisplayName}</div>
                                     <div className="text-xs text-gray-500">{customerPhone || o.customerEmail || o.customer?.email || '-'}</div>
                                   </td>
-
-                                  {/* Ürünler */}
                                   <td className="px-6 py-4">
                                     <div className="text-xs font-medium text-gray-800">
                                       {itemCount > 0 ? `${itemCount} Parfüm` : 'Özel Sipariş'}
@@ -616,21 +757,15 @@ export default function AdminDashboard() {
                                       {itemsList.map((it: any) => `${it.quantity || 1}x PN ${it.sku}`).join(', ')}
                                     </div>
                                   </td>
-
-                                  {/* Tutar */}
                                   <td className="px-6 py-4">
                                     <span className="font-semibold text-gray-900">{o.totalAmount} TL</span>
                                     {o.discountApplied && o.discountApplied > 0 ? (
                                       <div className="text-[10px] text-emerald-600">(-{o.discountApplied} TL İndirim)</div>
                                     ) : null}
                                   </td>
-
-                                  {/* Durum */}
                                   <td className="px-6 py-4">
                                     {getStatusBadge(o.status)}
                                   </td>
-
-                                  {/* Kargo Bilgisi */}
                                   <td className="px-6 py-4 text-xs">
                                     {o.cargoCompany ? (
                                       <div>
@@ -641,16 +776,11 @@ export default function AdminDashboard() {
                                       <span className="text-gray-400">-</span>
                                     )}
                                   </td>
-
-                                  {/* Tarih */}
                                   <td className="px-6 py-4 text-xs text-gray-500 whitespace-nowrap">
                                     {new Date(o.createdAt).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                   </td>
-
-                                  {/* Aksiyonlar */}
                                   <td className="px-6 py-4 text-right whitespace-nowrap">
                                     <div className="flex items-center justify-end gap-1.5">
-                                      {/* İşleme Al Butonu */}
                                       {o.status === 'pending' && (
                                         <button
                                           onClick={() => handleUpdateOrderStatus(o.id, 'paid')}
@@ -661,8 +791,6 @@ export default function AdminDashboard() {
                                           İşleme Al
                                         </button>
                                       )}
-
-                                      {/* Kargoya Ver Butonu */}
                                       {(o.status === 'paid' || o.status === 'pending') && (
                                         <button
                                           onClick={() => {
@@ -676,8 +804,6 @@ export default function AdminDashboard() {
                                           <Truck size={13} /> Kargola
                                         </button>
                                       )}
-
-                                      {/* Teslim Edildi Butonu */}
                                       {o.status === 'shipped' && (
                                         <button
                                           onClick={() => handleUpdateOrderStatus(o.id, 'delivered')}
@@ -688,8 +814,6 @@ export default function AdminDashboard() {
                                           <Check size={13} /> Teslim Et
                                         </button>
                                       )}
-
-                                      {/* Detay Butonu */}
                                       <button
                                         onClick={() => setSelectedOrder(o)}
                                         className="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-gray-200"
@@ -698,6 +822,190 @@ export default function AdminDashboard() {
                                         <Eye size={16} />
                                       </button>
                                     </div>
+                                  </td>
+                                </tr>
+                              )
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ===================== MUSTERILER & ELCILER ===================== */}
+              {activeTab === 'customers' && (
+                <div className="space-y-6">
+                  {/* Filter & Search Bar */}
+                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                      {/* Search */}
+                      <div className="relative flex-1 max-w-md">
+                        <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input 
+                          type="text" 
+                          placeholder="İsim, E-posta, Telefon, Davet Kodu ara..." 
+                          value={customerSearch}
+                          onChange={e => setCustomerSearch(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                        {customerSearch && (
+                          <button onClick={() => setCustomerSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            <X size={14} />
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="text-xs text-gray-500">
+                        Toplam <span className="font-semibold text-gray-900">{filteredCustomers.length}</span> üye listeleniyor
+                      </div>
+                    </div>
+
+                    {/* Filter Tabs */}
+                    <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+                      {[
+                        { key: 'all', label: 'Tüm Üyeler', count: customerCounts.all },
+                        { key: 'influencer', label: '🌟 Influencer Elçiler', count: customerCounts.influencer },
+                        { key: 'b2b_sampler', label: '📦 B2B Sampler', count: customerCounts.b2b_sampler },
+                        { key: 'cart_full', label: '🛒 Sepeti Dolu Olanlar', count: customerCounts.cart_full },
+                        { key: 'recent_login', label: '⚡ Son 24s Giriş Yapanlar', count: customers.filter(c => c.lastLogin && (Date.now() - new Date(c.lastLogin).getTime()) < 86400000).length },
+                      ].map(tab => (
+                        <button
+                          key={tab.key}
+                          onClick={() => setCustomerFilter(tab.key)}
+                          className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors border flex items-center gap-1.5 ${
+                            customerFilter === tab.key 
+                              ? 'bg-gray-900 text-white border-gray-900 shadow-sm' 
+                              : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          {tab.label}
+                          <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${customerFilter === tab.key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-700'}`}>
+                            {tab.count}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Customers Table */}
+                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-gray-50/80 border-b border-gray-200 text-gray-500 text-xs font-semibold uppercase tracking-wider">
+                            <th className="px-6 py-4">Müşteri / Hesap Adı</th>
+                            <th className="px-6 py-4">Telefon</th>
+                            <th className="px-6 py-4">Üyelik Rolü</th>
+                            <th className="px-6 py-4">Son Giriş Tarihi</th>
+                            <th className="px-6 py-4">Sepet Durumu</th>
+                            <th className="px-6 py-4">Cüzdan / Elçi Bakiyesi</th>
+                            <th className="px-6 py-4">Kayıt Tarihi</th>
+                            <th className="px-6 py-4 text-right">İşlemler</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100 text-sm">
+                          {filteredCustomers.length === 0 ? (
+                            <tr>
+                              <td colSpan={8} className="p-12 text-center text-gray-400">
+                                <Users size={36} className="mx-auto mb-2 opacity-40" />
+                                Bu filtreye uygun üye bulunamadı.
+                              </td>
+                            </tr>
+                          ) : (
+                            filteredCustomers.map(c => {
+                              const cartItems = Array.isArray(c.cart) ? c.cart : []
+                              const cartCount = cartItems.reduce((s: number, it: any) => s + (it.quantity || 1), 0)
+                              const cartTotal = cartItems.reduce((s: number, it: any) => s + ((it.price || 0) * (it.quantity || 1)), 0)
+
+                              return (
+                                <tr key={c.id} className="hover:bg-gray-50/70 transition-colors">
+                                  {/* İsim & E-posta */}
+                                  <td className="px-6 py-4">
+                                    <div className="font-semibold text-gray-900">{c.name || 'İsimsiz Üye'}</div>
+                                    <div className="text-xs text-gray-500 font-mono">{c.email}</div>
+                                  </td>
+
+                                  {/* Telefon & WhatsApp */}
+                                  <td className="px-6 py-4">
+                                    {c.phone ? (
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-mono text-xs text-gray-700">{c.phone}</span>
+                                        <a 
+                                          href={`https://wa.me/${c.phone.replace(/[^0-9]/g, '')}?text=Merhaba%20${encodeURIComponent(c.name || '')},%20PN%20Parfüm'den%20ulaşıyoruz.`}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="text-emerald-600 hover:text-emerald-700"
+                                          title="WhatsApp Mesajı Gönder"
+                                        >
+                                          <MessageCircle size={15} />
+                                        </a>
+                                      </div>
+                                    ) : (
+                                      <span className="text-gray-400 text-xs">-</span>
+                                    )}
+                                  </td>
+
+                                  {/* Üyelik Rolü */}
+                                  <td className="px-6 py-4">
+                                    {getPartnerBadge(c.partner_type)}
+                                    {c.referral_code && (
+                                      <div className="text-[10px] font-mono text-gray-400 mt-0.5">Kod: {c.referral_code}</div>
+                                    )}
+                                  </td>
+
+                                  {/* Son Giriş Tarihi */}
+                                  <td className="px-6 py-4 text-xs text-gray-600">
+                                    {c.lastLogin ? (
+                                      <div>
+                                        <div className="font-medium text-gray-800">
+                                          {new Date(c.lastLogin).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                        </div>
+                                        <div className="text-[10px] text-gray-400">
+                                          {new Date(c.lastLogin).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <span className="text-gray-400 text-[11px] italic">Giriş Kaydı Yok</span>
+                                    )}
+                                  </td>
+
+                                  {/* Sepet Durumu */}
+                                  <td className="px-6 py-4 text-xs">
+                                    {cartCount > 0 ? (
+                                      <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-full text-xs font-semibold">
+                                        <ShoppingCart size={12} className="text-amber-600" />
+                                        {cartCount} Ürün ({cartTotal} TL)
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center gap-1 text-gray-400 text-xs">
+                                        <ShoppingCart size={12} className="opacity-40" /> Boş
+                                      </span>
+                                    )}
+                                  </td>
+
+                                  {/* Cüzdan / Bakiye */}
+                                  <td className="px-6 py-4">
+                                    <span className="font-bold text-emerald-600 text-sm">{c.wallet_balance} TL</span>
+                                    {c.earned_samples > 0 && (
+                                      <div className="text-[11px] text-purple-600 font-medium">({c.earned_samples} Tester Kotası)</div>
+                                    )}
+                                  </td>
+
+                                  {/* Kayıt Tarihi */}
+                                  <td className="px-6 py-4 text-xs text-gray-500 whitespace-nowrap">
+                                    {new Date(c.createdAt).toLocaleDateString('tr-TR')}
+                                  </td>
+
+                                  {/* İşlemler */}
+                                  <td className="px-6 py-4 text-right whitespace-nowrap">
+                                    <button
+                                      onClick={() => handleOpenCustomerDetail(c)}
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-medium transition-colors shadow-sm"
+                                    >
+                                      <Eye size={14} /> Detay
+                                    </button>
                                   </td>
                                 </tr>
                               )
@@ -743,27 +1051,6 @@ export default function AdminDashboard() {
                     <div><label className="block text-sm font-semibold mb-2">Aktif Kampanya</label><textarea rows={3} value={aiConfig.active_campaign || ''} onChange={e => setAiConfig({...aiConfig, active_campaign: e.target.value})} className="w-full border rounded-lg p-4 text-sm" /></div>
                     <button onClick={handleUpdateAiConfig} className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium">Yapay Zeka Ayarlarını Kaydet</button>
                   </div>
-                </div>
-              )}
-
-              {/* ===================== MUSTERILER ===================== */}
-              {activeTab === 'customers' && (
-                <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
-                  <table className="w-full text-left">
-                    <thead className="bg-gray-50 border-b text-sm"><tr className="text-gray-500"><th className="px-6 py-4">E-posta</th><th className="px-6 py-4">İsim</th><th className="px-6 py-4">Üyelik Tipi</th><th className="px-6 py-4">Cüzdan</th><th className="px-6 py-4">Tester Kotası</th><th className="px-6 py-4">Kayıt Tarihi</th></tr></thead>
-                    <tbody className="divide-y">
-                      {customers.length === 0 ? <tr><td colSpan={6} className="p-8 text-center text-gray-500">Kayıt yok</td></tr> : customers.map(c => (
-                        <tr key={c.id} className="hover:bg-gray-50 text-sm">
-                          <td className="px-6 py-4 font-medium">{c.email}</td>
-                          <td className="px-6 py-4">{c.name || '-'}</td>
-                          <td className="px-6 py-4"><span className="bg-indigo-50 text-indigo-700 px-2 py-1 rounded text-xs uppercase font-bold">{c.partner_type}</span></td>
-                          <td className="px-6 py-4 font-medium text-green-600">{c.wallet_balance} TL</td>
-                          <td className="px-6 py-4">{c.earned_samples} Adet</td>
-                          <td className="px-6 py-4 text-gray-500">{new Date(c.createdAt).toLocaleDateString('tr-TR')}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
                 </div>
               )}
 
@@ -889,7 +1176,6 @@ export default function AdminDashboard() {
       {selectedOrder && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in-95 duration-200">
-            {/* Modal Header */}
             <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
               <div>
                 <div className="flex items-center gap-3">
@@ -908,11 +1194,9 @@ export default function AdminDashboard() {
               </button>
             </div>
 
-            {/* Modal Body */}
             <div className="p-8 overflow-y-auto space-y-6 flex-1">
-              {/* 2-Column Info Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Müşteri & Teslimat Bilgileri */}
+                {/* Müşteri Bilgileri */}
                 <div className="bg-gray-50/80 rounded-2xl p-5 border border-gray-100 space-y-4">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2">
                     <User size={14} /> Müşteri & Teslimat Bilgileri
@@ -923,7 +1207,6 @@ export default function AdminDashboard() {
                     <div className="text-xs text-gray-500 mt-0.5">{selectedOrder.customerEmail || selectedOrder.customer?.email || '-'}</div>
                   </div>
 
-                  {/* Telefon & WhatsApp Butonu */}
                   {(selectedOrder.customerPhone || selectedOrder.customer?.phone) && (
                     <div className="flex items-center justify-between pt-2 border-t border-gray-200/60">
                       <div className="text-sm font-mono text-gray-700 flex items-center gap-1.5">
@@ -941,7 +1224,6 @@ export default function AdminDashboard() {
                     </div>
                   )}
 
-                  {/* Adres */}
                   <div className="pt-2 border-t border-gray-200/60">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs text-gray-400 font-medium flex items-center gap-1"><MapPin size={12} /> Teslimat Adresi</span>
@@ -965,7 +1247,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                {/* Kargo & Lojistik Durumu */}
+                {/* Kargo & Lojistik */}
                 <div className="bg-gray-50/80 rounded-2xl p-5 border border-gray-100 flex flex-col justify-between">
                   <div className="space-y-4">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2">
@@ -1055,7 +1337,7 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Modal Footer (Durum Güncelleme Butonları) */}
+            {/* Modal Footer */}
             <div className="px-8 py-5 border-t border-gray-100 bg-gray-50/80 flex flex-wrap items-center justify-between gap-3">
               <div className="text-xs text-gray-500 font-medium">Hızlı Durum Değiştir:</div>
               <div className="flex flex-wrap items-center gap-2">
@@ -1093,6 +1375,351 @@ export default function AdminDashboard() {
                   </button>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================== MUSTERI & ELCI DETAY MODALI ===================== */}
+      {selectedCustomer && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[92vh] overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white font-bold text-lg flex items-center justify-center shadow-md">
+                  {(selectedCustomer.name || selectedCustomer.email).charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-xl font-bold text-gray-900">{selectedCustomer.name || 'İsimsiz Üye'}</h2>
+                    {getPartnerBadge(selectedCustomer.partner_type)}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5 font-mono">{selectedCustomer.email}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedCustomer(null)} 
+                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Sub-tabs */}
+            <div className="flex border-b border-gray-100 px-8 bg-gray-50/30">
+              <button 
+                onClick={() => setCustomerModalTab('profile')}
+                className={`py-3 px-4 text-xs font-semibold border-b-2 transition-colors flex items-center gap-2 ${customerModalTab === 'profile' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+              >
+                <User size={14} /> Profil & Demografi
+              </button>
+              <button 
+                onClick={() => setCustomerModalTab('partner')}
+                className={`py-3 px-4 text-xs font-semibold border-b-2 transition-colors flex items-center gap-2 ${customerModalTab === 'partner' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+              >
+                <Award size={14} /> Elçilik, Rol & Cüzdan
+              </button>
+              <button 
+                onClick={() => setCustomerModalTab('cart')}
+                className={`py-3 px-4 text-xs font-semibold border-b-2 transition-colors flex items-center gap-2 ${customerModalTab === 'cart' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+              >
+                <ShoppingCart size={14} /> Canlı Sepet
+                {Array.isArray(selectedCustomer.cart) && selectedCustomer.cart.length > 0 && (
+                  <span className="bg-amber-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">{selectedCustomer.cart.length}</span>
+                )}
+              </button>
+              <button 
+                onClick={() => setCustomerModalTab('history')}
+                className={`py-3 px-4 text-xs font-semibold border-b-2 transition-colors flex items-center gap-2 ${customerModalTab === 'history' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+              >
+                <Package size={14} /> Siparişler & Kuponlar
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-8 overflow-y-auto space-y-6 flex-1">
+              {/* TAB 1: Profil & Demografi */}
+              {customerModalTab === 'profile' && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                      <span className="text-xs text-gray-400 font-medium block mb-1">Hesap Adı Soyadı</span>
+                      <span className="font-semibold text-gray-900 text-sm">{selectedCustomer.name || 'Belirtilmedi'}</span>
+                    </div>
+
+                    <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                      <span className="text-xs text-gray-400 font-medium block mb-1">E-posta Adresi</span>
+                      <span className="font-mono text-gray-900 text-sm">{selectedCustomer.email}</span>
+                    </div>
+
+                    <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex items-center justify-between">
+                      <div>
+                        <span className="text-xs text-gray-400 font-medium block mb-1">Telefon Numarası</span>
+                        <span className="font-mono text-gray-900 text-sm">{selectedCustomer.phone || 'Belirtilmedi'}</span>
+                      </div>
+                      {selectedCustomer.phone && (
+                        <a 
+                          href={`https://wa.me/${selectedCustomer.phone.replace(/[^0-9]/g, '')}?text=Merhaba%20${encodeURIComponent(selectedCustomer.name || '')},%20PN%20Parfüm'den%20ulaşıyoruz.`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm"
+                        >
+                          <MessageCircle size={13} /> WhatsApp
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                      <span className="text-xs text-gray-400 font-medium block mb-1">Meslek / Sektör</span>
+                      <span className="font-medium text-gray-900 text-sm">{selectedCustomer.profession || 'Belirtilmedi'}</span>
+                    </div>
+
+                    <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                      <span className="text-xs text-gray-400 font-medium block mb-1">Doğum Tarihi / Yılı</span>
+                      <span className="font-medium text-gray-900 text-sm">{selectedCustomer.birth_date || selectedCustomer.birth_year || 'Belirtilmedi'}</span>
+                    </div>
+
+                    <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                      <span className="text-xs text-gray-400 font-medium block mb-1">Sisteme Son Giriş</span>
+                      <span className="font-semibold text-indigo-700 text-sm">
+                        {selectedCustomer.lastLogin ? new Date(selectedCustomer.lastLogin).toLocaleString('tr-TR') : 'Giriş Kaydı Yok'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Teslimat Adresi */}
+                  <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                        <MapPin size={13} /> Kayıtlı Teslimat Adresi
+                      </span>
+                      {selectedCustomer.address && (
+                        <button 
+                          onClick={() => {
+                            navigator.clipboard.writeText(selectedCustomer.address || '')
+                            setCopiedAddr(true)
+                            setTimeout(() => setCopiedAddr(false), 2000)
+                          }}
+                          className="text-[11px] text-indigo-600 hover:underline flex items-center gap-1"
+                        >
+                          {copiedAddr ? <Check size={11} /> : <Copy size={11} />}
+                          {copiedAddr ? 'Kopyalandı' : 'Kopyala'}
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-800 bg-white p-4 rounded-xl border border-gray-200 leading-relaxed font-sans">
+                      {selectedCustomer.address || 'Kullanıcının kayıtlı adresi bulunmuyor.'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: Elçilik & Cüzdan Yönetimi (Form) */}
+              {customerModalTab === 'partner' && (
+                <form onSubmit={handleUpdateCustomer} className="space-y-6">
+                  <div className="bg-amber-50/60 border border-amber-200 p-4 rounded-2xl text-xs text-amber-900 flex items-start gap-3">
+                    <Award className="text-amber-600 flex-shrink-0 mt-0.5" size={18} />
+                    <div>
+                      <span className="font-bold">Elçilik & İş Ortaklığı Paneli</span>
+                      <p className="mt-0.5 text-amber-800">
+                        Buradan kullanıcıya influencer veya B2B ortağı rolü atayabilir, cüzdanına satış komisyonu yükleyebilir veya tester kotasını güncelleyebilirsiniz.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Üyelik Rolü</label>
+                      <select 
+                        value={editCustomerData.partner_type} 
+                        onChange={e => setEditCustomerData({...editCustomerData, partner_type: e.target.value})}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                      >
+                        <option value="retail">Bireysel Müşteri (Retail)</option>
+                        <option value="influencer">🌟 Influencer / Marka Elçisi</option>
+                        <option value="b2b_sampler">📦 B2B Sampler / İş Ortağı</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Özel Davet / Elçi Kodu</label>
+                      <div className="w-full bg-gray-100 border border-gray-200 rounded-xl p-3 text-sm font-mono text-gray-700">
+                        {selectedCustomer.referral_code || 'Sistem tarafından henüz kod üretilmedi'}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Cüzdan Bakiyesi (TL)</label>
+                      <input 
+                        type="number" 
+                        step="0.01"
+                        value={editCustomerData.wallet_balance}
+                        onChange={e => setEditCustomerData({...editCustomerData, wallet_balance: parseFloat(e.target.value) || 0})}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm font-semibold text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Hak Edilen Tester Kotası (Adet)</label>
+                      <input 
+                        type="number" 
+                        value={editCustomerData.earned_samples}
+                        onChange={e => setEditCustomerData({...editCustomerData, earned_samples: parseInt(e.target.value) || 0})}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm font-semibold text-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-gray-100 flex justify-end">
+                    <button 
+                      type="submit" 
+                      disabled={savingId === 'save_customer'}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2.5 rounded-xl text-sm transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2"
+                    >
+                      <Save size={16} /> {savingId === 'save_customer' ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* TAB 3: Canlı Sepet Analizi (Terk Edilmiş Sepet) */}
+              {customerModalTab === 'cart' && (
+                <div className="space-y-6">
+                  {Array.isArray(selectedCustomer.cart) && selectedCustomer.cart.length > 0 ? (
+                    <>
+                      <div className="bg-emerald-50/70 border border-emerald-200 p-4 rounded-2xl flex items-center justify-between">
+                        <div>
+                          <div className="font-bold text-emerald-900 text-sm flex items-center gap-2">
+                            <ShoppingCart size={16} /> Sepet Dolu ({selectedCustomer.cart.length} Farklı Ürün)
+                          </div>
+                          <p className="text-xs text-emerald-700 mt-0.5">
+                            Müşteri bu ürünleri sepetine ekledi ancak henüz satın almayı tamamlamadı.
+                          </p>
+                        </div>
+
+                        {selectedCustomer.phone && (
+                          <a 
+                            href={`https://wa.me/${selectedCustomer.phone.replace(/[^0-9]/g, '')}?text=Merhaba%20${encodeURIComponent(selectedCustomer.name || '')},%20PN%20Parfüm%20sepetinizdeki%20ürünleriniz%20için%20özel%20ayrıcalıklar%20sizi%20bekliyor!`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-sm"
+                          >
+                            <MessageCircle size={14} /> Sepet Hatırlatması Gönder
+                          </a>
+                        )}
+                      </div>
+
+                      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                        <table className="w-full text-left text-xs">
+                          <thead>
+                            <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 font-semibold">
+                              <th className="px-4 py-3">Ürün Adı</th>
+                              <th className="px-4 py-3">SKU</th>
+                              <th className="px-4 py-3 text-center">Adet</th>
+                              <th className="px-4 py-3 text-right">Birim Fiyat</th>
+                              <th className="px-4 py-3 text-right">Toplam</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100">
+                            {selectedCustomer.cart.map((it: any, idx: number) => (
+                              <tr key={idx} className="hover:bg-gray-50/50">
+                                <td className="px-4 py-3 font-medium text-gray-900">{it.name || 'Özel Harman Parfüm'}</td>
+                                <td className="px-4 py-3 font-mono text-gray-500">PN {it.sku}</td>
+                                <td className="px-4 py-3 text-center font-bold">{it.quantity || 1}</td>
+                                <td className="px-4 py-3 text-right text-gray-600">{it.price} TL</td>
+                                <td className="px-4 py-3 text-right font-semibold text-gray-900">{(it.price || 0) * (it.quantity || 1)} TL</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                          <tfoot className="bg-gray-50/50 border-t border-gray-200">
+                            <tr>
+                              <td colSpan={4} className="px-4 py-3 text-right font-medium text-gray-600">Sepet Toplam Tutarı:</td>
+                              <td className="px-4 py-3 text-right font-bold text-gray-900 text-sm">
+                                {selectedCustomer.cart.reduce((sum: number, it: any) => sum + ((it.price || 0) * (it.quantity || 1)), 0)} TL
+                              </td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="bg-gray-50 rounded-2xl p-12 text-center text-gray-400 border border-dashed border-gray-200">
+                      <ShoppingCart size={40} className="mx-auto mb-2 opacity-30" />
+                      <p className="text-sm font-medium text-gray-600">Müşterinin sepeti şu anda boş</p>
+                      <p className="text-xs text-gray-400 mt-1">Kullanıcı sepete ürün eklediğinde burada canlı olarak listelenecektir.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TAB 4: Siparişler & Kuponlar */}
+              {customerModalTab === 'history' && (
+                <div className="space-y-6">
+                  {/* Sipariş Geçmişi */}
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3 flex items-center gap-1.5">
+                      <Package size={14} /> Geçmiş Siparişleri ({selectedCustomer.orders?.length || 0})
+                    </h4>
+                    {Array.isArray(selectedCustomer.orders) && selectedCustomer.orders.length > 0 ? (
+                      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                        <table className="w-full text-left text-xs">
+                          <thead>
+                            <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 font-semibold">
+                              <th className="px-4 py-3">Sipariş No</th>
+                              <th className="px-4 py-3">Tutar</th>
+                              <th className="px-4 py-3">Durum</th>
+                              <th className="px-4 py-3">Tarih</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100">
+                            {selectedCustomer.orders.map((o: any) => (
+                              <tr key={o.id} className="hover:bg-gray-50/50">
+                                <td className="px-4 py-3 font-mono font-semibold text-gray-900">{o.orderNumber}</td>
+                                <td className="px-4 py-3 font-bold text-gray-900">{o.totalAmount} TL</td>
+                                <td className="px-4 py-3">{getStatusBadge(o.status)}</td>
+                                <td className="px-4 py-3 text-gray-500">{new Date(o.createdAt).toLocaleDateString('tr-TR')}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="p-6 bg-gray-50 rounded-2xl text-center text-gray-400 text-xs border">
+                        Henüz siparişi bulunmuyor.
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Kupon Kasası */}
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3 flex items-center gap-1.5">
+                      <Tag size={14} /> Tanımlı Kuponları ({selectedCustomer.coupons?.length || 0})
+                    </h4>
+                    {Array.isArray(selectedCustomer.coupons) && selectedCustomer.coupons.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {selectedCustomer.coupons.map((cp: any) => (
+                          <div key={cp.id} className="p-3 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-between">
+                            <div>
+                              <div className="font-mono font-bold text-indigo-700 text-xs">{cp.code}</div>
+                              <div className="text-[10px] text-gray-500">
+                                {cp.discount_type === 'percentage' ? `%${cp.value} İndirim` : `${cp.value} TL İndirim`}
+                              </div>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${cp.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
+                              {cp.is_active ? 'Aktif' : 'Kullanıldı'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-6 bg-gray-50 rounded-2xl text-center text-gray-400 text-xs border">
+                        Tanımlı kupon bulunmuyor.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

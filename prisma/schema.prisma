@@ -139,6 +139,10 @@ model Customer {
   orders            Order[]
   notifications     Notification[]
   
+  // Oturum & Canlı Sepet Takibi
+  lastLogin         DateTime?
+  cart              Json? // Sepetteki anlık ürünler (Terk edilmiş sepet ve sepet analizi için)
+  
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
