@@ -406,6 +406,17 @@ export default function ProfilePage() {
                             ))}
                           </ul>
                           
+                          {/* Kargo Takip Bilgisi */}
+                          {(order.status === 'shipped' || order.status === 'delivered') && order.trackingCode && (
+                            <div className="bg-purple-500/10 border border-purple-500/20 p-4 rounded-xl mt-4 flex items-center justify-between text-xs">
+                              <div>
+                                <span className="font-semibold text-purple-600">{order.cargoCompany || 'Kargo'}: </span>
+                                <span className="font-mono text-foreground font-medium ml-1">{order.trackingCode}</span>
+                              </div>
+                              <span className="bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Kargoda</span>
+                            </div>
+                          )}
+
                           <div className="bg-foreground/5 p-4 rounded-xl mt-4">
                             <div className="flex justify-between items-start mb-2">
                               <p className="text-xs uppercase tracking-widest text-foreground/50">Teslimat Adresi</p>

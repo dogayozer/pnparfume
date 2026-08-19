@@ -203,6 +203,10 @@ model Order {
   customerAddress      String?
   paytrToken           String?
   
+  // Kargo & Lojistik Takip
+  cargoCompany         String? // Örn: "Yurtiçi Kargo", "Aras Kargo", "MNG Kargo", "Sürat Kargo", "PTT"
+  trackingCode         String? // Kargo Takip Kodu
+  
   // Paydaş Ekonomisi (Kargo Birleştirme)
   combinedWithOrderId  String? // Arkadaşının kargo numarası
   shippingCostDiscount Float    @default(0) // Anında kargo indirimi
