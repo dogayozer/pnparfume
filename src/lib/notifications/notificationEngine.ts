@@ -181,3 +181,21 @@ export async function sendAbandonedCartNotification(params: {
     message
   })
 }
+
+// 6. Doğum Günü / Doğum Ayı VIP Kutlama Bildirimi
+export async function sendBirthdayNotification(params: {
+  customerName: string
+  phone?: string | null
+  customerId: string
+  couponCode: string
+  discountPercent: number
+}) {
+  const message = `İyi ki doğdunuz Sayın ${params.customerName}! 🎂 PN Parfüm aileniz olarak yeni yaşınızı kutlarız. Doğum gününüze özel %${params.discountPercent} VIP indirim kuponunuz: ${params.couponCode}. Keyifli alışverişler dileriz! https://pnparfume.com`
+  return sendNotification({
+    phone: params.phone,
+    customerId: params.customerId,
+    triggerReason: 'custom',
+    type: 'sms',
+    message
+  })
+}

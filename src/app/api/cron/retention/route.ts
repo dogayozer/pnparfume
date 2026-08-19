@@ -1,22 +1,24 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { sendBirthdayNotification } from '@/lib/notifications/notificationEngine'
 
-// Bu route'un Vercel veya AWS üzerinde her gece 00:00'da tetikleneceği varsayılır (Cron-Job)
+// Vercel Cron / Nightly Retention & Birthday Automation Route
 export async function GET(request: Request) {
   try {
-    // Güvenlik: Sadece yetkili cron servisinin bu URL'yi çağırabildiğinden emin olmak için secret kontrolü yapılabilir.
-    // const authHeader = request.headers.get('authorization');
-    // if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    // Bugünün tarihi ve tam 45 gün öncesinin başlangıç ve bitiş zamanı
     const today = new Date();
+    const currentMonth = today.getMonth() + 1; // 1-12
+    let refillNotifsCreated = 0;
+    let birthdayNotifsCreated = 0;
+
+    // -------------------------------------------------------------
+    // 1. 45. GÜN PARFÜM YENİLEME HATIRLATICISI
+    // -------------------------------------------------------------
     const fortyFiveDaysAgoStart = new Date(today.getTime() - (45 * 24 * 60 * 60 * 1000));
     fortyFiveDaysAgoStart.setHours(0, 0, 0, 0);
     
     const fortyFiveDaysAgoEnd = new Date(fortyFiveDaysAgoStart);
     fortyFiveDaysAgoEnd.setHours(23, 59, 59, 999);
 
-    // Tam 45 gün önce tamamlanmış (shipped veya delivered) siparişleri bul
     const oldOrders = await prisma.order.findMany({
       where: {
         createdAt: {
@@ -31,11 +33,8 @@ export async function GET(request: Request) {
       }
     });
 
-    let notificationsCreated = 0;
-
     for (const order of oldOrders) {
       if (order.customerId) {
-        // Zaten bu sipariş/müşteri için daha önce bir hatırlatma gönderilmiş mi kontrolü
         const existingNotif = await prisma.notification.findFirst({
           where: {
             customerId: order.customerId,
@@ -45,7 +44,6 @@ export async function GET(request: Request) {
         });
 
         if (!existingNotif) {
-          // Özel %10 İndirim Kuponu Oluştur (Sadece bu müşteriye özel)
           const newCoupon = await prisma.coupon.create({
             data: {
               code: `YENILE-${order.customer?.name?.substring(0,3).toUpperCase() || 'PN'}-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -55,34 +53,87 @@ export async function GET(request: Request) {
               source: 'system',
               is_active: true,
               usage_limit: 1,
-              expiresAt: new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000)) // 7 gün geçerli
+              expiresAt: new Date(today.getTime() + (14 * 24 * 60 * 60 * 1000))
             }
           });
 
-          // Bildirim oluştur
           await prisma.notification.create({
             data: {
               customerId: order.customerId,
-              type: 'email', // Ya da SMS/Whatsapp
-              message_content: `Merhaba ${order.customer?.name || ''}, imza parfümünüz bitmek üzere olmalı. Sizin için oluşturduğumuz ${newCoupon.code} koduyla %10 indirimli olarak hemen yenileyebilirsiniz.`,
+              phone: order.customerPhone || order.customer?.phone,
+              type: 'sms',
+              message_content: `Merhaba ${order.customer?.name || 'Değerli Müşterimiz'}, imza parfümünüz bitmek üzere olmalı. Sizin için tanımladığımız ${newCoupon.code} koduyla %10 indirimli olarak hemen yenileyebilirsiniz: https://pnparfume.com`,
               trigger_reason: 'refill_reminder',
-              status: 'pending',
+              status: 'sent',
               scheduledFor: today
             }
           });
 
-          notificationsCreated++;
+          refillNotifsCreated++;
+        }
+      }
+    }
+
+    // -------------------------------------------------------------
+    // 2. DOĞUM AYI / DOĞUM GÜNÜ VIP KAMPANYA OTOMASYONU
+    // -------------------------------------------------------------
+    const birthdayCustomers = await prisma.customer.findMany({
+      where: {
+        birth_month: currentMonth,
+        sms_opt_in: true
+      }
+    });
+
+    const oneYearAgo = new Date(today.getTime() - (300 * 24 * 60 * 60 * 1000));
+
+    for (const cust of birthdayCustomers) {
+      // Check if already received birthday coupon in the last 300 days
+      const existingBdayNotif = await prisma.notification.findFirst({
+        where: {
+          customerId: cust.id,
+          trigger_reason: 'custom',
+          createdAt: { gte: oneYearAgo }
+        }
+      });
+
+      if (!existingBdayNotif) {
+        const bdayCode = `VIPDOGUM-${cust.name.substring(0,3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+        await prisma.coupon.create({
+          data: {
+            code: bdayCode,
+            discount_type: 'percentage',
+            value: 20,
+            ownerId: cust.id,
+            source: 'system',
+            is_active: true,
+            usage_limit: 1,
+            expiresAt: new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000)) // 30 gün geçerli
+          }
+        });
+
+        try {
+          await sendBirthdayNotification({
+            customerName: cust.name,
+            phone: cust.phone,
+            customerId: cust.id,
+            couponCode: bdayCode,
+            discountPercent: 20
+          });
+          birthdayNotifsCreated++;
+        } catch (smsErr) {
+          console.error(`Birthday SMS dispatch error for ${cust.name}:`, smsErr);
         }
       }
     }
 
     return NextResponse.json({ 
       success: true, 
-      message: `${notificationsCreated} adet 45. gün parfüm yenileme (retention) bildirimi sıraya alındı.` 
+      message: `Cron tamamlandı: ${refillNotifsCreated} adet parfüm yenileme ve ${birthdayNotifsCreated} adet Doğum Günü VIP SMS bildirimi başarıyla işlendi.` 
     });
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('Retention Cron Error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal Server Error: ' + error.message }, { status: 500 });
   }
 }
