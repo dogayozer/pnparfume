@@ -3,6 +3,7 @@ import ProductCard from '@/components/ProductCard'
 import FilterSidebar from '@/components/catalog/FilterSidebar'
 import MobileFilterSort from '@/components/catalog/MobileFilterSort'
 import Pagination from '@/components/catalog/Pagination'
+import { getProductKasapImage } from '@/lib/kasapImages'
 
 export default async function KatalogPage({
   searchParams,
@@ -39,21 +40,21 @@ export default async function KatalogPage({
     include: { marketplaceListings: true }
   })
 
-  let processedProducts = allProducts.map((product) => {
-    const trendyolListing = product.marketplaceListings?.find(l => l.platform === 'trendyol')
-    const trendyolImage = trendyolListing?.images?.[0] || null
+  let processedProducts = allProducts.map((product: any, index: number) => {
+    const trendyolListing = product.marketplaceListings?.find((l: any) => l.platform === 'trendyol')
+    const kasapImageUrl = getProductKasapImage(product.sku, index)
     
     return {
       ...product,
       trendyolListing,
-      finalImageUrl: trendyolImage
+      finalImageUrl: kasapImageUrl
     }
-  }).filter(product => product.finalImageUrl)
+  })
 
   if (sort === 'price_asc') {
-    processedProducts.sort((a, b) => (a.trendyolListing?.price || a.base_cost) - (b.trendyolListing?.price || b.base_cost))
+    processedProducts.sort((a: any, b: any) => (a.trendyolListing?.price || a.base_cost) - (b.trendyolListing?.price || b.base_cost))
   } else if (sort === 'newest') {
-    processedProducts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    processedProducts.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   }
 
   const products = processedProducts

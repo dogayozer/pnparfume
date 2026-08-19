@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import ProductGallery from '@/components/ProductGallery'
 import ProductActions from '@/components/ProductActions'
+import { getProductKasapImage } from '@/lib/kasapImages'
 
 export const revalidate = 86400 // Cache for 24 hours (super fast loading)
 
@@ -60,12 +61,12 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
     }
   })
 
-  if (!product || product.publish_status === 'DRAFT') {
+  if (!product) {
     notFound()
   }
 
-  const trendyolListing = product.marketplaceListings?.find(l => l.platform === 'trendyol')
-  const imageUrl = trendyolListing?.images?.[0]
+  const trendyolListing = product.marketplaceListings?.find((l: any) => l.platform === 'trendyol')
+  const finalImageUrl = trendyolListing?.images?.[0] || null
   const displayPrice = trendyolListing?.price || product.base_cost
   const marketPrice = trendyolListing?.marketPrice
   const description = trendyolListing?.description ? parseDescription(trendyolListing.description) : `
@@ -101,7 +102,7 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
         <div>
           {/* Left: Product Visual/Gallery */}
           <ProductGallery 
-            images={trendyolListing?.images || []}
+            images={trendyolListing?.images?.length ? trendyolListing.images : [getProductKasapImage(product.sku)]}
             title={title}
             isOutOfStock={isOutOfStock}
             sku={product.sku}
