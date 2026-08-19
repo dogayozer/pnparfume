@@ -2,15 +2,20 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Sparkles, User, X, MessageSquare, Plus, ArrowRight } from 'lucide-react'
+import { Send, Sparkles, User, X, MessageSquare, Plus, ArrowRight, ShoppingBag, Check, Copy, Tag } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
+import { useCart } from '@/contexts/CartContext'
+import { getProductKasapImage } from '@/lib/kasapImages'
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [addedSku, setAddedSku] = useState<string | null>(null)
+  const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null)
   
   // 'initial' | 'wizard' | 'similar' | 'chat'
   const [flowMode, setFlowMode] = useState('initial')
@@ -18,12 +23,32 @@ export default function ChatWidget() {
   const [wizardProducts, setWizardProducts] = useState<any[]>([])
   
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const { addToCart, setIsCartOpen } = useCart()
 
   useEffect(() => {
     if (isOpen) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
   }, [messages, isOpen])
+
+  const handleAddToCart = (prod: any) => {
+    addToCart({
+      sku: prod.sku,
+      name: prod.original_name || `PN ${prod.sku}`,
+      price: prod.price || 850,
+      quantity: 1
+    })
+    setAddedSku(prod.sku)
+    setTimeout(() => setAddedSku(null), 2500)
+    setIsCartOpen(true)
+  }
+
+  const handleApplyCoupon = (code: string) => {
+    navigator.clipboard.writeText(code)
+    localStorage.setItem('pn_referral_code', code)
+    setCopiedCoupon(code)
+    setTimeout(() => setCopiedCoupon(null), 2500)
+  }
 
   const addWizardStep = (step: string) => {
     if (step === 'gender') {
@@ -119,7 +144,7 @@ export default function ChatWidget() {
         return
       }
 
-      // Lokal Filtreleme (Sıfır LLM, Sıfır Backend)
+      // Local filter
       let filtered = [...wizardProducts]
       const valLower = value.toLowerCase()
 
@@ -131,7 +156,6 @@ export default function ChatWidget() {
       else if (valLower.includes('çekici')) filtered = filtered.filter(p => p.mood_tag?.toLowerCase().includes('çekici') || p.mood_tag?.toLowerCase().includes('seksi') || p.mood_tag?.toLowerCase().includes('etkileyici'))
       else if (valLower.includes('ferah')) filtered = filtered.filter(p => p.mood_tag?.toLowerCase().includes('ferah') || p.mood_tag?.toLowerCase().includes('temiz') || p.mood_tag?.toLowerCase().includes('enerjik'))
 
-      // Eğer çok fazla daralttıysa ve ürün kalmadıysa
       if (filtered.length === 0) {
         setMessages(prev => [...prev, { 
           id: Date.now().toString(), 
@@ -149,7 +173,6 @@ export default function ChatWidget() {
         toolResults: [{ toolName: 'searchProducts', result: filtered }]
       }])
       
-      // Tekrar daraltma imkanı sun
       setTimeout(() => addWizardStep('refinement'), 500)
       return
     }
@@ -226,8 +249,7 @@ export default function ChatWidget() {
     
     const lowerText = textToSend.toLowerCase()
     
-    // Niyet Yakalama (Intent Interception)
-    // Eğer kullanıcı manuel olarak "öner" yazarsa sihirbazı başlat
+    // Intent Interception
     if (flowMode === 'initial' || flowMode === 'chat') {
       const isWizardIntent = /öner|oner|tavsiye|tavsıye|hangi parfüm|hangi parfum|koku seç|koku sec|yardım|yardim/i.test(lowerText) && !/gibi|benzer|muadil/i.test(lowerText)
       const isSimilarIntent = /gibi|benzer|muadil/i.test(lowerText)
@@ -242,8 +264,6 @@ export default function ChatWidget() {
       
       if (isSimilarIntent) {
         setFlowMode('similar')
-        // Doğrudan backend'e "similar" olarak gitmesi için flowMode'u similar yapıp aşağıdan devam etmesine izin veriyoruz
-        // Veya daha iyisi, similar match endpointine gönderelim:
       }
     }
 
@@ -263,7 +283,13 @@ export default function ChatWidget() {
         })
       })
       
-      const data = await res.json()
+      const rawText = await res.text()
+      let data: any = {}
+      try {
+        data = JSON.parse(rawText.trim())
+      } catch {
+        data = { text: rawText }
+      }
       
       if (data.type === 'did_you_mean') {
         const assistantMessage = {
@@ -275,7 +301,6 @@ export default function ChatWidget() {
           suggestion: data.suggestion
         }
         setMessages(prev => [...prev, assistantMessage])
-        // Akışa devam etmesi için flowMode sıfırlanmıyor
       } else {
         const assistantMessage = {
           id: (Date.now() + 1).toString(),
@@ -321,7 +346,7 @@ export default function ChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-0 right-0 w-full h-[70vh] md:bottom-6 md:right-6 md:w-[400px] md:h-[600px] md:max-h-[80vh] bg-background border border-foreground/10 rounded-t-2xl md:rounded-2xl shadow-2xl flex flex-col overflow-hidden z-[60]"
+            className="fixed bottom-0 right-0 w-full h-[75vh] md:bottom-6 md:right-6 md:w-[420px] md:h-[620px] md:max-h-[82vh] bg-background border border-foreground/10 rounded-t-2xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden z-[60]"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 bg-foreground text-background">
@@ -420,24 +445,70 @@ export default function ChatWidget() {
                     {/* Tool UI */}
                     {m.toolResults?.map((tr: any, idx: number) => {
                       const resultData = tr.result || tr.output || tr;
+                      
+                      // Search Products
                       if (tr.toolName === 'searchProducts') {
                         return (
                           <div key={idx} className="mt-3 p-3 bg-foreground/5 rounded-xl border border-foreground/10">
-                            <p className="text-[10px] font-medium text-accent-gold mb-2 tracking-widest uppercase">Önerilen Parfümler ({Array.isArray(resultData) ? resultData.length : 0})</p>
-                            <div className="space-y-2 max-h-[250px] overflow-y-auto pr-1 custom-scrollbar">
-                              {Array.isArray(resultData) && resultData.length > 0 ? resultData.map((prod: any) => (
-                                <Link key={prod.sku} href={`/urun/${prod.sku}`} className="block p-2 bg-background rounded-md hover:border-accent-rose border border-transparent transition-colors text-xs shadow-sm">
-                                  <div className="flex items-center justify-between mb-1">
-                                    <span className="font-medium">PN {prod.sku}</span>
-                                    <span className="text-[9px] uppercase font-bold text-accent-gold tracking-widest">{prod.gender}</span>
+                            <p className="text-[10px] font-medium text-accent-gold mb-2 tracking-widest uppercase">Önerilen İmza Parfümler ({Array.isArray(resultData) ? resultData.length : 0})</p>
+                            <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1 custom-scrollbar">
+                              {Array.isArray(resultData) && resultData.length > 0 ? resultData.map((prod: any) => {
+                                const prodImg = getProductKasapImage(prod.sku)
+                                return (
+                                  <div key={prod.sku} className="p-2.5 bg-background rounded-xl border border-foreground/10 flex items-center justify-between gap-2 shadow-sm">
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                      <div className="w-10 h-10 rounded-lg overflow-hidden relative flex-shrink-0 bg-foreground/5">
+                                        <Image src={prodImg} alt={prod.sku} fill className="object-cover" />
+                                      </div>
+                                      <div className="min-w-0">
+                                        <Link href={`/urun/${prod.sku}`} className="font-bold text-foreground hover:text-accent-gold transition-colors text-xs truncate block">
+                                          PN {prod.sku}
+                                        </Link>
+                                        <span className="text-[10px] text-foreground/50 truncate block">{prod.mood_tag || prod.fragrance_family?.[0] || 'İmza Koku'}</span>
+                                        <span className="text-[11px] font-semibold text-accent-gold block">{prod.price || 850} TL</span>
+                                      </div>
+                                    </div>
+
+                                    <button
+                                      onClick={() => handleAddToCart(prod)}
+                                      className={`p-2 rounded-lg text-[10px] font-semibold transition-colors flex items-center gap-1 flex-shrink-0 ${
+                                        addedSku === prod.sku 
+                                          ? 'bg-emerald-600 text-white' 
+                                          : 'bg-foreground text-background hover:bg-accent-gold'
+                                      }`}
+                                      title="Sepete Ekle"
+                                    >
+                                      {addedSku === prod.sku ? <Check size={12} /> : <ShoppingBag size={12} />}
+                                      <span>{addedSku === prod.sku ? 'Eklendi' : 'Ekle'}</span>
+                                    </button>
                                   </div>
-                                  <div className="text-[10px] text-foreground/60 line-clamp-1">{prod.families?.join(', ') || prod.fragrance_family?.join(', ')}</div>
-                                </Link>
-                              )) : <div className="text-xs text-foreground/60">Ürün bulunamadı.</div>}
+                                )
+                              }) : <div className="text-xs text-foreground/60">Ürün bulunamadı.</div>}
                             </div>
                           </div>
                         )
                       }
+
+                      // Generate Discount
+                      if (tr.toolName === 'generateDiscount' && resultData?.code) {
+                        return (
+                          <div key={idx} className="mt-3 p-3 bg-gradient-to-br from-amber-500/15 to-accent-rose/15 rounded-xl border border-accent-gold/30 text-center space-y-1.5">
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-accent-gold flex items-center justify-center gap-1">
+                              <Tag size={12} /> Size Özel İndirim Tanımlandı
+                            </div>
+                            <div className="font-mono font-bold text-base text-foreground tracking-wider">{resultData.code}</div>
+                            <div className="text-[11px] text-foreground/70 font-medium">%{resultData.discountPercentage} Anında İndirim</div>
+                            <button
+                              onClick={() => handleApplyCoupon(resultData.code)}
+                              className="w-full mt-1 bg-foreground text-background py-1.5 rounded-lg text-[11px] font-semibold hover:bg-accent-gold transition-colors flex items-center justify-center gap-1 shadow-sm"
+                            >
+                              {copiedCoupon === resultData.code ? <Check size={12} /> : <Copy size={12} />}
+                              <span>{copiedCoupon === resultData.code ? 'Kupon Kopyalandı!' : 'Kuponu Sepete Tanımla'}</span>
+                            </button>
+                          </div>
+                        )
+                      }
+
                       return null
                     })}
                   </div>
@@ -467,13 +538,13 @@ export default function ChatWidget() {
                   onChange={(e) => setInput(e.target.value)}
                   placeholder={flowMode === 'wizard' ? "Lütfen yukarıdan seçim yapın" : "Mesajınızı yazın..."}
                   disabled={flowMode === 'wizard'}
-                  className="flex-1 bg-foreground/5 border border-foreground/10 rounded-full px-4 py-3 text-sm focus:outline-none focus:border-accent-rose/50 transition-colors disabled:bg-foreground/5"
+                  className="flex-1 bg-foreground/5 border border-foreground/10 rounded-full px-4 py-3 text-sm focus:outline-none focus:border-accent-rose/50 transition-colors disabled:bg-foreground/5 text-foreground"
                   style={{ touchAction: 'manipulation' }}
                 />
                 <button 
                   type="submit" 
                   disabled={isLoading || !(input || '').trim() || flowMode === 'wizard'}
-                  className="w-11 h-11 md:w-9 md:h-9 rounded-full bg-foreground text-background flex items-center justify-center hover:bg-accent-rose transition-colors disabled:opacity-50 flex-shrink-0"
+                  className="w-11 h-11 md:w-9 md:h-9 rounded-full bg-foreground text-background flex items-center justify-center hover:bg-accent-gold transition-colors disabled:opacity-50 flex-shrink-0"
                 >
                   <Send size={16} />
                 </button>
