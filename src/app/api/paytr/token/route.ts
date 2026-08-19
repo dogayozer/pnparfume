@@ -67,8 +67,8 @@ export async function POST(req: Request) {
     // Create Hash String - MUST BE EXACT STRINGS
     const hash_str = merchant_id + user_ip + merchant_oid + email + payment_amount.toString() + user_basket + no_installment + max_installment + currency + test_mode
     
-    // Generate Token
-    const paytr_token = crypto.createHmac('sha256', merchant_key + merchant_salt).update(hash_str).digest('base64')
+    // Generate Token (Data = hash_str + merchant_salt, Key = merchant_key)
+    const paytr_token = crypto.createHmac('sha256', merchant_key).update(hash_str + merchant_salt).digest('base64')
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
