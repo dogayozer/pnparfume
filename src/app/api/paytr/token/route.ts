@@ -34,6 +34,7 @@ export async function POST(req: Request) {
         customerEmail: customer.email,
         customerPhone: customer.phone,
         customerAddress: customer.address,
+          customerId: userId || null,
         combinedWithOrderId: friendOrderCode || null,
         shippingCostDiscount: shippingFee === 0 && !friendOrderCode ? 100 : 0
       }

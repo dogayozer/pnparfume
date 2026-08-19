@@ -45,6 +45,13 @@ export default function ProfilePage() {
   const [addressMsg, setAddressMsg] = useState<{type: 'success' | 'error', text: string} | null>(null)
   const [addressLoading, setAddressLoading] = useState(false)
 
+
+  // State for order address update
+  const [orders, setOrders] = useState<any[]>([])
+  const [editingOrderAddr, setEditingOrderAddr] = useState<string | null>(null)
+  const [newOrderAddr, setNewOrderAddr] = useState('')
+  const [orderAddrMsg, setOrderAddrMsg] = useState<{type: 'success' | 'error', text: string} | null>(null)
+
   useEffect(() => {
     const savedUser = localStorage.getItem('user')
     if (savedUser) {
@@ -54,10 +61,53 @@ export default function ProfilePage() {
         phone: parsed.phone || '',
         address: parsed.address || ''
       })
+      
+      // Fetch fresh orders and real data
+      fetch('/api/user/me', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: parsed.id })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (!data.error) {
+           setUser(data)
+           setOrders(data.orders || [])
+           localStorage.setItem('user', JSON.stringify(data))
+        }
+      })
+      .catch(console.error)
+
     } else {
       window.location.href = '/hesap'
     }
   }, [])
+
+  const handleOrderAddrUpdate = async (orderId: string) => {
+    setOrderAddrMsg(null)
+    try {
+      const res = await fetch('/api/orders/update-address', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId,
+          newAddress: newOrderAddr,
+          userId: user?.id
+        })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      
+      setOrders(orders.map(o => o.id === orderId ? { ...o, customerAddress: newOrderAddr } : o))
+      setEditingOrderAddr(null)
+      setOrderAddrMsg({ type: 'success', text: 'Sipariş adresi güncellendi' })
+      setTimeout(() => setOrderAddrMsg(null), 3000)
+    } catch (err: any) {
+      setOrderAddrMsg({ type: 'error', text: err.message })
+    }
+  }
+
+
 
   const handleAddressUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -141,8 +191,22 @@ export default function ProfilePage() {
     }, 1500)
   }
 
-  const activeOrders = displayUser.orders.filter(o => o.status === 'Hazırlanıyor' || o.status === 'Kargoya Verildi')
-  const pastOrders = displayUser.orders.filter(o => o.status === 'Teslim Edildi' || o.status === 'İptal Edildi')
+
+  // Map Prisma statuses to UI
+  const getStatusTr = (status: string) => {
+    switch(status) {
+      case 'pending': return 'Ödeme Bekliyor'
+      case 'paid': return 'Hazırlanıyor'
+      case 'shipped': return 'Kargoya Verildi'
+      case 'delivered': return 'Teslim Edildi'
+      case 'cancelled': return 'İptal Edildi'
+      default: return status
+    }
+  }
+
+  const activeOrders = orders.filter((o: any) => o.status === 'pending' || o.status === 'paid' || o.status === 'shipped')
+  const pastOrders = orders.filter((o: any) => o.status === 'delivered' || o.status === 'cancelled')
+
 
   return (
     <div className="min-h-screen bg-background pt-24 pb-20">
@@ -310,28 +374,71 @@ export default function ProfilePage() {
                 <div className="space-y-4 pt-4">
                   {(orderSubTab === 'aktif' ? activeOrders : pastOrders).map((order, i) => (
                     <div key={i} className="border border-foreground/10 rounded-2xl p-6 flex flex-col justify-between items-start gap-4 hover:border-accent-gold/30 transition-colors">
-                      <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-foreground/5 pb-4 mb-2">
-                        <div>
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className="font-mono text-sm tracking-wider font-medium">{order.id}</span>
-                            <span className={`text-xs px-2 py-1 rounded-full ${
-                              order.status === 'Teslim Edildi' ? 'bg-green-500/10 text-green-600' : 
-                              order.status === 'İptal Edildi' ? 'bg-red-500/10 text-red-600' :
-                              'bg-accent-gold/10 text-accent-gold'
-                            }`}>
-                              {order.status}
-                            </span>
+                        <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-foreground/5 pb-4 mb-2">
+                          <div>
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="font-mono text-sm tracking-wider font-medium">{order.orderNumber}</span>
+                              <span className={`text-xs px-2 py-1 rounded-full ${
+                                order.status === 'delivered' ? 'bg-green-500/10 text-green-600' : 
+                                order.status === 'cancelled' ? 'bg-red-500/10 text-red-600' :
+                                'bg-accent-gold/10 text-accent-gold'
+                              }`}>
+                                {getStatusTr(order.status)}
+                              </span>
+                            </div>
+                            <p className="text-sm text-foreground/60">{new Date(order.createdAt).toLocaleDateString('tr-TR')}</p>
                           </div>
-                          <p className="text-sm text-foreground/60">{order.date}</p>
+                          
+                          <div className="text-left sm:text-right w-full sm:w-auto flex sm:flex-col justify-between sm:justify-center items-center sm:items-end">
+                            <span className="text-xl font-light text-accent-rose">{order.totalAmount} TL</span>
+                          </div>
                         </div>
-                        
-                        <div className="text-left sm:text-right w-full sm:w-auto flex sm:flex-col justify-between sm:justify-center items-center sm:items-end">
-                          <span className="text-xl font-light text-accent-rose">{order.total}</span>
-                          {order.combinedWith && (
-                            <span className="text-xs bg-blue-500/10 text-blue-600 px-2 py-1 rounded-full mt-2 inline-block">
-                              Arkadaş Kargosu ({order.combinedWith})
-                            </span>
-                          )}
+  
+                        {/* Sipariş İçeriği */}
+                        <div className="w-full">
+                          <p className="text-xs uppercase tracking-widest text-foreground/50 mb-3">Sipariş İçeriği</p>
+                          <ul className="space-y-2 mb-4">
+                            {(order.items as any[])?.map((item: any, idx: number) => (
+                              <li key={idx} className="flex justify-between items-center text-sm">
+                                <span className="text-foreground/80 font-light">{item.quantity}x {item.name}</span>
+                                <span className="font-mono text-xs text-foreground/40">{item.price} TL</span>
+                              </li>
+                            ))}
+                          </ul>
+                          
+                          <div className="bg-foreground/5 p-4 rounded-xl mt-4">
+                            <div className="flex justify-between items-start mb-2">
+                              <p className="text-xs uppercase tracking-widest text-foreground/50">Teslimat Adresi</p>
+                              {(order.status === 'pending' || order.status === 'paid') && (
+                                <button 
+                                  onClick={() => {
+                                    setEditingOrderAddr(order.id)
+                                    setNewOrderAddr(order.customerAddress || '')
+                                  }}
+                                  className="text-xs text-accent-gold hover:underline"
+                                >
+                                  Adresi Değiştir
+                                </button>
+                              )}
+                            </div>
+                            
+                            {editingOrderAddr === order.id ? (
+                              <div className="mt-2 space-y-3">
+                                <textarea 
+                                  value={newOrderAddr}
+                                  onChange={e => setNewOrderAddr(e.target.value)}
+                                  className="w-full bg-background border border-foreground/10 rounded-lg p-3 text-sm focus:border-accent-gold outline-none"
+                                  rows={3}
+                                />
+                                <div className="flex gap-2">
+                                  <button onClick={() => handleOrderAddrUpdate(order.id)} className="bg-foreground text-background px-4 py-2 rounded-lg text-xs hover:bg-accent-gold transition-colors">Kaydet</button>
+                                  <button onClick={() => setEditingOrderAddr(null)} className="px-4 py-2 rounded-lg text-xs hover:bg-foreground/5">İptal</button>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-sm text-foreground/80">{order.customerAddress}</p>
+                            )}
+                          </div>
                         </div>
                       </div>
 

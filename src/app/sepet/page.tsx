@@ -98,6 +98,7 @@ export default function CartPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           customer: checkoutForm,
+            userId: JSON.parse(localStorage.getItem('user') || '{}').id || null,
           cart: items,
           totalAmount: total,
           discountApplied: multiItemDiscount + couponDiscount,
