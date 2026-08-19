@@ -54,7 +54,14 @@ export default function AuraWidget() {
       content: messageText.trim()
     }
 
-    setMessages(prev => [...prev, userMsg])
+    const assistantId = (Date.now() + 1).toString()
+    const assistantMsgPlaceholder: ChatMessage = {
+      id: assistantId,
+      role: 'assistant',
+      content: ''
+    }
+
+    setMessages(prev => [...prev, userMsg, assistantMsgPlaceholder])
     setInput('')
     setLoading(true)
 
@@ -71,44 +78,73 @@ export default function AuraWidget() {
         body: JSON.stringify({ messages: history })
       })
 
-      const rawText = await res.text()
-      let data: any = {}
-      try {
-        data = JSON.parse(rawText.trim())
-      } catch {
-        data = { text: rawText }
+      if (!res.ok || !res.body) {
+        throw new Error('Yanıt alınamadı')
       }
 
-      // Extract products or coupon from tool results
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let accumulatedText = ''
       let foundProducts: any[] = []
       let generatedCoupon: any = null
+      let buffer = ''
 
-      if (Array.isArray(data.toolResults)) {
-        for (const tool of data.toolResults) {
-          if (tool.toolName === 'searchProducts' && Array.isArray(tool.result)) {
-            foundProducts = tool.result
-          }
-          if (tool.toolName === 'generateDiscount' && tool.result?.code) {
-            generatedCoupon = tool.result
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (!trimmed) continue
+
+          try {
+            const parsed = JSON.parse(trimmed)
+            if (parsed.type === 'token' && parsed.value) {
+              accumulatedText += parsed.value
+              setMessages(prev => prev.map(m => 
+                m.id === assistantId ? { ...m, content: accumulatedText } : m
+              ))
+            } else if (parsed.type === 'done') {
+              if (Array.isArray(parsed.toolResults)) {
+                for (const tool of parsed.toolResults) {
+                  if (tool.toolName === 'searchProducts' && Array.isArray(tool.result)) {
+                    foundProducts = tool.result
+                  }
+                  if (tool.toolName === 'generateDiscount' && tool.result?.code) {
+                    generatedCoupon = tool.result
+                  }
+                }
+              }
+              setMessages(prev => prev.map(m => 
+                m.id === assistantId 
+                  ? { 
+                      ...m, 
+                      content: accumulatedText || 'Size nasıl yardımcı olabilirim?',
+                      products: foundProducts.length > 0 ? foundProducts : undefined,
+                      coupon: generatedCoupon || undefined
+                    } 
+                  : m
+              ))
+            }
+          } catch {
+            // Raw text chunk fallback
+            accumulatedText += trimmed
+            setMessages(prev => prev.map(m => 
+              m.id === assistantId ? { ...m, content: accumulatedText } : m
+            ))
           }
         }
       }
-
-      const assistantMsg: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: data.text || 'Size nasıl yardımcı olabilirim?',
-        products: foundProducts.length > 0 ? foundProducts : undefined,
-        coupon: generatedCoupon || undefined
-      }
-
-      setMessages(prev => [...prev, assistantMsg])
     } catch (err) {
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: 'Bağlantı sırasında küçük bir aksaklık oldu. Lütfen tekrar deneyin.'
-      }])
+      setMessages(prev => prev.map(m => 
+        m.id === assistantId 
+          ? { ...m, content: 'Bağlantı sırasında küçük bir aksaklık oldu. Lütfen tekrar deneyin.' } 
+          : m
+      ))
     } finally {
       setLoading(false)
     }
@@ -213,7 +249,16 @@ export default function AuraWidget() {
                       ? 'bg-foreground text-background rounded-tr-sm font-light' 
                       : 'bg-foreground/5 border border-foreground/10 text-foreground/90 rounded-tl-sm'
                   }`}>
-                    <p className="whitespace-pre-line">{m.content}</p>
+                    {m.content ? (
+                      <p className="whitespace-pre-line">{m.content}</p>
+                    ) : (
+                      <div className="flex items-center gap-1.5 py-1 text-foreground/50 italic">
+                        <span className="w-1.5 h-1.5 rounded-full bg-accent-gold animate-bounce" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-accent-gold animate-bounce [animation-delay:0.2s]" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-accent-gold animate-bounce [animation-delay:0.4s]" />
+                        <span className="text-[10px] ml-1">Aura yazıyor...</span>
+                      </div>
+                    )}
 
                     {/* Recomended Products Card List */}
                     {m.products && m.products.length > 0 && (
@@ -279,13 +324,6 @@ export default function AuraWidget() {
                   </div>
                 </div>
               ))}
-
-              {loading && (
-                <div className="flex items-center gap-2 text-xs text-foreground/50 italic pl-10">
-                  <span className="w-2 h-2 rounded-full bg-accent-gold animate-ping" />
-                  Aura koku koleksiyonunu tarıyor...
-                </div>
-              )}
 
               <div ref={messagesEndRef} />
             </div>

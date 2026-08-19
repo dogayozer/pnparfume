@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { getAIModel } from '@/lib/ai-gateway'
-import { generateText, tool } from 'ai'
+import { streamText, tool } from 'ai'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getProductKasapImage } from '@/lib/kasapImages'
@@ -20,7 +20,7 @@ function checkChatRateLimit(ip: string): boolean {
     return true
   }
 
-  if (record.count >= 20) { // max 20 messages per minute
+  if (record.count >= 25) {
     return false
   }
 
@@ -29,19 +29,27 @@ function checkChatRateLimit(ip: string): boolean {
 }
 
 export async function POST(req: Request) {
+  const t0 = Date.now()
+  let tFirstToken: number | null = null
+
   try {
     const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown-ip'
     if (!checkChatRateLimit(ip)) {
-      return new Response(JSON.stringify({ 
-        text: 'Çok fazla istek gönderdiniz. Lütfen bir dakika sonra tekrar deneyin.', 
-        toolResults: [] 
-      }), { status: 429, headers: { 'Content-Type': 'application/json' } })
+      return new Response(
+        JSON.stringify({ 
+          text: 'Çok fazla istek gönderdiniz. Lütfen bir dakika sonra tekrar deneyin.', 
+          toolResults: [] 
+        }), 
+        { status: 429, headers: { 'Content-Type': 'application/json' } }
+      )
     }
 
     const { messages } = await req.json()
 
-    // Fetch AI Config from DB
+    // 1. Fetch AI Config from DB with timing
+    const tConfigStart = Date.now()
     const config = await prisma.aiConfig.findFirst()
+    const configMs = Date.now() - tConfigStart
     
     let systemPrompt = config?.system_prompt || `Sen PN Parfüm'ün Kişisel Koku Uzmanı ve Yapay Zeka Satış Asistanısın. 
 Adın "Aura". Müşterilerle son derece lüks, samimi ve ikna edici bir dille konuşuyorsun.
@@ -67,11 +75,11 @@ SATIŞ KAPATMA VE İNDİRİM:
     const encoder = new TextEncoder()
     const stream = new TransformStream()
     const writer = stream.writable.getWriter()
-    
-    // Send space immediately for fast response
-    writer.write(encoder.encode(" "))
 
-    generateText({
+    const collectedToolResults: any[] = []
+
+    // 2. Stream LLM Response
+    const result = streamText({
       model: getAIModel(),
       system: systemPrompt,
       messages,
@@ -85,6 +93,7 @@ SATIŞ KAPATMA VE İNDİRİM:
             family: z.string().optional().describe('Koku ailesi (Odunsu, Çiçeksi, Ferah, Oryantal)')
           }),
           execute: async ({ query = '', gender, occasion, family }: any) => {
+            const tToolStart = Date.now()
             try {
               let products = await prisma.product.findMany({
                 where: {
@@ -132,12 +141,19 @@ SATIŞ KAPATMA VE İNDİRİM:
                 })
               }
 
-              // Enrich with image and price
-              return products.map(p => ({
+              const enriched = products.map(p => ({
                 ...p,
                 price: 850,
                 image: getProductKasapImage(p.sku)
               }))
+
+              collectedToolResults.push({
+                toolName: 'searchProducts',
+                result: enriched,
+                executionMs: Date.now() - tToolStart
+              })
+
+              return enriched
             } catch (e: any) {
               return { error: 'Search error: ' + e.message }
             }
@@ -150,12 +166,12 @@ SATIŞ KAPATMA VE İNDİRİM:
             reason: z.string().describe('İndirim sebebi')
           }),
           execute: async ({ discountPercentage, reason }: any) => {
+            const tToolStart = Date.now()
             try {
               if (!canGiveDiscount) {
                 return { error: 'İndirim tanımlanamıyor' }
               }
               
-              // 🔴 Hard enforce server-side discount cap
               const actualDiscount = Math.min(Number(discountPercentage) || 10, Number(discountLimit) || 20)
               const code = 'AURA' + Math.random().toString(36).substring(2, 7).toUpperCase()
               
@@ -168,16 +184,24 @@ SATIŞ KAPATMA VE İNDİRİM:
                   is_ai_generated: true,
                   is_active: true,
                   usage_limit: 1,
-                  expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours expiry
+                  expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
                 }
               })
 
-              return { 
+              const discountRes = { 
                 code, 
                 discountPercentage: actualDiscount, 
                 reason: reason || 'Aura Özel İndirimi',
                 message: `Size özel %${actualDiscount} indirim kuponunuz: ${code}`
               }
+
+              collectedToolResults.push({
+                toolName: 'generateDiscount',
+                result: discountRes,
+                executionMs: Date.now() - tToolStart
+              })
+
+              return discountRes
             } catch (e: any) {
               return { error: 'Kupon hatası: ' + e.message }
             }
@@ -185,22 +209,61 @@ SATIŞ KAPATMA VE İNDİRİM:
         })
       },
       maxSteps: 3
-    }).then(result => {
-      const allToolResults = result.steps?.flatMap(step => step.toolResults) || []
-      writer.write(encoder.encode(JSON.stringify({ text: result.text, toolResults: allToolResults })))
-      writer.close()
-    }).catch(err => {
-      console.error("Chat API Error:", err)
-      writer.write(encoder.encode(JSON.stringify({ 
-        text: 'Size yardımcı olmaktan mutluluk duyarım. Hangi koku tarzını tercih edersiniz? (Örn: Odunsu, Ferah, Çiçeksi veya Tatlı)', 
-        toolResults: [] 
-      })))
-      writer.close()
     })
 
-    return new Response(stream.readable, { headers: { 'Content-Type': 'application/json' } })
-  } catch (error) {
-    console.error('Chat root error:', error)
+    // Background stream handler with real-time SSE chunking & timing
+    ;(async () => {
+      try {
+        for await (const delta of result.textStream) {
+          if (!tFirstToken) {
+            tFirstToken = Date.now()
+          }
+          const chunkData = JSON.stringify({ type: 'token', value: delta }) + '\n'
+          await writer.write(encoder.encode(chunkData))
+        }
+
+        // Wait for steps/tools to complete
+        await result.steps
+
+        const totalMs = Date.now() - t0
+        const ttftMs = tFirstToken ? tFirstToken - t0 : totalMs
+
+        // Log diagnostics for observability
+        console.log(`[AURA PERFORMANCE] Total: ${totalMs}ms | Config: ${configMs}ms | TTFT: ${ttftMs}ms | Tools: ${collectedToolResults.length}`)
+
+        // Send final metadata chunk with tool results
+        const finalData = JSON.stringify({
+          type: 'done',
+          toolResults: collectedToolResults,
+          timing: {
+            configMs,
+            ttftMs,
+            totalMs
+          }
+        }) + '\n'
+        await writer.write(encoder.encode(finalData))
+      } catch (streamErr) {
+        console.error('[AURA STREAM ERROR]:', streamErr)
+        const errorChunk = JSON.stringify({
+          type: 'token',
+          value: '\nSize yardımcı olmaktan mutluluk duyarım. Hangi koku tarzını tercih edersiniz? (Örn: Odunsu, Ferah veya Çiçeksi)'
+        }) + '\n'
+        await writer.write(encoder.encode(errorChunk))
+      } finally {
+        await writer.close()
+      }
+    })()
+
+    return new Response(stream.readable, {
+      headers: {
+        'Content-Type': 'text/event-stream; charset=utf-8',
+        'Cache-Control': 'no-cache, no-transform',
+        'Connection': 'keep-alive'
+      }
+    })
+
+  } catch (error: any) {
+    console.error('[AURA ROOT ERROR]:', error)
     return new Response(JSON.stringify({ text: 'Bir bağlantı hatası oluştu. Lütfen tekrar deneyin.' }), { status: 500 })
   }
 }
