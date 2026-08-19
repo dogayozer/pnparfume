@@ -241,19 +241,22 @@ model Order {
 }
 
 model Notification {
-  id                String   @id @default(cuid())
+  id                String    @id @default(cuid())
   
-  customerId        String
-  customer          Customer @relation(fields: [customerId], references: [id])
+  customerId        String?
+  customer          Customer? @relation(fields: [customerId], references: [id])
   
-  type              String   // "whatsapp", "email", "sms"
+  phone             String?
+  orderNumber       String?
+  type              String    // "whatsapp", "email", "sms"
   message_content   String
-  trigger_reason    String   // "cart_abandonment", "loyalty_mix_offer", "refill_reminder"
+  trigger_reason    String    // "order_created", "order_shipped", "order_delivered", "cart_abandonment", "affiliate_commission"
   
-  status            String   @default("pending") // pending, sent, failed
+  status            String    @default("sent") // sent, pending, simulated, failed
+  providerResponse  String?
   
   scheduledFor      DateTime? // İleri tarihli bildirimler için (Örn: 45 gün sonra)
-  createdAt         DateTime @default(now())
+  createdAt         DateTime  @default(now())
   sentAt            DateTime?
 }
 

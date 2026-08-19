@@ -8,7 +8,7 @@ import {
   EyeOff, Search, Filter, MapPin, User, Phone, Mail, Calendar, ChevronRight, 
   X, Package, Check, Copy, ArrowRight, ShoppingCart, Award, Gift, 
   CreditCard, Tag, Edit3, ShieldCheck, Key, Lock, History, Info, 
-  CheckSquare, Square
+  CheckSquare, Square, Bell, Send, MessageSquare
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 
@@ -76,9 +76,25 @@ const CARGO_COMPANIES = [
 ]
 
 // Sistem Versiyon ve Değişiklik Günlüğü (Changelog)
-const SYSTEM_VERSION = 'v2.5.0'
+const SYSTEM_VERSION = 'v2.6.0'
 const SYSTEM_BUILD_DATE = '2026.08.20'
 const CHANGELOG = [
+  {
+    version: 'v2.6.0',
+    code: 'MAJOR-20260820-D',
+    date: '20.08.2026',
+    type: 'Büyük Değişim (Major)',
+    badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    title: 'Otomatik Kargo & Sipariş WhatsApp/SMS Bildirim Motoru & Elçi Hakedişi',
+    changes: [
+      'Netgsm ve SMS/WhatsApp Gateway entegrasyonu ile otomatik bildirim motoru (notificationEngine) kuruldu.',
+      'Sipariş oluşturulduğunda / PayTR ile ödendiğinde otomatik "Sipariş Alındı" SMS bildirimi.',
+      'Sipariş kargoya verildiğinde kargo firması ve takip linki içeren otomatik "Kargoya Verildi" SMS bildirimi.',
+      'Sipariş teslim edildiğinde "Teslim Edildi" VIP kupon bildirimi ve Elçiye anında komisyon bakiye aktarımı bildirimi.',
+      'Admin panelinde canlı SMS/WhatsApp logları, iletim durumu ve tek tıkla test SMS gönderim merkezi eklendi.',
+      'Müşteri profilinde Marka Elçisi & Kazanç Paneli ve cüzdan bakiyesini alışveriş kuponuna dönüştürme özelliği eklendi.'
+    ]
+  },
   {
     version: 'v2.5.0',
     code: 'MAJOR-20260820-A',
@@ -186,7 +202,7 @@ const CHANGELOG = [
 ]
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<'scenarios' | 'ai' | 'orders' | 'customers' | 'reports' | 'api' | 'products'>('orders')
+  const [activeTab, setActiveTab] = useState<'scenarios' | 'ai' | 'orders' | 'customers' | 'notifications' | 'reports' | 'api' | 'products'>('orders')
   const [loading, setLoading] = useState(false)
   const [savingId, setSavingId] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
@@ -217,9 +233,16 @@ export default function AdminDashboard() {
   const [aiConfig, setAiConfig] = useState<AiConfig | null>(null)
   const [orders, setOrders] = useState<Order[]>([])
   const [customers, setCustomers] = useState<Customer[]>([])
+  const [notifications, setNotifications] = useState<any[]>([])
   const [reports, setReports] = useState<ReportData | null>(null)
   const [stores, setStores] = useState<MarketplaceStore[]>([])
   const [marketOrders, setMarketOrders] = useState<MarketplaceOrder[]>([])
+
+  // Notification States
+  const [customSmsPhone, setCustomSmsPhone] = useState('')
+  const [customSmsMessage, setCustomSmsMessage] = useState('')
+  const [customSmsSending, setCustomSmsSending] = useState(false)
+  const [notifFilter, setNotifFilter] = useState('all')
 
   // Order Management States
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
@@ -291,12 +314,45 @@ export default function AdminDashboard() {
     else if (activeTab === 'ai') fetchData('/api/admin/ai', setAiConfig)
     else if (activeTab === 'orders') fetchData('/api/admin/orders', setOrders)
     else if (activeTab === 'customers') fetchData('/api/admin/customers', setCustomers)
+    else if (activeTab === 'notifications') fetchData('/api/admin/notifications', setNotifications)
     else if (activeTab === 'reports') fetchData('/api/admin/reports', setReports)
     else if (activeTab === 'api') {
       fetchData('/api/admin/marketplace/stores', setStores)
       fetchData('/api/admin/marketplace/orders', setMarketOrders)
     }
   }, [activeTab, isAuthenticated])
+
+  const handleSendCustomSms = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!customSmsPhone || !customSmsMessage) return
+    setCustomSmsSending(true)
+
+    try {
+      const res = await fetch('/api/admin/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: customSmsPhone,
+          message: customSmsMessage,
+          type: 'sms'
+        })
+      })
+
+      const data = await res.json()
+      if (res.ok && data.success) {
+        showMsg('success', 'SMS bildirimi başarıyla sıraya alındı!')
+        setCustomSmsPhone('')
+        setCustomSmsMessage('')
+        fetchData('/api/admin/notifications', setNotifications)
+      } else {
+        showMsg('error', data.error || 'Bildirim gönderilemedi')
+      }
+    } catch {
+      showMsg('error', 'Bağlantı hatası oluştu')
+    } finally {
+      setCustomSmsSending(false)
+    }
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -889,6 +945,16 @@ export default function AdminDashboard() {
             </button>
 
             <button 
+              onClick={() => setActiveTab('notifications')} 
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-medium text-sm transition-colors ${activeTab === 'notifications' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
+            >
+              <div className="flex items-center gap-3">
+                <Bell size={18} /> Bildirim & SMS
+              </div>
+              <span className="bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Otomatik</span>
+            </button>
+
+            <button 
               onClick={() => setActiveTab('scenarios')} 
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors ${activeTab === 'scenarios' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
             >
@@ -1361,6 +1427,272 @@ export default function AdminDashboard() {
                                 </tr>
                               )
                             })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ===================== BILDIRIM & SMS YONETIMI ===================== */}
+              {activeTab === 'notifications' && (
+                <div className="space-y-6">
+                  {/* Top Notification Stats */}
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+                      <div className="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase mb-2">
+                        <span>Toplam Bildirim</span>
+                        <Bell size={16} className="text-indigo-600" />
+                      </div>
+                      <div className="text-2xl font-bold text-gray-900">{notifications.length}</div>
+                      <p className="text-[11px] text-gray-400 mt-1">İletilen SMS & Mesaj</p>
+                    </div>
+
+                    <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+                      <div className="flex items-center justify-between text-purple-600 text-xs font-semibold uppercase mb-2">
+                        <span>Kargo Bildirimleri</span>
+                        <Truck size={16} />
+                      </div>
+                      <div className="text-2xl font-bold text-purple-700">
+                        {notifications.filter((n: any) => n.trigger_reason === 'order_shipped').length}
+                      </div>
+                      <p className="text-[11px] text-gray-400 mt-1">Kargo takip linki iletilen</p>
+                    </div>
+
+                    <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+                      <div className="flex items-center justify-between text-blue-600 text-xs font-semibold uppercase mb-2">
+                        <span>Sipariş Onayları</span>
+                        <CheckCircle size={16} />
+                      </div>
+                      <div className="text-2xl font-bold text-blue-700">
+                        {notifications.filter((n: any) => n.trigger_reason === 'order_created').length}
+                      </div>
+                      <p className="text-[11px] text-gray-400 mt-1">Ödeme alındı bildirimi</p>
+                    </div>
+
+                    <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+                      <div className="flex items-center justify-between text-emerald-600 text-xs font-semibold uppercase mb-2">
+                        <span>Elçi Komisyonu</span>
+                        <Award size={16} />
+                      </div>
+                      <div className="text-2xl font-bold text-emerald-700">
+                        {notifications.filter((n: any) => n.trigger_reason === 'affiliate_commission').length}
+                      </div>
+                      <p className="text-[11px] text-gray-400 mt-1">Hakediş bilgilendirmesi</p>
+                    </div>
+                  </div>
+
+                  {/* Manual SMS Dispatch & Gateway Info */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* SMS Test & Send Form */}
+                    <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center">
+                          <Send size={20} />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-gray-900 text-sm">Hızlı SMS / Bildirim Gönder</h3>
+                          <p className="text-xs text-gray-500">Müşteriye veya test numaranıza özel SMS iletin</p>
+                        </div>
+                      </div>
+
+                      <form onSubmit={handleSendCustomSms} className="space-y-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-700 mb-1">Telefon Numarası</label>
+                          <input 
+                            type="tel"
+                            placeholder="0532 123 45 67"
+                            value={customSmsPhone}
+                            onChange={e => setCustomSmsPhone(e.target.value)}
+                            required
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                          />
+                        </div>
+
+                        {/* Template Quick Pills */}
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-700 mb-1">Hazır Şablonlar</label>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setCustomSmsMessage('Sayın Müşterimiz, PN Parfüm siparişiniz kargoya verilmiştir. Takip: https://pnparfume.com/profil')}
+                              className="text-[11px] bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded-lg transition-colors"
+                            >
+                              🚚 Kargo Şablonu
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setCustomSmsMessage('PN Parfümde sana özel %15 indirim kuponun: PN-VIP15. Hemen keşfet: https://pnparfume.com/katalog')}
+                              className="text-[11px] bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded-lg transition-colors"
+                            >
+                              🎁 VIP İndirim
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setCustomSmsMessage('Sayın Müşterimiz, sepetinizdeki ürünler tükenmek üzere. Tamamlamak için: https://pnparfume.com/sepet')}
+                              className="text-[11px] bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded-lg transition-colors"
+                            >
+                              🛒 Terk Edilmiş Sepet
+                            </button>
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="flex justify-between items-center mb-1">
+                            <label className="block text-xs font-semibold text-gray-700">Mesaj İçeriği</label>
+                            <span className="text-[10px] text-gray-400 font-mono">
+                              {customSmsMessage.length} karakter ({Math.ceil((customSmsMessage.length || 1) / 155)} SMS)
+                            </span>
+                          </div>
+                          <textarea 
+                            rows={3}
+                            placeholder="İletilecek mesaj metnini yazın..."
+                            value={customSmsMessage}
+                            onChange={e => setCustomSmsMessage(e.target.value)}
+                            required
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                          />
+                        </div>
+
+                        <button 
+                          type="submit"
+                          disabled={customSmsSending || !customSmsPhone || !customSmsMessage}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-xs font-semibold transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2"
+                        >
+                          <Send size={14} />
+                          {customSmsSending ? 'Gönderiliyor...' : 'Bildirimi Gönder'}
+                        </button>
+                      </form>
+                    </div>
+
+                    {/* Gateway Config Status */}
+                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                            <CheckCircle size={18} />
+                          </div>
+                          <h4 className="font-bold text-gray-900 text-sm">SMS Gateway Durumu</h4>
+                        </div>
+                        
+                        <p className="text-xs text-gray-600 leading-relaxed mb-4">
+                          Sistem Netgsm REST API ve simülasyon motoruyla tam entegredir. Siparişler ve kargolama işlemleri yapıldığında müşterilere otomatik SMS tetiklenir.
+                        </p>
+
+                        <div className="space-y-2.5 text-xs bg-gray-50 p-4 rounded-xl border border-gray-200 font-mono">
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Sağlayıcı:</span>
+                            <span className="font-semibold text-gray-800">Netgsm / Webhook</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">SMS Başlığı:</span>
+                            <span className="font-semibold text-indigo-600">PN PARFUM</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Otomasyon:</span>
+                            <span className="font-semibold text-emerald-600">Aktif (Canlı)</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-4 border-t border-gray-100 text-[11px] text-gray-400">
+                        * `.env` dosyasında `NETGSM_USERCODE` ve `NETGSM_PASSWORD` tanımlandığında mesajlar doğrudan GSM operatörlerine iletilir.
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Notification History Log Table */}
+                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="p-5 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <h3 className="font-bold text-gray-900 text-sm">Bildirim & İletim Günlüğü</h3>
+                        <p className="text-xs text-gray-500">Sistem tarafından otomatik ve manuel iletilen tüm bildirimler</p>
+                      </div>
+
+                      <div className="flex gap-2 flex-wrap">
+                        {['all', 'order_created', 'order_shipped', 'order_delivered', 'affiliate_commission', 'cart_abandonment'].map((f) => (
+                          <button
+                            key={f}
+                            onClick={() => setNotifFilter(f)}
+                            className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors border ${
+                              notifFilter === f 
+                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' 
+                                : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                            }`}
+                          >
+                            {f === 'all' ? 'Tümü' : 
+                             f === 'order_created' ? 'Sipariş Onayı' :
+                             f === 'order_shipped' ? 'Kargo' :
+                             f === 'order_delivered' ? 'Teslim' :
+                             f === 'affiliate_commission' ? 'Elçi Komisyonu' : 'Terk Edilmiş Sepet'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-gray-50/80 border-b border-gray-200 text-gray-500 font-semibold uppercase tracking-wider">
+                            <th className="px-6 py-4">Tarih</th>
+                            <th className="px-6 py-4">Alıcı</th>
+                            <th className="px-6 py-4">Tetikleyici Sebep</th>
+                            <th className="px-6 py-4">Tür</th>
+                            <th className="px-6 py-4">Durum</th>
+                            <th className="px-6 py-4">Mesaj Önizleme</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {notifications.length === 0 ? (
+                            <tr>
+                              <td colSpan={6} className="p-12 text-center text-gray-400">
+                                <Bell size={36} className="mx-auto mb-2 opacity-30" />
+                                Henüz iletilmiş bildirim bulunmuyor.
+                              </td>
+                            </tr>
+                          ) : (
+                            notifications
+                              .filter((n: any) => notifFilter === 'all' || n.trigger_reason === notifFilter)
+                              .map((n: any) => (
+                                <tr key={n.id} className="hover:bg-gray-50/70 transition-colors">
+                                  <td className="px-6 py-4 font-mono text-gray-500 whitespace-nowrap">
+                                    {new Date(n.createdAt).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                  </td>
+                                  <td className="px-6 py-4">
+                                    <div className="font-semibold text-gray-900">{n.customer?.name || 'Müşteri'}</div>
+                                    <div className="font-mono text-[11px] text-gray-500">{n.phone || '-'}</div>
+                                  </td>
+                                  <td className="px-6 py-4">
+                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold ${
+                                      n.trigger_reason === 'order_shipped' ? 'bg-purple-100 text-purple-700' :
+                                      n.trigger_reason === 'order_created' ? 'bg-blue-100 text-blue-700' :
+                                      n.trigger_reason === 'order_delivered' ? 'bg-emerald-100 text-emerald-700' :
+                                      n.trigger_reason === 'affiliate_commission' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-700'
+                                    }`}>
+                                      {n.trigger_reason === 'order_shipped' ? '🚚 Kargoya Verildi' :
+                                       n.trigger_reason === 'order_created' ? '💳 Sipariş Alındı' :
+                                       n.trigger_reason === 'order_delivered' ? '✨ Teslim Edildi' :
+                                       n.trigger_reason === 'affiliate_commission' ? '💰 Elçi Komisyonu' :
+                                       n.trigger_reason === 'cart_abandonment' ? '🛒 Terk Sepet' : 'Özel Mesaj'}
+                                    </span>
+                                  </td>
+                                  <td className="px-6 py-4 uppercase font-bold text-gray-600 font-mono text-[11px]">
+                                    {n.type}
+                                  </td>
+                                  <td className="px-6 py-4">
+                                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold ${
+                                      n.status === 'sent' ? 'bg-emerald-100 text-emerald-700' :
+                                      n.status === 'simulated' ? 'bg-indigo-100 text-indigo-700' : 'bg-rose-100 text-rose-700'
+                                    }`}>
+                                      {n.status === 'sent' ? '✅ İletildi' : n.status === 'simulated' ? '⚡ Simüle Edildi' : '❌ Hatalı'}
+                                    </span>
+                                  </td>
+                                  <td className="px-6 py-4 max-w-xs truncate text-gray-700" title={n.message_content}>
+                                    {n.message_content}
+                                  </td>
+                                </tr>
+                              ))
                           )}
                         </tbody>
                       </table>

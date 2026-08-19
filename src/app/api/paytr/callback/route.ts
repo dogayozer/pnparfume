@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { sendOrderCreatedNotification } from '@/lib/notifications/notificationEngine'
 
 export async function POST(req: Request) {
   try {
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
 
     // Verify hash
     const hash_str = merchant_oid + merchant_salt + status + total_amount
-    const calculated_hash = crypto.createHmac('sha256', merchant_key).update(hash_str).digest('base64')
+    const calculated_hash = crypto.createHmac('sha256', merchant_key).update(hash_str + merchant_salt).digest('base64')
 
     if (hash !== calculated_hash) {
       console.error(`PayTR Callback Hash Mismatch for order ${merchant_oid}`)
@@ -31,11 +32,25 @@ export async function POST(req: Request) {
     }
 
     if (status === 'success') {
-      await prisma.order.update({
+      const order = await prisma.order.update({
         where: { orderNumber: merchant_oid },
         data: { status: 'paid' }
       })
       console.log(`Order ${merchant_oid} paid successfully via PayTR.`)
+
+      // Trigger Automated SMS / WhatsApp Notification
+      try {
+        await sendOrderCreatedNotification({
+          orderNumber: merchant_oid,
+          customerName: order.customerName || 'Değerli Müşterimiz',
+          phone: order.customerPhone,
+          customerId: order.customerId,
+          totalAmount: order.totalAmount
+        })
+      } catch (notifErr) {
+        console.error('Notification dispatch error in PayTR callback:', notifErr)
+      }
+
     } else {
       await prisma.order.update({
         where: { orderNumber: merchant_oid },

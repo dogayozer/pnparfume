@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { 
+  sendOrderShippedNotification, 
+  sendOrderDeliveredNotification, 
+  sendAffiliateCommissionNotification 
+} from '@/lib/notifications/notificationEngine'
 
 export async function GET() {
   try {
@@ -35,7 +40,11 @@ export async function PUT(req: Request) {
     }
 
     const currentOrder = await prisma.order.findUnique({
-      where: { id: orderId }
+      where: { id: orderId },
+      include: {
+        customer: true,
+        referrer: true
+      }
     })
 
     if (!currentOrder) {
@@ -51,7 +60,7 @@ export async function PUT(req: Request) {
     // Check if status changed to 'delivered' and commission needs to be paid
     if ((status === 'delivered' || status === 'paid') && currentOrder.referrerId && !currentOrder.isCommissionPaid && currentOrder.affiliateEarned > 0) {
       // Pay commission to ambassador
-      await prisma.customer.update({
+      const updatedAmbassador = await prisma.customer.update({
         where: { id: currentOrder.referrerId },
         data: {
           wallet_balance: { increment: currentOrder.affiliateEarned },
@@ -59,6 +68,19 @@ export async function PUT(req: Request) {
         }
       })
       updateData.isCommissionPaid = true
+
+      // Send Affiliate Commission Notification
+      try {
+        await sendAffiliateCommissionNotification({
+          ambassadorName: updatedAmbassador.name || 'Marka Elçimiz',
+          phone: updatedAmbassador.phone,
+          customerId: updatedAmbassador.id,
+          earnedAmount: currentOrder.affiliateEarned,
+          newWalletBalance: updatedAmbassador.wallet_balance
+        })
+      } catch (e) {
+        console.error('Affiliate commission notification error:', e)
+      }
     }
 
     const updated = await prisma.order.update({
@@ -77,8 +99,40 @@ export async function PUT(req: Request) {
       }
     })
 
+    // Automated Notification Triggers:
+    // 1. Shipped trigger
+    if ((status === 'shipped' || (trackingCode && currentOrder.status !== 'shipped')) && trackingCode) {
+      try {
+        await sendOrderShippedNotification({
+          orderNumber: currentOrder.orderNumber,
+          customerName: currentOrder.customerName || 'Değerli Müşterimiz',
+          phone: currentOrder.customerPhone || currentOrder.customer?.phone,
+          customerId: currentOrder.customerId,
+          cargoCompany: cargoCompany || currentOrder.cargoCompany || 'Yurtiçi Kargo',
+          trackingCode: trackingCode
+        })
+      } catch (e) {
+        console.error('Shipped notification error:', e)
+      }
+    }
+
+    // 2. Delivered trigger
+    if (status === 'delivered' && currentOrder.status !== 'delivered') {
+      try {
+        await sendOrderDeliveredNotification({
+          orderNumber: currentOrder.orderNumber,
+          customerName: currentOrder.customerName || 'Değerli Müşterimiz',
+          phone: currentOrder.customerPhone || currentOrder.customer?.phone,
+          customerId: currentOrder.customerId,
+          vipCouponCode: 'PN-VIP-15'
+        })
+      } catch (e) {
+        console.error('Delivered notification error:', e)
+      }
+    }
+
     return NextResponse.json({
-      message: 'Sipariş başarıyla güncellendi',
+      message: 'Sipariş başarıyla güncellendi ve bildirimler tetiklendi',
       order: updated
     })
   } catch (error) {
