@@ -76,9 +76,24 @@ const CARGO_COMPANIES = [
 ]
 
 // Sistem Versiyon ve Değişiklik Günlüğü (Changelog)
-const SYSTEM_VERSION = 'v2.8.0'
+const SYSTEM_VERSION = 'v2.9.0'
 const SYSTEM_BUILD_DATE = '2026.08.20'
 const CHANGELOG = [
+  {
+    version: 'v2.9.0',
+    code: 'EXPANSION-20260820-A',
+    date: '20.08.2026',
+    type: 'Yeni Özellik & Büyüme (Major)',
+    badgeColor: 'bg-amber-50 text-amber-700 border-amber-200',
+    title: "5'li Discovery Set (Keşif Kutusu) & Fotoğraflı UGC Yorum Motoru",
+    changes: [
+      "5'li Discovery Set (Keşif Kutusu) Stüdyosu: Müşterinin 338 parfüm arasından 5 adet 10ml seçip avantajlı tek paket olarak alabileceği interaktif kutu seçici (/mix/discovery-set) yayına alındı.",
+      "Hızlı Hazır Paketler: En Çok Satan 5 İmza, Karizmatik & Ofis, Gece Cazibesi ve Çiçeksi Zarafet paketleri tek tıkla sepete eklenebilir.",
+      "%100 Cashback Garantisi: Keşif kutusu alan müşteriye tam boy parfümde geçerli kutu bedeli kadar VIP hediye çeki tanımlanır.",
+      "UGC & Fotoğraflı Müşteri Yorumları: Ürün detay sayfalarında 1-5 yıldız puanlama, doğrulanmış alıcı yorumları ve deneyim paylaşım modülü.",
+      "Admin Yorum Moderasyon Merkezi: Admin panelinde gelen yorumları tek tıkla onaylama, yayından kaldırma ve silme ekranı eklendi."
+    ]
+  },
   {
     version: 'v2.8.0',
     code: 'CRITICAL-AUDIT-20260820-A',
@@ -344,6 +359,10 @@ export default function AdminDashboard() {
   const [importProgress, setImportProgress] = useState<{current: number, total: number} | null>(null)
   const [bulkPriceData, setBulkPriceData] = useState({ platform: 'all', type: 'zam', percentage: '' })
 
+  // UGC & Reviews state
+  const [reviews, setReviews] = useState<any[]>([])
+  const [reviewFilter, setReviewFilter] = useState<'all' | 'pending' | 'approved'>('all')
+
   const showMsg = (type: 'success'|'error', text: string) => { setMessage({type, text}); setTimeout(() => setMessage(null), 4000) }
 
   // Check saved session on mount ("Beni Hatırla")
@@ -523,6 +542,35 @@ export default function AdminDashboard() {
       else throw new Error('Hata')
     } catch { showMsg('error', 'Hata oluştu.') }
     finally { setSavingId(null) }
+  }
+
+  const handleToggleReviewApproval = async (reviewId: string, currentStatus: boolean) => {
+    try {
+      const res = await fetch('/api/admin/reviews', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewId, isApproved: !currentStatus })
+      })
+      if (res.ok) {
+        showMsg('success', !currentStatus ? 'Yorum onaylandı ve yayına alındı.' : 'Yorum yayından kaldırıldı.')
+        setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, isApproved: !currentStatus } : r))
+      } else {
+        showMsg('error', 'İşlem başarısız')
+      }
+    } catch { showMsg('error', 'Hata oluştu') }
+  }
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!confirm('Bu yorumu kalıcı olarak silmek istediğinize emin misiniz?')) return
+    try {
+      const res = await fetch(`/api/admin/reviews?id=${reviewId}`, { method: 'DELETE' })
+      if (res.ok) {
+        showMsg('success', 'Yorum silindi.')
+        setReviews(prev => prev.filter(r => r.id !== reviewId))
+      } else {
+        showMsg('error', 'Silinemedi')
+      }
+    } catch { showMsg('error', 'Hata oluştu') }
   }
 
   const handleUpdateOrderStatus = async (orderId: string, status: string, cargoCompany?: string, trackingCode?: string) => {
@@ -1189,6 +1237,20 @@ export default function AdminDashboard() {
             </button>
 
             <button 
+              onClick={() => { setActiveTab('reviews'); fetchData('/api/admin/reviews', setReviews) }} 
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-medium text-sm transition-colors ${activeTab === 'reviews' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
+            >
+              <div className="flex items-center gap-3">
+                <MessageSquare size={18} /> Yorumlar & UGC
+              </div>
+              {reviews.filter(r => !r.isApproved).length > 0 && (
+                <span className="bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  {reviews.filter(r => !r.isApproved).length} Yeni
+                </span>
+              )}
+            </button>
+
+            <button 
               onClick={() => setActiveTab('api')} 
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors ${activeTab === 'api' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
             >
@@ -1224,8 +1286,10 @@ export default function AdminDashboard() {
             <h1 className="font-semibold text-gray-900 text-lg">
               {activeTab === 'orders' && 'Sipariş Yönetimi & Lojistik'}
               {activeTab === 'customers' && 'Müşteriler, Elçiler & Cüzdan Yönetimi'}
+              {activeTab === 'notifications' && 'Bildirim & SMS Merkezi'}
               {activeTab === 'scenarios' && 'Senaryo Kuralları'}
               {activeTab === 'products' && 'Toplu Fiyat & Excel Ürün Yönetimi'}
+              {activeTab === 'reviews' && 'Müşteri Yorumları & UGC Değerlendirmeleri'}
               {activeTab === 'ai' && 'Nöropazarlama & Yapay Zeka'}
               {activeTab === 'reports' && 'Performans Raporları'}
               {activeTab === 'api' && 'Pazaryeri & Bayi Entegrasyonları'}
@@ -1233,7 +1297,7 @@ export default function AdminDashboard() {
 
             {/* Versiyon Rozeti */}
             <button 
-              onClick={() => setShowVersionModal(true)}
+              onClick={() => setShowVersionModal(true)} 
               className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-mono font-medium transition-colors"
               title="Değişiklik Günlüğü (Changelog)"
             >
@@ -1256,6 +1320,7 @@ export default function AdminDashboard() {
                 else if (activeTab === 'customers') fetchData('/api/admin/customers', setCustomers)
                 else if (activeTab === 'scenarios') fetchData('/api/admin/scenarios', setRules)
                 else if (activeTab === 'reports') fetchData('/api/admin/reports', setReports)
+                else if (activeTab === 'reviews') fetchData('/api/admin/reviews', setReviews)
               }} 
               disabled={loading} 
               className="p-2 text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
@@ -2259,6 +2324,126 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                       )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ===================== YORUMLAR & UGC YÖNETİMİ ===================== */}
+              {activeTab === 'reviews' && (
+                <div className="space-y-6">
+                  {/* Filter bar */}
+                  <div className="bg-white rounded-2xl border border-gray-200 p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setReviewFilter('all')}
+                        className={`px-4 py-2 rounded-xl text-xs font-semibold transition-colors ${reviewFilter === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                      >
+                        Tümü ({reviews.length})
+                      </button>
+                      <button
+                        onClick={() => setReviewFilter('pending')}
+                        className={`px-4 py-2 rounded-xl text-xs font-semibold transition-colors ${reviewFilter === 'pending' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'}`}
+                      >
+                        Onay Bekleyenler ({reviews.filter(r => !r.isApproved).length})
+                      </button>
+                      <button
+                        onClick={() => setReviewFilter('approved')}
+                        className={`px-4 py-2 rounded-xl text-xs font-semibold transition-colors ${reviewFilter === 'approved' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'}`}
+                      >
+                        Yayındakiler ({reviews.filter(r => r.isApproved).length})
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={() => fetchData('/api/admin/reviews', setReviews)}
+                      className="px-4 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl text-xs font-medium text-gray-700 flex items-center gap-2"
+                    >
+                      <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Listeyi Yenile
+                    </button>
+                  </div>
+
+                  {/* Reviews List */}
+                  {reviews.length === 0 ? (
+                    <div className="p-16 bg-white rounded-2xl border border-gray-200 text-center text-gray-400 text-sm">
+                      <MessageSquare className="mx-auto mb-2 text-gray-300" size={32} />
+                      Henüz müşteri yorumu bulunmuyor.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {reviews
+                        .filter(r => {
+                          if (reviewFilter === 'pending') return !r.isApproved
+                          if (reviewFilter === 'approved') return r.isApproved
+                          return true
+                        })
+                        .map((rev) => (
+                          <div key={rev.id} className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm flex flex-col justify-between">
+                            <div>
+                              <div className="flex items-start justify-between gap-2 mb-3">
+                                <div>
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-mono text-xs font-bold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-100">
+                                      PN {rev.product?.sku || rev.productSku}
+                                    </span>
+                                    <span className="text-xs font-semibold text-gray-800">
+                                      {rev.product?.original_name || 'Parfüm'}
+                                    </span>
+                                  </div>
+                                  <div className="text-xs text-gray-600 font-medium flex items-center gap-2">
+                                    <span>{rev.customerName}</span>
+                                    <span className="text-[10px] text-gray-400 font-mono">
+                                      {new Date(rev.createdAt).toLocaleDateString('tr-TR')}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                  rev.isApproved 
+                                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
+                                    : 'bg-amber-100 text-amber-800 border border-amber-200'
+                                }`}>
+                                  {rev.isApproved ? 'Yayında' : 'Onay Bekliyor'}
+                                </span>
+                              </div>
+
+                              {/* Rating Stars */}
+                              <div className="flex items-center gap-1 text-amber-400 mb-2">
+                                {[1, 2, 3, 4, 5].map((s) => (
+                                  <Star key={s} size={14} className={s <= rev.rating ? "fill-amber-400 text-amber-400" : "text-gray-300"} />
+                                ))}
+                                <span className="text-xs font-bold text-gray-700 ml-1.5">{rev.rating}/5</span>
+                              </div>
+
+                              {/* Comment */}
+                              <p className="text-xs text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100 italic leading-relaxed">
+                                "{rev.comment}"
+                              </p>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex items-center justify-between gap-3 mt-4 pt-3 border-t border-gray-100">
+                              <button
+                                onClick={() => handleToggleReviewApproval(rev.id, rev.isApproved)}
+                                className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 ${
+                                  rev.isApproved
+                                    ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200'
+                                    : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                }`}
+                              >
+                                {rev.isApproved ? 'Yayından Kaldır' : '✓ Onayla ve Yayınla'}
+                              </button>
+
+                              <button
+                                onClick={() => handleDeleteReview(rev.id)}
+                                className="py-2 px-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-medium transition-colors"
+                                title="Yorumu Sil"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
                     </div>
                   )}
                 </div>

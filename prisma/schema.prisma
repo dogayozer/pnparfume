@@ -35,6 +35,7 @@ model Product {
 
   ingredients          ProductIngredient[]
   marketplaceListings  MarketplaceListing[]
+  reviews              Review[]
 
   // Maliyet ve Senaryo Yönetimi
   base_cost            Float    @default(0) // Maliyetin altında satışı önlemek için
@@ -119,6 +120,7 @@ model Customer {
   // Demografi & Profilleme
   birth_year        Int?     // Kayıtta zorunlu hale getirilecek (UI seviyesinde)
   birth_date        String?  // Örn: "05-12" (Gün ve Ay) Doğum günü ayrıcalıkları için
+  birth_month       Int?
   profession        String?  // Mesleğe/Yaşam tarzına özel kampanyalar için
   
   // Nöropazarlama Profili (Asistanın satış taktikleri için)
@@ -139,6 +141,7 @@ model Customer {
   orders            Order[]       @relation("CustomerOrders")
   referredOrders    Order[]       @relation("ReferralOrders")
   notifications     Notification[]
+  reviews           Review[]
   
   // Oturum & Canlı Sepet Takibi
   lastLogin         DateTime?
@@ -348,4 +351,23 @@ model AdminUser {
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Review {
+  id           String    @id @default(cuid())
+  productSku   String
+  product      Product   @relation(fields: [productSku], references: [sku])
+  customerId   String?
+  customer     Customer? @relation(fields: [customerId], references: [id])
+  customerName String
+  rating       Int       // 1 - 5 stars
+  comment      String
+  images       String[]  @default([])
+  isApproved   Boolean   @default(false)
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([productSku])
+  @@index([isApproved])
 }

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import ProductGallery from '@/components/ProductGallery'
 import ProductActions from '@/components/ProductActions'
+import ProductReviews from '@/components/ProductReviews'
 import { getProductKasapImage } from '@/lib/kasapImages'
 
 export const revalidate = 86400 // Cache for 24 hours (super fast loading)
@@ -228,6 +229,9 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
 
         </div>
       </div>
+
+      {/* Customer Reviews & UGC Section */}
+      <ProductReviews sku={product.sku} productName={title} />
     </div>
   )
 }
