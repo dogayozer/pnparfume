@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendBirthdayNotification } from '@/lib/notifications/notificationEngine'
 
-// Vercel Cron / Nightly Retention & Birthday Automation Route
+// Vercel Cron / Nightly Retention, Birthday Automation & DB Log Archiving Route
 export async function GET(request: Request) {
   try {
     const today = new Date();
     const currentMonth = today.getMonth() + 1; // 1-12
     let refillNotifsCreated = 0;
     let birthdayNotifsCreated = 0;
+    let archivedLogsCount = 0;
 
     // -------------------------------------------------------------
     // 1. 45. GÜN PARFÜM YENİLEME HATIRLATICISI
@@ -127,9 +128,21 @@ export async function GET(request: Request) {
       }
     }
 
+    // -------------------------------------------------------------
+    // 3. 90 GÜNDEN ESKİ BİLDİRİM LOGLARINI ARŞİVLEME / TEMİZLEME (Neon Storage & Index Tasarrufu)
+    // -------------------------------------------------------------
+    const ninetyDaysAgo = new Date(today.getTime() - (90 * 24 * 60 * 60 * 1000));
+    const deleteResult = await prisma.notification.deleteMany({
+      where: {
+        status: 'sent',
+        createdAt: { lte: ninetyDaysAgo }
+      }
+    });
+    archivedLogsCount = deleteResult.count;
+
     return NextResponse.json({ 
       success: true, 
-      message: `Cron tamamlandı: ${refillNotifsCreated} adet parfüm yenileme ve ${birthdayNotifsCreated} adet Doğum Günü VIP SMS bildirimi başarıyla işlendi.` 
+      message: `Cron tamamlandı: ${refillNotifsCreated} adet parfüm yenileme, ${birthdayNotifsCreated} adet Doğum Günü VIP SMS'i ve ${archivedLogsCount} adet eski bildirim logu temizlendi.` 
     });
     
   } catch (error: any) {

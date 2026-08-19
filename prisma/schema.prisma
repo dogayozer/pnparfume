@@ -46,6 +46,9 @@ model Product {
 
   @@index([original_name])
   @@index([gender])
+  @@index([publish_status, gender])
+  @@index([occasion_tag])
+  @@index([season_tag])
 }
 
 // Ürünlerin Pazaryeri (Trendyol, İkas, Amazon vb.) Satış Linkleri ve Fiyatları
@@ -149,6 +152,9 @@ model Customer {
   
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+
+  @@index([partner_type])
+  @@index([birth_month, sms_opt_in])
 }
 
 model Coupon {
@@ -171,6 +177,9 @@ model Coupon {
   
   createdAt         DateTime @default(now())
   expiresAt         DateTime? // Kuponun 3 aylık zaman aşımı takibi için
+
+  @@index([ownerId])
+  @@index([is_active, expiresAt])
 }
 
 model CouponUsage {
@@ -188,6 +197,9 @@ model CouponUsage {
   device_fingerprint String?
   
   usedAt             DateTime @default(now())
+
+  @@index([orderId])
+  @@index([couponId, customerId])
 }
 
 model Order {
@@ -242,6 +254,11 @@ model Order {
 
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
+
+  @@index([status, createdAt])
+  @@index([customerId])
+  @@index([referrerId])
+  @@index([createdAt])
 }
 
 model OrderItem {
@@ -279,6 +296,11 @@ model Notification {
   scheduledFor      DateTime? // İleri tarihli bildirimler için (Örn: 45 gün sonra)
   createdAt         DateTime  @default(now())
   sentAt            DateTime?
+
+  @@index([status])
+  @@index([trigger_reason])
+  @@index([customerId])
+  @@index([createdAt])
 }
 
 // Yeni Model: Senaryo Yönetimi ve Dinamik Kurallar (Admin Panel)
