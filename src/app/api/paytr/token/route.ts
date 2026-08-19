@@ -39,7 +39,10 @@ export async function POST(req: Request) {
       }
     })
 
-    const user_ip = req.headers.get('x-forwarded-for') || '1.1.1.1' 
+    let user_ip = req.headers.get('x-forwarded-for') || '1.1.1.1' 
+    if (user_ip.includes(',')) {
+      user_ip = user_ip.split(',')[0].trim()
+    }
     const email = customer.email
     const user_name = customer.name
     const user_address = customer.address
@@ -52,17 +55,17 @@ export async function POST(req: Request) {
       item.quantity
     ])
     
+    // Use proper JSON stringify and base64 encoding
     const user_basket = Buffer.from(JSON.stringify(paytrBasket)).toString('base64')
     
-    const debug_on = 1 // Enable debug mode for initial integration
-    const no_installment = 0 // 0 allows installments, 1 disables them
-    const max_installment = 12
+    const debug_on = '1' // Enable debug mode for initial integration
+    const no_installment = '0' // 0 allows installments, 1 disables them
+    const max_installment = '12'
     const currency = 'TL'
-    const test_mode = 0 // 1 for test transactions, 0 for real transactions
+    const test_mode = '0' // 1 for test transactions, 0 for real transactions
 
-    // Create Hash String
-    // merchant_id + user_ip + merchant_oid + email + payment_amount + user_basket + no_installment + max_installment + currency + test_mode
-    const hash_str = merchant_id + user_ip + merchant_oid + email + payment_amount + user_basket + no_installment + max_installment + currency + test_mode
+    // Create Hash String - MUST BE EXACT STRINGS
+    const hash_str = merchant_id + user_ip + merchant_oid + email + payment_amount.toString() + user_basket + no_installment + max_installment + currency + test_mode
     
     // Generate Token
     const paytr_token = crypto.createHmac('sha256', merchant_key + merchant_salt).update(hash_str).digest('base64')
@@ -77,9 +80,9 @@ export async function POST(req: Request) {
     formData.append('payment_amount', payment_amount.toString())
     formData.append('paytr_token', paytr_token)
     formData.append('user_basket', user_basket)
-    formData.append('debug_on', debug_on.toString())
-    formData.append('no_installment', no_installment.toString())
-    formData.append('max_installment', max_installment.toString())
+    formData.append('debug_on', debug_on)
+    formData.append('no_installment', no_installment)
+    formData.append('max_installment', max_installment)
     formData.append('user_name', user_name)
     formData.append('user_address', user_address)
     formData.append('user_phone', user_phone)
@@ -87,7 +90,7 @@ export async function POST(req: Request) {
     formData.append('merchant_fail_url', `${siteUrl}/basarisiz`)
     formData.append('timeout_limit', '30')
     formData.append('currency', currency)
-    formData.append('test_mode', test_mode.toString())
+    formData.append('test_mode', test_mode)
 
     const response = await fetch('https://www.paytr.com/odeme/api/get-token', {
       method: 'POST',

@@ -1,23 +1,32 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowLeft, Eye } from 'lucide-react'
+import { ArrowLeft, Eye, EyeOff, Copy, Check } from 'lucide-react'
 import { useState } from 'react'
 
 export default function AccountPage() {
+  // Login State
+  const [loginEmail, setLoginEmail] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [showLoginPwd, setShowLoginPwd] = useState(false)
+  const [loginLoading, setLoginLoading] = useState(false)
+  const [loginError, setLoginError] = useState('')
+
   // Signup State
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   
-  // Profiling Fields
   const [birthYear, setBirthYear] = useState('')
   const [birthMonthDay, setBirthMonthDay] = useState('')
   const [profession, setProfession] = useState('')
   
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
+  const [showRegPwd, setShowRegPwd] = useState(false)
+  const [showRegPwdConfirm, setShowRegPwdConfirm] = useState(false)
+  
   const [termsConsent, setTermsConsent] = useState(false)
   const [emailConsent, setEmailConsent] = useState(false)
   const [smsConsent, setSmsConsent] = useState(false)
@@ -26,6 +35,39 @@ export default function AccountPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [couponCode, setCouponCode] = useState('')
+  const [copied, setCopied] = useState(false)
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoginError('')
+    
+    if (!loginEmail || !loginPassword) {
+      setLoginError('Lütfen e-posta ve şifrenizi girin.')
+      return
+    }
+
+    setLoginLoading(true)
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginEmail, password: loginPassword })
+      })
+      
+      const data = await res.json()
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'Giriş yapılamadı.')
+      }
+      
+      localStorage.setItem('user', JSON.stringify(data.user))
+      window.location.href = '/profil'
+    } catch (err: any) {
+      setLoginError(err.message)
+    } finally {
+      setLoginLoading(false)
+    }
+  }
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -52,16 +94,11 @@ export default function AccountPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          firstName,
-          lastName,
-          email,
-          phone,
+          firstName, lastName, email, phone,
           birthYear: parseInt(birthYear),
           birthDate: birthMonthDay || null,
           profession: profession || null,
-          password,
-          emailConsent,
-          smsConsent
+          password, emailConsent, smsConsent
         })
       })
       
@@ -71,6 +108,8 @@ export default function AccountPage() {
         throw new Error(data.error || 'Kayıt sırasında bir hata oluştu.')
       }
       
+      // Auto login after register
+      localStorage.setItem('user', JSON.stringify(data.user))
       setSuccess(true)
       setCouponCode(data.coupon)
     } catch (err: any) {
@@ -79,6 +118,13 @@ export default function AccountPage() {
       setLoading(false)
     }
   }
+
+  const copyCode = () => {
+    navigator.clipboard.writeText(couponCode)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
   return (
     <div className="min-h-[calc(100vh-80px)] bg-background pt-10 pb-20 relative">
       <div className="max-w-5xl mx-auto px-6">
@@ -92,26 +138,41 @@ export default function AccountPage() {
           <div className="flex flex-col h-full">
             <h1 className="text-3xl font-light tracking-wide mb-10">Giriş Yap</h1>
             
-            <form className="space-y-8 flex-1 flex flex-col">
+            <form onSubmit={handleLogin} className="space-y-8 flex-1 flex flex-col">
+              {loginError && (
+                <div className="bg-red-500/10 border border-red-500/20 text-red-600 p-4 rounded-xl text-sm">
+                  {loginError}
+                </div>
+              )}
               <div className="flex flex-col">
-                <label className="text-xs uppercase tracking-widest text-foreground/60 mb-2">E-posta adresi</label>
+                <label htmlFor="loginEmail" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">E-posta adresi</label>
                 <input 
+                  id="loginEmail"
+                  name="email"
                   type="email" 
+                  autoComplete="email"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
                   className="w-full bg-transparent border-b border-foreground/20 py-2 focus:outline-none focus:border-accent-gold transition-colors"
                   placeholder="isim@ornek.com"
                 />
               </div>
               
               <div className="flex flex-col">
-                <label className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Şifre</label>
+                <label htmlFor="loginPassword" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Şifre</label>
                 <div className="relative">
                   <input 
-                    type="password" 
+                    id="loginPassword"
+                    name="password"
+                    type={showLoginPwd ? "text" : "password"}
+                    autoComplete="current-password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
                     className="w-full bg-transparent border-b border-foreground/20 py-2 focus:outline-none focus:border-accent-gold transition-colors pr-10"
                     placeholder="••••••••"
                   />
-                  <button type="button" className="absolute right-0 top-2 text-foreground/40 hover:text-foreground transition-colors">
-                    <Eye size={18} />
+                  <button type="button" onClick={() => setShowLoginPwd(!showLoginPwd)} className="absolute right-0 top-2 text-foreground/40 hover:text-foreground transition-colors">
+                    {showLoginPwd ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
               </div>
@@ -121,8 +182,8 @@ export default function AccountPage() {
               </div>
               
               <div className="pt-6 mt-auto">
-                <button type="button" className="w-full bg-foreground text-background py-4 uppercase tracking-widest text-sm font-medium hover:bg-accent-gold transition-colors">
-                  Giriş Yap
+                <button type="submit" disabled={loginLoading} className="w-full bg-foreground text-background py-4 uppercase tracking-widest text-sm font-medium hover:bg-accent-gold transition-colors disabled:opacity-50">
+                  {loginLoading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
                 </button>
               </div>
             </form>
@@ -138,22 +199,30 @@ export default function AccountPage() {
             {success ? (
               <div className="flex-1 flex flex-col justify-center items-center text-center space-y-6">
                 <div className="w-16 h-16 rounded-full bg-accent-gold/20 flex items-center justify-center text-accent-gold mb-4">
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  <Check size={32} />
                 </div>
                 <h2 className="text-2xl font-light">Aramıza Hoş Geldiniz!</h2>
                 <p className="text-foreground/70 leading-relaxed max-w-sm">
-                  Üyeliğiniz başarıyla oluşturuldu. PN Parfüm ayrıcalıklarını keşfetmeye başlayabilirsiniz.
+                  Üyeliğiniz başarıyla oluşturuldu ve sisteme giriş yapıldı. PN Parfüm ayrıcalıklarını keşfetmeye başlayabilirsiniz.
                 </p>
                 <div className="bg-foreground/5 p-6 rounded-2xl border border-foreground/10 w-full mt-4">
                   <p className="text-sm uppercase tracking-widest text-foreground/60 mb-2">İlk Üyeliğe Özel Kuponunuz</p>
-                  <p className="text-3xl font-medium tracking-wider text-accent-gold">{couponCode}</p>
+                  
+                  <div className="flex items-center justify-center gap-4 mt-2">
+                    <p className="text-3xl font-medium tracking-wider text-accent-gold">{couponCode}</p>
+                    <button 
+                      onClick={copyCode}
+                      className="w-10 h-10 bg-foreground/10 text-foreground rounded-lg flex items-center justify-center hover:bg-accent-gold hover:text-white transition-colors"
+                      title="Kodu Kopyala"
+                    >
+                      {copied ? <Check size={18} /> : <Copy size={18} />}
+                    </button>
+                  </div>
+                  {copied && <p className="text-xs text-accent-gold mt-2">Kopyalandı!</p>}
                 </div>
-                <button 
-                  onClick={() => setSuccess(false)}
-                  className="mt-8 border border-foreground text-foreground px-8 py-3 uppercase tracking-widest text-sm font-medium hover:bg-foreground hover:text-background transition-colors"
-                >
-                  Giriş Yap
-                </button>
+                <Link href="/profil" className="mt-8 border border-foreground text-foreground px-8 py-3 uppercase tracking-widest text-sm font-medium hover:bg-foreground hover:text-background transition-colors inline-block">
+                  Profilime Git
+                </Link>
               </div>
             ) : (
             <form onSubmit={handleRegister} className="space-y-8 flex-1 flex flex-col">
@@ -164,8 +233,11 @@ export default function AccountPage() {
               )}
               <div className="grid grid-cols-2 gap-6">
                 <div className="flex flex-col">
-                  <label className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Ad</label>
+                  <label htmlFor="firstName" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Ad</label>
                   <input 
+                    id="firstName"
+                    name="firstName"
+                    autoComplete="given-name"
                     type="text" 
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
@@ -173,8 +245,11 @@ export default function AccountPage() {
                   />
                 </div>
                 <div className="flex flex-col">
-                  <label className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Soyad</label>
+                  <label htmlFor="lastName" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Soyad</label>
                   <input 
+                    id="lastName"
+                    name="lastName"
+                    autoComplete="family-name"
                     type="text" 
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
@@ -184,8 +259,11 @@ export default function AccountPage() {
               </div>
               
               <div className="flex flex-col">
-                <label className="text-xs uppercase tracking-widest text-foreground/60 mb-2">E-posta adresi</label>
+                <label htmlFor="registerEmail" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">E-posta adresi</label>
                 <input 
+                  id="registerEmail"
+                  name="registerEmail"
+                  autoComplete="email"
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -194,8 +272,11 @@ export default function AccountPage() {
               </div>
               
               <div className="flex flex-col">
-                <label className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Telefon Numarası</label>
+                <label htmlFor="registerPhone" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Telefon Numarası</label>
                 <input 
+                  id="registerPhone"
+                  name="registerPhone"
+                  autoComplete="tel"
                   type="tel" 
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
@@ -206,8 +287,10 @@ export default function AccountPage() {
 
               <div className="grid grid-cols-2 gap-6">
                 <div className="flex flex-col">
-                  <label className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Doğum Yılı *</label>
+                  <label htmlFor="birthYear" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Doğum Yılı *</label>
                   <input 
+                    id="birthYear"
+                    name="bday-year"
                     type="number" 
                     min="1920" max="2015"
                     value={birthYear}
@@ -217,10 +300,12 @@ export default function AccountPage() {
                   />
                 </div>
                 <div className="flex flex-col">
-                  <label className="text-xs uppercase tracking-widest text-foreground/60 mb-2 flex items-center justify-between">
+                  <label htmlFor="birthMonthDay" className="text-xs uppercase tracking-widest text-foreground/60 mb-2 flex items-center justify-between">
                     Doğum Günü <span className="text-[10px] text-foreground/40 normal-case tracking-normal">Opsiyonel</span>
                   </label>
                   <input 
+                    id="birthMonthDay"
+                    name="bday-day"
                     type="text" 
                     value={birthMonthDay}
                     onChange={(e) => setBirthMonthDay(e.target.value)}
@@ -232,10 +317,12 @@ export default function AccountPage() {
               </div>
 
               <div className="flex flex-col">
-                <label className="text-xs uppercase tracking-widest text-foreground/60 mb-2 flex items-center justify-between">
+                <label htmlFor="profession" className="text-xs uppercase tracking-widest text-foreground/60 mb-2 flex items-center justify-between">
                   Meslek <span className="text-[10px] text-foreground/40 normal-case tracking-normal">Opsiyonel</span>
                 </label>
                 <input 
+                  id="profession"
+                  name="organization-title"
                   type="text" 
                   value={profession}
                   onChange={(e) => setProfession(e.target.value)}
@@ -247,25 +334,37 @@ export default function AccountPage() {
               
               <div className="grid grid-cols-2 gap-6">
                 <div className="flex flex-col">
-                  <label className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Şifre</label>
+                  <label htmlFor="registerPassword" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Şifre</label>
                   <div className="relative">
                      <input 
-                       type="password" 
+                       id="registerPassword"
+                       name="registerPassword"
+                       autoComplete="new-password"
+                       type={showRegPwd ? "text" : "password"}
                        value={password}
                        onChange={(e) => setPassword(e.target.value)}
-                       className="w-full bg-transparent border-b border-foreground/20 py-2 focus:outline-none focus:border-accent-gold transition-colors"
+                       className="w-full bg-transparent border-b border-foreground/20 py-2 focus:outline-none focus:border-accent-gold transition-colors pr-10"
                      />
+                     <button type="button" onClick={() => setShowRegPwd(!showRegPwd)} className="absolute right-0 top-2 text-foreground/40 hover:text-foreground transition-colors">
+                       {showRegPwd ? <EyeOff size={18} /> : <Eye size={18} />}
+                     </button>
                   </div>
                 </div>
                 <div className="flex flex-col">
-                  <label className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Şifre Tekrar</label>
+                  <label htmlFor="registerPasswordConfirm" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Şifre Tekrar</label>
                    <div className="relative">
                      <input 
-                       type="password" 
+                       id="registerPasswordConfirm"
+                       name="registerPasswordConfirm"
+                       autoComplete="new-password"
+                       type={showRegPwdConfirm ? "text" : "password"}
                        value={passwordConfirm}
                        onChange={(e) => setPasswordConfirm(e.target.value)}
-                       className="w-full bg-transparent border-b border-foreground/20 py-2 focus:outline-none focus:border-accent-gold transition-colors"
+                       className="w-full bg-transparent border-b border-foreground/20 py-2 focus:outline-none focus:border-accent-gold transition-colors pr-10"
                      />
+                     <button type="button" onClick={() => setShowRegPwdConfirm(!showRegPwdConfirm)} className="absolute right-0 top-2 text-foreground/40 hover:text-foreground transition-colors">
+                       {showRegPwdConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                     </button>
                   </div>
                 </div>
               </div>
@@ -300,7 +399,7 @@ export default function AccountPage() {
                   {loading ? 'İşleniyor...' : 'Üye Ol'}
                 </button>
                 <p className="text-center text-xs text-foreground/60 mt-4 leading-relaxed">
-                  İlk Üyelerimize Özel <span className="uppercase underline font-bold text-foreground">İNDİRİM KUPONU</span> kodunuz kayıt sonrası ekranda verilecektir.
+                  İlk üyelerimize özel <span className="uppercase underline font-bold text-foreground">İNDİRİM KUPONU</span> kodunuz kayıt sonrası ekranda verilecektir.
                 </p>
               </div>
             </form>
