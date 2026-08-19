@@ -76,9 +76,23 @@ const CARGO_COMPANIES = [
 ]
 
 // Sistem Versiyon ve Değişiklik Günlüğü (Changelog)
-const SYSTEM_VERSION = 'v2.6.0'
+const SYSTEM_VERSION = 'v2.7.0'
 const SYSTEM_BUILD_DATE = '2026.08.20'
 const CHANGELOG = [
+  {
+    version: 'v2.7.0',
+    code: 'MAJOR-20260820-E',
+    date: '20.08.2026',
+    type: 'Büyük Değişim (Major)',
+    badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    title: 'Admin Tekil Ürün & Stok/Görsel Yönetim Paneli',
+    changes: [
+      'Admin panelinde tek tek yeni parfüm ekleme (SKU, isim, koku piramidi, kalıcılık/yayılım puanları, mood/tarz etiketleri, fiyat, stok ve görsel).',
+      'Mevcut parfümleri tek tıkla düzenleme, aktif/pasif satış durumu değiştirme ve güvenli silme özelliği.',
+      'Canlı ürün arama, cinsiyet ve yayın durumuna göre filtreleme kataloğu.',
+      'Toplu Fiyat Güncelleme motoru ve Excel Toplu Aktarım araçlarının alt sekmeler halinde birleştirilmesi.'
+    ]
+  },
   {
     version: 'v2.6.0',
     code: 'MAJOR-20260820-D',
@@ -279,6 +293,35 @@ export default function AdminDashboard() {
   // New store form state
   const [newStore, setNewStore] = useState({ name: '', platform: 'trendyol', sellerId: '', apiKey: '', apiSecret: '' })
 
+  // Product Management States
+  const [products, setProducts] = useState<any[]>([])
+  const [productSearch, setProductSearch] = useState('')
+  const [productGenderFilter, setProductGenderFilter] = useState('all')
+  const [productStatusFilter, setProductStatusFilter] = useState('all')
+  const [productSubTab, setProductSubTab] = useState<'catalog' | 'bulk_price' | 'excel'>('catalog')
+  const [showProductModal, setShowProductModal] = useState(false)
+  const [productModalMode, setProductModalMode] = useState<'create' | 'edit'>('create')
+  const [productForm, setProductForm] = useState({
+    sku: '',
+    original_name: '',
+    gender: 'Unisex',
+    fragrance_family: 'Odunsu',
+    top_notes: 'Bergamot, Pembe Biber, Narenciye',
+    heart_notes: 'Gül, Yasemin, Paçuli',
+    base_notes: 'Sedir Ağacı, Amber, Misk',
+    mood_tag: 'Karizmatik & Çekici',
+    persona_tag: 'Modern Şehirli',
+    season_tag: 'Dört Mevsim',
+    occasion_tag: 'Özel Davet & Günlük',
+    longevity_score: 9,
+    sillage_score: 8,
+    price: 850,
+    stock: 50,
+    base_cost: 250,
+    publish_status: 'ACTIVE',
+    image: ''
+  })
+
   // Product Bulk update states
   const [importProgress, setImportProgress] = useState<{current: number, total: number} | null>(null)
   const [bulkPriceData, setBulkPriceData] = useState({ platform: 'all', type: 'zam', percentage: '' })
@@ -315,6 +358,7 @@ export default function AdminDashboard() {
     else if (activeTab === 'orders') fetchData('/api/admin/orders', setOrders)
     else if (activeTab === 'customers') fetchData('/api/admin/customers', setCustomers)
     else if (activeTab === 'notifications') fetchData('/api/admin/notifications', setNotifications)
+    else if (activeTab === 'products') fetchData('/api/admin/products', setProducts)
     else if (activeTab === 'reports') fetchData('/api/admin/reports', setReports)
     else if (activeTab === 'api') {
       fetchData('/api/admin/marketplace/stores', setStores)
@@ -647,6 +691,150 @@ export default function AdminDashboard() {
       setSavingId(null)
     }
   }
+
+  // --- Single Product Management Functions ---
+  const handleOpenCreateProduct = () => {
+    setProductModalMode('create')
+    setSelectedProduct(null)
+    setProductForm({
+      sku: '',
+      original_name: '',
+      gender: 'Unisex',
+      fragrance_family: 'Odunsu',
+      top_notes: 'Bergamot, Pembe Biber, Narenciye',
+      heart_notes: 'Gül, Yasemin, Paçuli',
+      base_notes: 'Sedir Ağacı, Amber, Misk',
+      mood_tag: 'Karizmatik & Çekici',
+      persona_tag: 'Modern Şehirli',
+      season_tag: 'Dört Mevsim',
+      occasion_tag: 'Özel Davet & Günlük',
+      longevity_score: 9,
+      sillage_score: 8,
+      price: 850,
+      stock: 50,
+      base_cost: 250,
+      publish_status: 'ACTIVE',
+      image: ''
+    })
+    setShowProductModal(true)
+  }
+
+  const handleOpenEditProduct = (prod: any) => {
+    setProductModalMode('edit')
+    setSelectedProduct(prod)
+    const listing = prod.marketplaceListings?.find((l: any) => l.platform === 'pn_store') || prod.marketplaceListings?.[0]
+    setProductForm({
+      sku: prod.sku,
+      original_name: prod.original_name,
+      gender: prod.gender || 'Unisex',
+      fragrance_family: Array.isArray(prod.fragrance_family) ? prod.fragrance_family[0] || 'Odunsu' : prod.fragrance_family || 'Odunsu',
+      top_notes: prod.top_notes || '',
+      heart_notes: prod.heart_notes || '',
+      base_notes: prod.base_notes || '',
+      mood_tag: prod.mood_tag || 'Karizmatik & Çekici',
+      persona_tag: prod.persona_tag || 'Modern Şehirli',
+      season_tag: prod.season_tag || 'Dört Mevsim',
+      occasion_tag: prod.occasion_tag || 'Özel Davet & Günlük',
+      longevity_score: prod.longevity_score || 9,
+      sillage_score: prod.sillage_score || 8,
+      price: listing?.price || 850,
+      stock: listing?.stock !== undefined ? listing.stock : 50,
+      base_cost: prod.base_cost || 250,
+      publish_status: prod.publish_status || 'ACTIVE',
+      image: listing?.images?.[0] || ''
+    })
+    setShowProductModal(true)
+  }
+
+  const handleSaveProduct = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSavingId('save_product')
+
+    try {
+      const method = productModalMode === 'create' ? 'POST' : 'PUT'
+      const res = await fetch('/api/admin/products', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...productForm,
+          fragrance_family: [productForm.fragrance_family]
+        })
+      })
+
+      const data = await res.json()
+      if (res.ok && data.success) {
+        showMsg('success', data.message || 'Ürün başarıyla kaydedildi.')
+        setShowProductModal(false)
+        fetchData('/api/admin/products', setProducts)
+      } else {
+        showMsg('error', data.error || 'İşlem başarısız')
+      }
+    } catch {
+      showMsg('error', 'Ürün kaydedilirken bağlantı hatası oluştu.')
+    } finally {
+      setSavingId(null)
+    }
+  }
+
+  const handleDeleteProduct = async (sku: string) => {
+    if (!confirm(`PN ${sku} ürününü silmek istediğinize emin misiniz?`)) return
+    setSavingId(`del_${sku}`)
+
+    try {
+      const res = await fetch(`/api/admin/products?sku=${sku}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        showMsg('success', data.message || 'Ürün silindi.')
+        fetchData('/api/admin/products', setProducts)
+      } else {
+        showMsg('error', data.error || 'Ürün silinemedi')
+      }
+    } catch {
+      showMsg('error', 'Silme işlemi sırasında hata oluştu.')
+    } finally {
+      setSavingId(null)
+    }
+  }
+
+  const handleToggleProductStatus = async (prod: any) => {
+    const newStatus = prod.publish_status === 'ACTIVE' ? 'PASSIVE' : 'ACTIVE'
+    try {
+      const res = await fetch('/api/admin/products', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sku: prod.sku, publish_status: newStatus })
+      })
+      if (res.ok) {
+        showMsg('success', `PN ${prod.sku} durumu ${newStatus === 'ACTIVE' ? 'Aktif' : 'Pasif'} yapıldı.`)
+        fetchData('/api/admin/products', setProducts)
+      }
+    } catch {
+      showMsg('error', 'Durum güncellenemedi')
+    }
+  }
+
+  // Filtered Products Calculation
+  const filteredProducts = useMemo(() => {
+    return products.filter(p => {
+      if (productGenderFilter !== 'all' && p.gender?.toLowerCase() !== productGenderFilter.toLowerCase()) {
+        return false
+      }
+      if (productStatusFilter !== 'all' && p.publish_status !== productStatusFilter) {
+        return false
+      }
+      if (productSearch.trim()) {
+        const q = productSearch.toLowerCase()
+        const matchSku = p.sku?.toLowerCase().includes(q)
+        const matchName = p.original_name?.toLowerCase().includes(q)
+        const matchMood = p.mood_tag?.toLowerCase().includes(q)
+        const matchFamily = Array.isArray(p.fragrance_family) && p.fragrance_family.some((f: string) => f.toLowerCase().includes(q))
+        if (!matchSku && !matchName && !matchMood && !matchFamily) {
+          return false
+        }
+      }
+      return true
+    })
+  }, [products, productGenderFilter, productStatusFilter, productSearch])
 
   // Filtered Orders Calculation
   const filteredOrders = useMemo(() => {
@@ -1793,61 +1981,268 @@ export default function AdminDashboard() {
                 </div>
               )}
 
-              {/* ===================== TOPLU FIYAT & URUN ===================== */}
+              {/* ===================== URUN & STOK YONETIMI ===================== */}
               {activeTab === 'products' && (
-                <div className="space-y-8">
-                  <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                    <h3 className="font-semibold text-gray-900 mb-2">Excel Ürün Aktarımı (Toplu Yükleme / Güncelleme)</h3>
-                    <p className="text-sm text-gray-500 mb-6">Trendyol veya sistem formatındaki Excel dosyasını seçerek ürünleri anında güncelleyin veya yeni ürünler ekleyin.</p>
-                    <label className="border-2 border-dashed border-gray-300 hover:border-indigo-500 rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer transition-colors">
-                      <UploadCloud size={48} className="text-indigo-600 mb-2" />
-                      <span className="text-sm font-semibold text-gray-900">Excel Dosyası Seçin</span>
-                      <span className="text-xs text-gray-500 mt-1">.xlsx veya .xls formatı</span>
-                      <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="hidden" />
-                    </label>
-                    {importProgress && (
-                      <div className="mt-4 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-                        <div className="flex justify-between text-xs font-semibold text-indigo-900 mb-1">
-                          <span>Aktarılıyor...</span>
-                          <span>{importProgress.current} / {importProgress.total}</span>
-                        </div>
-                        <div className="w-full bg-indigo-200 rounded-full h-2">
-                          <div className="bg-indigo-600 h-2 rounded-full transition-all" style={{ width: `${(importProgress.current / importProgress.total) * 100}%` }} />
-                        </div>
-                      </div>
-                    )}
+                <div className="space-y-6">
+                  {/* Top Subtab Switcher */}
+                  <div className="bg-white p-2 rounded-2xl border border-gray-200 shadow-sm flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setProductSubTab('catalog')}
+                      className={`flex-1 min-w-[160px] py-2.5 px-4 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-2 ${
+                        productSubTab === 'catalog'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Box size={16} /> Tekil Ürün Kataloğu ({products.length})
+                    </button>
+
+                    <button
+                      onClick={() => setProductSubTab('bulk_price')}
+                      className={`flex-1 min-w-[160px] py-2.5 px-4 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-2 ${
+                        productSubTab === 'bulk_price'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Percent size={16} /> Toplu Fiyat Güncelleme
+                    </button>
+
+                    <button
+                      onClick={() => setProductSubTab('excel')}
+                      className={`flex-1 min-w-[160px] py-2.5 px-4 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-2 ${
+                        productSubTab === 'excel'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <UploadCloud size={16} /> Excel Toplu Aktarım
+                    </button>
                   </div>
 
-                  <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                    <h3 className="font-semibold text-gray-900 mb-2">Toplu Fiyat Değişikliği (% Zam / % İndirim)</h3>
-                    <p className="text-sm text-gray-500 mb-6">Seçilen platformdaki tüm ürünlerin fiyatlarını tek tıkla toplu olarak artırın veya azaltın.</p>
-                    <form onSubmit={handleBulkPriceUpdate} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold mb-1">Hedef Platform</label>
-                        <select value={bulkPriceData.platform} onChange={e => setBulkPriceData({...bulkPriceData, platform: e.target.value})} className="w-full border rounded-lg p-2.5 text-sm">
-                          <option value="all">Tüm Platformlar & Kendi Sitemiz</option>
-                          <option value="trendyol">Yalnızca Trendyol</option>
-                          <option value="hepsiburada">Yalnızca Hepsiburada</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold mb-1">İşlem Tipi</label>
-                        <select value={bulkPriceData.type} onChange={e => setBulkPriceData({...bulkPriceData, type: e.target.value})} className="w-full border rounded-lg p-2.5 text-sm">
-                          <option value="zam">Fiyat Artışı (% Zam)</option>
-                          <option value="indirim">Fiyat Düşüşü (% İndirim)</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold mb-1">Yüzde (%)</label>
-                        <input type="number" step="0.01" placeholder="Örn: 15" value={bulkPriceData.percentage} onChange={e => setBulkPriceData({...bulkPriceData, percentage: e.target.value})} className="w-full border rounded-lg p-2.5 text-sm" required />
-                      </div>
-                      <div className="sm:col-span-3">
-                        <button type="submit" disabled={savingId === 'bulk_price'} className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2.5 rounded-lg text-sm transition-colors">
-                          {savingId === 'bulk_price' ? 'Güncelleniyor...' : 'Fiyatları Toplu Güncelle'}
+                  {/* SUBTAB 1: TEKIL URUN KATALOGU */}
+                  {productSubTab === 'catalog' && (
+                    <div className="space-y-6">
+                      {/* Search & Filter & Add Button Bar */}
+                      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex flex-col sm:flex-row gap-3 flex-1">
+                          <div className="relative flex-1 max-w-md">
+                            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <input 
+                              type="text" 
+                              placeholder="SKU, Parfüm Adı, Koku Ailesi veya Tarz ara..." 
+                              value={productSearch}
+                              onChange={e => setProductSearch(e.target.value)}
+                              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            />
+                            {productSearch && (
+                              <button onClick={() => setProductSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                <X size={14} />
+                              </button>
+                            )}
+                          </div>
+
+                          <select
+                            value={productGenderFilter}
+                            onChange={e => setProductGenderFilter(e.target.value)}
+                            className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-medium text-gray-700"
+                          >
+                            <option value="all">Tüm Cinsiyetler</option>
+                            <option value="Erkek">Erkek</option>
+                            <option value="Kadın">Kadın</option>
+                            <option value="Unisex">Unisex</option>
+                          </select>
+
+                          <select
+                            value={productStatusFilter}
+                            onChange={e => setProductStatusFilter(e.target.value)}
+                            className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-medium text-gray-700"
+                          >
+                            <option value="all">Tüm Durumlar</option>
+                            <option value="ACTIVE">Yalnızca Aktif</option>
+                            <option value="PASSIVE">Yalnızca Pasif</option>
+                          </select>
+                        </div>
+
+                        <button
+                          onClick={handleOpenCreateProduct}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-xs font-semibold transition-colors shadow-sm flex items-center justify-center gap-2 whitespace-nowrap"
+                        >
+                          <PackagePlus size={16} /> Yeni Parfüm Ekle
                         </button>
                       </div>
-                    </form>
-                  </div>
+
+                      {/* Products Table */}
+                      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse text-xs">
+                            <thead>
+                              <tr className="bg-gray-50/80 border-b border-gray-200 text-gray-500 font-semibold uppercase tracking-wider">
+                                <th className="px-6 py-4">SKU / Kod</th>
+                                <th className="px-6 py-4">Parfüm İsmi</th>
+                                <th className="px-6 py-4">Koku Ailesi / Cinsiyet</th>
+                                <th className="px-6 py-4">Koku Piramidi (Notalar)</th>
+                                <th className="px-6 py-4">Kalıcılık / Yayılım</th>
+                                <th className="px-6 py-4">Fiyat & Stok</th>
+                                <th className="px-6 py-4">Durum</th>
+                                <th className="px-6 py-4 text-right">İşlemler</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                              {filteredProducts.length === 0 ? (
+                                <tr>
+                                  <td colSpan={8} className="p-12 text-center text-gray-400">
+                                    <Box size={36} className="mx-auto mb-2 opacity-30" />
+                                    Aranan kriterlere uygun parfüm bulunamadı.
+                                  </td>
+                                </tr>
+                              ) : (
+                                filteredProducts.map((prod: any) => {
+                                  const listing = prod.marketplaceListings?.find((l: any) => l.platform === 'pn_store') || prod.marketplaceListings?.[0]
+                                  const priceVal = listing?.price || 850
+                                  const stockVal = listing?.stock !== undefined ? listing.stock : 50
+
+                                  return (
+                                    <tr key={prod.sku} className="hover:bg-gray-50/70 transition-colors">
+                                      <td className="px-6 py-4">
+                                        <div className="font-mono font-bold text-indigo-700 text-sm">PN {prod.sku}</div>
+                                      </td>
+                                      <td className="px-6 py-4">
+                                        <div className="font-semibold text-gray-900 text-sm">{prod.original_name}</div>
+                                        <div className="text-[10px] text-gray-400 truncate max-w-[160px]">{prod.mood_tag || 'Özel Seri'}</div>
+                                      </td>
+                                      <td className="px-6 py-4">
+                                        <div className="flex flex-col gap-1 items-start">
+                                          <span className="font-semibold text-gray-700">{Array.isArray(prod.fragrance_family) ? prod.fragrance_family.join(', ') : prod.fragrance_family}</span>
+                                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                            prod.gender?.toLowerCase() === 'kadın' ? 'bg-rose-100 text-rose-700' :
+                                            prod.gender?.toLowerCase() === 'erkek' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                                          }`}>
+                                            {prod.gender || 'Unisex'}
+                                          </span>
+                                        </div>
+                                      </td>
+                                      <td className="px-6 py-4 max-w-xs">
+                                        <div className="text-[11px] text-gray-600 line-clamp-1">
+                                          <span className="font-bold text-gray-400">Üst:</span> {prod.top_notes || '-'}
+                                        </div>
+                                        <div className="text-[11px] text-gray-600 line-clamp-1">
+                                          <span className="font-bold text-gray-400">Kalp:</span> {prod.heart_notes || '-'}
+                                        </div>
+                                        <div className="text-[11px] text-gray-600 line-clamp-1">
+                                          <span className="font-bold text-gray-400">Dip:</span> {prod.base_notes || '-'}
+                                        </div>
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-gray-700 font-medium">Kalıcılık: <span className="font-bold text-indigo-600">{prod.longevity_score || 9}/10</span></div>
+                                        <div className="text-gray-500 text-[10px]">Yayılım: <span className="font-bold text-indigo-600">{prod.sillage_score || 8}/10</span></div>
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="font-bold text-gray-900 text-sm">{priceVal} TL</div>
+                                        <div className={`text-[10px] font-semibold ${stockVal > 10 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                          Stok: {stockVal} Adet
+                                        </div>
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap">
+                                        <button
+                                          onClick={() => handleToggleProductStatus(prod)}
+                                          className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors ${
+                                            prod.publish_status === 'ACTIVE'
+                                              ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                                              : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                                          }`}
+                                          title="Durumu Değiştir"
+                                        >
+                                          {prod.publish_status === 'ACTIVE' ? '✅ Aktif' : '⏸️ Pasif'}
+                                        </button>
+                                      </td>
+                                      <td className="px-6 py-4 text-right whitespace-nowrap">
+                                        <div className="flex items-center justify-end gap-1.5">
+                                          <button
+                                            onClick={() => handleOpenEditProduct(prod)}
+                                            className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-medium transition-colors"
+                                          >
+                                            Düzenle
+                                          </button>
+                                          <button
+                                            onClick={() => handleDeleteProduct(prod.sku)}
+                                            disabled={savingId === `del_${prod.sku}`}
+                                            className="px-2 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-medium transition-colors"
+                                            title="Sil"
+                                          >
+                                            Sil
+                                          </button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  )
+                                })
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUBTAB 2: TOPLU FIYAT GUNCELLEME */}
+                  {productSubTab === 'bulk_price' && (
+                    <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                      <h3 className="font-semibold text-gray-900 mb-2">Toplu Fiyat Değişikliği (% Zam / % İndirim)</h3>
+                      <p className="text-sm text-gray-500 mb-6">Seçilen platformdaki tüm parfümlerin fiyatlarını tek tıkla toplu olarak artırın veya azaltın.</p>
+                      <form onSubmit={handleBulkPriceUpdate} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold mb-1 text-gray-700">Hedef Platform</label>
+                          <select value={bulkPriceData.platform} onChange={e => setBulkPriceData({...bulkPriceData, platform: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm">
+                            <option value="all">Tüm Platformlar & Kendi Sitemiz</option>
+                            <option value="trendyol">Yalnızca Trendyol</option>
+                            <option value="hepsiburada">Yalnızca Hepsiburada</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold mb-1 text-gray-700">İşlem Tipi</label>
+                          <select value={bulkPriceData.type} onChange={e => setBulkPriceData({...bulkPriceData, type: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm">
+                            <option value="zam">Fiyat Artışı (% Zam)</option>
+                            <option value="indirim">Fiyat Düşüşü (% İndirim)</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold mb-1 text-gray-700">Yüzde (%)</label>
+                          <input type="number" step="0.01" placeholder="Örn: 15" value={bulkPriceData.percentage} onChange={e => setBulkPriceData({...bulkPriceData, percentage: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm" required />
+                        </div>
+                        <div className="sm:col-span-3">
+                          <button type="submit" disabled={savingId === 'bulk_price'} className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-xl text-xs transition-colors shadow-sm">
+                            {savingId === 'bulk_price' ? 'Güncelleniyor...' : 'Fiyatları Toplu Güncelle'}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+
+                  {/* SUBTAB 3: EXCEL TOPLU AKTARIM */}
+                  {productSubTab === 'excel' && (
+                    <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                      <h3 className="font-semibold text-gray-900 mb-2">Excel Ürün Aktarımı (Toplu Yükleme / Güncelleme)</h3>
+                      <p className="text-sm text-gray-500 mb-6">Trendyol veya sistem formatındaki Excel dosyasını seçerek ürünleri anında güncelleyin veya yeni ürünler ekleyin.</p>
+                      <label className="border-2 border-dashed border-gray-300 hover:border-indigo-500 rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer transition-colors bg-gray-50/50">
+                        <UploadCloud size={48} className="text-indigo-600 mb-2" />
+                        <span className="text-sm font-semibold text-gray-900">Excel Dosyası Seçin</span>
+                        <span className="text-xs text-gray-500 mt-1">.xlsx veya .xls formatı</span>
+                        <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="hidden" />
+                      </label>
+                      {importProgress && (
+                        <div className="mt-4 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                          <div className="flex justify-between text-xs font-semibold text-indigo-900 mb-1">
+                            <span>Aktarılıyor...</span>
+                            <span>{importProgress.current} / {importProgress.total}</span>
+                          </div>
+                          <div className="w-full bg-indigo-200 rounded-full h-2">
+                            <div className="bg-indigo-600 h-2 rounded-full transition-all" style={{ width: `${(importProgress.current / importProgress.total) * 100}%` }} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </>
@@ -2624,6 +3019,262 @@ export default function AdminDashboard() {
                   className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl text-sm font-medium transition-colors shadow-sm disabled:opacity-50"
                 >
                   {savingId === `order_${shippingModalOrder.id}` ? 'Kaydediliyor...' : 'Kargoya Ver'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ===================== YENI PARFUM EKLE / DUZENLE MODALI ===================== */}
+      {showProductModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
+                  <PackagePlus size={20} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">
+                    {productModalMode === 'create' ? 'Yeni Parfüm Ekle' : `Parfüm Düzenle: PN ${productForm.sku}`}
+                  </h3>
+                  <p className="text-xs text-gray-500">Koku piramidi, notalar, fiyat ve stok bilgilerini yapılandırın</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowProductModal(false)} 
+                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSaveProduct} className="p-6 overflow-y-auto space-y-4 flex-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">SKU / Parfüm Kodu *</label>
+                  <input
+                    type="text"
+                    placeholder="Örn: 201 veya PN-201"
+                    value={productForm.sku}
+                    onChange={e => setProductForm({ ...productForm, sku: e.target.value })}
+                    disabled={productModalMode === 'edit'}
+                    required
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Parfüm İsmi / İlham *</label>
+                  <input
+                    type="text"
+                    placeholder="Örn: Noir Extrême"
+                    value={productForm.original_name}
+                    onChange={e => setProductForm({ ...productForm, original_name: e.target.value })}
+                    required
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Cinsiyet</label>
+                  <select
+                    value={productForm.gender}
+                    onChange={e => setProductForm({ ...productForm, gender: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="Unisex">Unisex</option>
+                    <option value="Erkek">Erkek</option>
+                    <option value="Kadın">Kadın</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Koku Ailesi</label>
+                  <select
+                    value={productForm.fragrance_family}
+                    onChange={e => setProductForm({ ...productForm, fragrance_family: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="Odunsu">Odunsu</option>
+                    <option value="Çiçeksi">Çiçeksi</option>
+                    <option value="Ferah">Ferah / Su</option>
+                    <option value="Baharatlı">Baharatlı</option>
+                    <option value="Oryantal">Oryantal</option>
+                    <option value="Meyvemsi">Meyvemsi</option>
+                    <option value="Gurme">Gurme / Tatlı</option>
+                    <option value="Deri">Deri / Dumansı</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Koku Piramidi */}
+              <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 space-y-3">
+                <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Koku Piramidi (Notalar)</h4>
+                <div>
+                  <label className="block text-[11px] font-semibold text-gray-600 mb-1">Üst Notalar (İlk Hissedilen)</label>
+                  <input
+                    type="text"
+                    placeholder="Örn: Bergamot, Kakule, Pembe Biber"
+                    value={productForm.top_notes}
+                    onChange={e => setProductForm({ ...productForm, top_notes: e.target.value })}
+                    className="w-full bg-white border border-indigo-200 rounded-xl p-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-gray-600 mb-1">Kalp Notalar (Karakter & Gövde)</label>
+                  <input
+                    type="text"
+                    placeholder="Örn: Gül, Yasemin, Paçuli, Kahve"
+                    value={productForm.heart_notes}
+                    onChange={e => setProductForm({ ...productForm, heart_notes: e.target.value })}
+                    className="w-full bg-white border border-indigo-200 rounded-xl p-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-gray-600 mb-1">Dip Notalar (Kalıcılık & İz)</label>
+                  <input
+                    type="text"
+                    placeholder="Örn: Sandal Ağacı, Amber, Vanilya, Beyaz Misk"
+                    value={productForm.base_notes}
+                    onChange={e => setProductForm({ ...productForm, base_notes: e.target.value })}
+                    className="w-full bg-white border border-indigo-200 rounded-xl p-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              {/* Kalıcılık & Yayılım & Nöropazarlama */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    Kalıcılık Puanı: <span className="text-indigo-600 font-bold">{productForm.longevity_score}/10</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={productForm.longevity_score}
+                    onChange={e => setProductForm({ ...productForm, longevity_score: parseInt(e.target.value) || 9 })}
+                    className="w-full accent-indigo-600 cursor-pointer"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    Yayılım (Sillage) Puanı: <span className="text-indigo-600 font-bold">{productForm.sillage_score}/10</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={productForm.sillage_score}
+                    onChange={e => setProductForm({ ...productForm, sillage_score: parseInt(e.target.value) || 8 })}
+                    className="w-full accent-indigo-600 cursor-pointer"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Ruh Hali / Tarz (Mood Tag)</label>
+                  <input
+                    type="text"
+                    placeholder="Örn: Karizmatik & Çekici"
+                    value={productForm.mood_tag}
+                    onChange={e => setProductForm({ ...productForm, mood_tag: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Mevsim / Kullanım</label>
+                  <select
+                    value={productForm.season_tag}
+                    onChange={e => setProductForm({ ...productForm, season_tag: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs"
+                  >
+                    <option value="Dört Mevsim">Dört Mevsim</option>
+                    <option value="Sonbahar / Kış">Sonbahar / Kış</option>
+                    <option value="İlkbahar / Yaz">İlkbahar / Yaz</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Fiyat, Stok ve Durum */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-200">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Satış Fiyatı (TL) *</label>
+                  <input
+                    type="number"
+                    value={productForm.price}
+                    onChange={e => setProductForm({ ...productForm, price: parseFloat(e.target.value) || 0 })}
+                    required
+                    className="w-full bg-white border border-gray-200 rounded-xl p-2 text-xs font-bold text-gray-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Maliyet (TL)</label>
+                  <input
+                    type="number"
+                    value={productForm.base_cost}
+                    onChange={e => setProductForm({ ...productForm, base_cost: parseFloat(e.target.value) || 0 })}
+                    className="w-full bg-white border border-gray-200 rounded-xl p-2 text-xs text-gray-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Stok Adedi *</label>
+                  <input
+                    type="number"
+                    value={productForm.stock}
+                    onChange={e => setProductForm({ ...productForm, stock: parseInt(e.target.value) || 0 })}
+                    required
+                    className="w-full bg-white border border-gray-200 rounded-xl p-2 text-xs font-bold text-gray-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Yayın Durumu</label>
+                  <select
+                    value={productForm.publish_status}
+                    onChange={e => setProductForm({ ...productForm, publish_status: e.target.value })}
+                    className="w-full bg-white border border-gray-200 rounded-xl p-2 text-xs font-semibold text-gray-800"
+                  >
+                    <option value="ACTIVE">Aktif (Satışta)</option>
+                    <option value="PASSIVE">Pasif (Gizli)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Görsel */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Görsel URL veya Kasap Image Dosyası</label>
+                <input
+                  type="text"
+                  placeholder="Örn: 201.jpg veya https://.../image.jpg (Boş bırakılırsa varsayılan şişe kullanılır)"
+                  value={productForm.image}
+                  onChange={e => setProductForm({ ...productForm, image: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs font-mono"
+                />
+              </div>
+
+              {/* Buttons */}
+              <div className="pt-3 border-t border-gray-100 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowProductModal(false)}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl text-xs font-semibold transition-colors"
+                >
+                  Vazgeç
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingId === 'save_product'}
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-xs font-semibold transition-colors shadow-sm disabled:opacity-50"
+                >
+                  {savingId === 'save_product' ? 'Kaydediliyor...' : 'Parfümü Kaydet'}
                 </button>
               </div>
             </form>
