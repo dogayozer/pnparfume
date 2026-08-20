@@ -73,7 +73,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems(prev => prev.filter(i => i.sku !== sku))
   }
 
-  const clearCart = () => setItems([])
+  const clearCart = () => {
+    setItems([])
+    try {
+      localStorage.removeItem('pn_cart')
+    } catch (e) {}
+  }
 
   const totalAmount = items.reduce((acc, item) => acc + (item.price * item.quantity), 0)
 

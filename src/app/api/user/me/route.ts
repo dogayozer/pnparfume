@@ -13,7 +13,10 @@ export async function POST(request: Request) {
       where: { id: userId },
       include: {
         orders: {
-          orderBy: { createdAt: 'desc' }
+          orderBy: { createdAt: 'desc' },
+          include: {
+            orderItems: true
+          }
         },
         referredOrders: {
           orderBy: { createdAt: 'desc' },
@@ -48,7 +51,10 @@ export async function POST(request: Request) {
         data: { referral_code: generatedCode },
         include: {
           orders: {
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: 'desc' },
+            include: {
+              orderItems: true
+            }
           },
           referredOrders: {
             orderBy: { createdAt: 'desc' },
