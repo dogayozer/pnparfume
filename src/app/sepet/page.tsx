@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowLeft, Trash2, Tag, Truck, Info, Users, ShieldCheck, Check, Clock, X, CreditCard } from 'lucide-react'
+import { ArrowLeft, Trash2, Tag, Truck, Info, Users, ShieldCheck, Check, Clock, X, CreditCard, LogIn, UserCheck, AlertCircle } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
 
 export default function CartPage() {
@@ -20,9 +20,16 @@ export default function CartPage() {
   const [timeLeft, setTimeLeft] = useState(600) // 10:00
   const [selectedTester, setSelectedTester] = useState<string | null>(null)
 
-
-  // Checkout Modal & PayTR State
+  // Auth & Checkout State
+  const [currentUser, setCurrentUser] = useState<any>(null)
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false)
+  const [isLoginTabOpen, setIsLoginTabOpen] = useState(false)
+  const [loginEmail, setLoginEmail] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [loginLoading, setLoginLoading] = useState(false)
+  const [loginError, setLoginError] = useState<string | null>(null)
+  const [loginSuccessMsg, setLoginSuccessMsg] = useState<string | null>(null)
+
   const [checkoutForm, setCheckoutForm] = useState({
     name: '',
     email: '',
@@ -35,6 +42,7 @@ export default function CartPage() {
     if (savedUser) {
       try {
         const user = JSON.parse(savedUser)
+        setCurrentUser(user)
         setCheckoutForm(prev => ({
           ...prev,
           name: user.name || prev.name,
@@ -45,6 +53,39 @@ export default function CartPage() {
       } catch (e) {}
     }
   }, [])
+
+  const handleInlineLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoginLoading(true)
+    setLoginError(null)
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginEmail, password: loginPassword })
+      })
+      const data = await res.json()
+      if (res.ok && data.user) {
+        setCurrentUser(data.user)
+        localStorage.setItem('user', JSON.stringify(data.user))
+        setCheckoutForm({
+          name: data.user.name || '',
+          email: data.user.email || loginEmail,
+          phone: data.user.phone || '',
+          address: data.user.address || ''
+        })
+        setIsLoginTabOpen(false)
+        setLoginSuccessMsg(`Hoş geldiniz ${data.user.name || ''}! Kayıtlı bilgileriniz yüklendi.`)
+        setTimeout(() => setLoginSuccessMsg(null), 5000)
+      } else {
+        setLoginError(data.error || 'Giriş yapılamadı. E-posta ve şifrenizi kontrol ediniz.')
+      }
+    } catch (err) {
+      setLoginError('Bağlantı hatası oluştu. Lütfen tekrar deneyin.')
+    } finally {
+      setLoginLoading(false)
+    }
+  }
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [paytrToken, setPaytrToken] = useState<string | null>(null)
@@ -412,7 +453,100 @@ export default function CartPage() {
                 </div>
               ) : (
                 <form onSubmit={handleCheckoutSubmit} className="space-y-4">
-                  <p className="text-sm text-foreground/60 mb-6">Siparişinizi tamamlamak için lütfen teslimat ve fatura bilgilerinizi giriniz. (3D Secure ile güvenle korunmaktadır)</p>
+                  {/* Member Login Switch / Success Alert */}
+                  {currentUser ? (
+                    <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2.5 text-emerald-400 font-medium">
+                        <UserCheck size={16} />
+                        <span><strong>{currentUser.name || currentUser.email}</strong> hesabınızla işlem yapıyorsunuz.</span>
+                      </div>
+                      <span className="text-[11px] text-foreground/50 hidden sm:inline">Kayıtlı adresiniz yüklendi ✓</span>
+                    </div>
+                  ) : (
+                    <div>
+                      {loginSuccessMsg && (
+                        <div className="mb-3 p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl text-xs flex items-center gap-2">
+                          <UserCheck size={14} /> {loginSuccessMsg}
+                        </div>
+                      )}
+
+                      {!isLoginTabOpen ? (
+                        <div className="bg-gradient-to-r from-accent-gold/15 via-accent-gold/5 to-transparent border border-accent-gold/30 rounded-xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                          <div>
+                            <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                              <LogIn size={15} className="text-accent-gold" /> Zaten bir hesabınız var mı?
+                            </div>
+                            <p className="text-[11px] text-foreground/60 font-light mt-0.5">
+                              Giriş yaparak kayıtlı adresinizi otomatik doldurabilir ve siparişinizi profilinizden takip edebilirsiniz.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setIsLoginTabOpen(true)}
+                            className="px-4 py-2 bg-foreground text-background text-xs font-semibold rounded-lg hover:bg-accent-gold transition-colors flex-shrink-0"
+                          >
+                            Hızlı Üye Girişi Yap
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="p-4 sm:p-5 bg-foreground/[0.03] border border-foreground/15 rounded-xl space-y-3 animate-in fade-in zoom-in-95 duration-200">
+                          <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-foreground">
+                            <LogIn size={15} className="text-accent-gold" /> Hızlı Üye Girişi
+                          </h3>
+
+                          {loginError && (
+                            <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2">
+                              <AlertCircle size={14} /> {loginError}
+                            </div>
+                          )}
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs font-medium text-foreground/70 block mb-1">E-Posta Adresi</label>
+                              <input
+                                type="email"
+                                value={loginEmail}
+                                onChange={e => setLoginEmail(e.target.value)}
+                                placeholder="ornek@mail.com"
+                                className="w-full bg-background border border-foreground/15 rounded-lg p-2.5 text-xs text-foreground focus:border-accent-gold outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-foreground/70 block mb-1">Şifre</label>
+                              <input
+                                type="password"
+                                value={loginPassword}
+                                onChange={e => setLoginPassword(e.target.value)}
+                                placeholder="••••••••"
+                                className="w-full bg-background border border-foreground/15 rounded-lg p-2.5 text-xs text-foreground focus:border-accent-gold outline-none"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between gap-3 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => setIsLoginTabOpen(false)}
+                              className="text-xs text-foreground/50 hover:text-foreground underline"
+                            >
+                              Misafir olarak devam et
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={handleInlineLogin}
+                              disabled={loginLoading || !loginEmail || !loginPassword}
+                              className="px-4 py-2 bg-accent-gold text-background rounded-lg text-xs font-bold hover:bg-accent-gold/90 transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
+                            >
+                              {loginLoading ? 'Giriş Yapılıyor...' : 'Giriş Yap ve Bilgilerimi Yükle'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <p className="text-xs text-foreground/60">Siparişinizi tamamlamak için teslimat ve fatura bilgilerinizi kontrol ediniz. (3D Secure ile güvenle korunmaktadır)</p>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
