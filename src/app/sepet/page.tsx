@@ -90,6 +90,24 @@ export default function CartPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [paytrToken, setPaytrToken] = useState<string | null>(null)
 
+  // PayTR official iFrameResizer auto-height integration
+  useEffect(() => {
+    if (paytrToken) {
+      const script = document.createElement('script')
+      script.src = 'https://www.paytr.com/js/iframeResizer.min.js'
+      script.async = true
+      script.onload = () => {
+        if ((window as any).iFrameResize) {
+          ;(window as any).iFrameResize({}, '#paytriframe')
+        }
+      }
+      document.body.appendChild(script)
+      return () => {
+        try { document.body.removeChild(script) } catch (e) {}
+      }
+    }
+  }, [paytrToken])
+
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft(prev => (prev > 0 ? prev - 1 : 0))
@@ -426,29 +444,33 @@ export default function CartPage() {
 
       {/* Checkout Modal */}
       {isCheckoutModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
-          <div className="bg-background border border-foreground/10 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="sticky top-0 bg-background border-b border-foreground/10 px-6 py-4 flex justify-between items-center z-10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-2 sm:p-4">
+          <div className={`bg-background border border-foreground/10 rounded-2xl w-full ${paytrToken ? 'max-w-3xl h-[94vh] sm:h-[90vh]' : 'max-w-2xl max-h-[90vh]'} flex flex-col shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden`}>
+            <div className="sticky top-0 bg-background border-b border-foreground/10 px-6 py-4 flex justify-between items-center z-10 flex-shrink-0">
               <h2 className="text-xl font-medium flex items-center gap-2">
                 <CreditCard size={20} className="text-accent-gold" /> Güvenli Ödeme
               </h2>
               <button 
-                onClick={() => setIsCheckoutModalOpen(false)}
+                onClick={() => {
+                  setIsCheckoutModalOpen(false)
+                  setPaytrToken(null)
+                }}
                 className="p-2 text-foreground/50 hover:text-foreground transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-3 sm:p-6 overflow-y-auto flex-1 flex flex-col">
               {paytrToken ? (
-                <div className="w-full min-h-[500px]">
+                <div className="w-full flex-1 min-h-[700px] sm:min-h-[780px] bg-background">
                   <iframe
                     src={`https://www.paytr.com/odeme/guvenli/${paytrToken}`}
                     id="paytriframe"
                     frameBorder="0"
-                    scrolling="no"
-                    style={{ width: '100%', height: '600px' }}
+                    scrolling="yes"
+                    className="w-full rounded-xl"
+                    style={{ width: '100%', minHeight: '750px', height: '100%', border: 'none' }}
                   ></iframe>
                 </div>
               ) : (
