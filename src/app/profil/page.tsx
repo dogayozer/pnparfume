@@ -6,7 +6,7 @@ import {
   ArrowLeft, Wallet, Gift, Users, Copy, Check, Package, Clock, 
   ShieldCheck, Info, Lock, AlertCircle, Eye, EyeOff, Share2, 
   MessageCircle, TrendingUp, Sparkles, Award, DollarSign, 
-  RefreshCw, Send, CheckCircle2, ChevronRight, ExternalLink, Tag
+  RefreshCw, Send, CheckCircle2, ChevronRight, ExternalLink, Tag, LogOut
 } from 'lucide-react'
 
 export default function ProfilePage() {
@@ -279,11 +279,21 @@ export default function ProfilePage() {
             <p className="text-foreground/60 font-light">Hoş geldin, {displayUser.name}</p>
           </div>
 
-          {displayUser.partner_type === 'influencer' && (
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/20 to-amber-600/10 border border-amber-500/30 px-4 py-2 rounded-2xl text-accent-gold text-xs font-semibold">
-              <Award size={16} /> Resmi Marka Elçisi
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {displayUser.partner_type === 'influencer' && (
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/20 to-amber-600/10 border border-amber-500/30 px-4 py-2 rounded-2xl text-accent-gold text-xs font-semibold">
+                <Award size={16} /> Resmi Marka Elçisi
+              </div>
+            )}
+
+            <button 
+              onClick={handleLogout}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-medium transition-colors"
+              title="Hesaptan Güvenli Çıkış Yap"
+            >
+              <LogOut size={16} /> Çıkış Yap
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-12">
@@ -320,6 +330,12 @@ export default function ProfilePage() {
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-left text-sm ${activeTab === 'ayarlar' ? 'bg-foreground/5 text-foreground font-medium' : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'}`}
               >
                 <Lock size={18} /> Ayarlar ve Güvenlik
+              </button>
+              <button 
+                onClick={handleLogout}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-left text-sm text-rose-400 hover:bg-rose-500/10 mt-2 border border-rose-500/20"
+              >
+                <LogOut size={18} /> Çıkış Yap
               </button>
             </div>
           </div>
