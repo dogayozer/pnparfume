@@ -142,7 +142,7 @@ export default function CartPage() {
   const total = subtotal - multiItemDiscount - couponDiscount + shippingFee
 
   // WhatsApp Manuel Sipariş Hazırlığı (Yedek olarak durabilir)
-  const whatsappNumber = "905323913141"
+  const whatsappNumber = "905447360990"
   const cartText = items.map(i => `- ${i.quantity}x PN ${i.sku} (${i.name}) : ${i.price * i.quantity} TL`).join('%0A')
   const whatsappMessage = `Merhaba, PN Parfüm'den sipariş vermek istiyorum.%0A%0ASepetim:%0A${cartText}%0A%0A🎁 İndirimler & Kargo: -${multiItemDiscount + couponDiscount - shippingFee} TL%0A💳 Toplam Tutar: ${total} TL`
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`

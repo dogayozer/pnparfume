@@ -6,6 +6,7 @@ import Footer from '@/components/layout/Footer'
 import { CartProvider } from '@/contexts/CartContext'
 import CartModal from '@/components/cart/CartModal'
 import ChatWidget from '@/components/layout/ChatWidget'
+import WhatsAppButton from '@/components/common/WhatsAppButton'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -48,6 +49,7 @@ export default function RootLayout({
           <Footer />
           <CartModal />
           <ChatWidget />
+          <WhatsAppButton />
         </CartProvider>
       </body>
     </html>
