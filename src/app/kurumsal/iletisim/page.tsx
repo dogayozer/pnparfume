@@ -1,11 +1,61 @@
-import { MapPin, Phone, Mail, Clock, MessageCircle } from 'lucide-react'
+'use client'
 
-export const metadata = {
-  title: 'İletişim | PN Parfüm',
-  description: 'PN Parfüm ile iletişime geçin. Görüş ve önerilerinizi bekliyoruz.',
-}
+import { useState } from 'react'
+import { MapPin, Phone, Mail, Clock, MessageCircle, Send, CheckCircle2, AlertCircle } from 'lucide-react'
 
 export default function IletisimPage() {
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    subject: 'Sipariş Durumu',
+    message: ''
+  })
+  const [loading, setLoading] = useState(false)
+  const [msg, setMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setMsg(null)
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      })
+
+      const data = await res.json()
+
+      if (res.ok && data.success) {
+        setMsg({
+          type: 'success',
+          text: data.message || 'Mesajınız siparis@pienparfume.com adresine başarıyla iletildi. En kısa sürede sizinle iletişime geçeceğiz.'
+        })
+        setForm({
+          name: '',
+          email: '',
+          phone: '',
+          subject: 'Sipariş Durumu',
+          message: ''
+        })
+      } else {
+        setMsg({
+          type: 'error',
+          text: data.error || 'Mesaj iletilirken bir sorun oluştu. Lütfen WhatsApp üzerinden bize yazınız.'
+        })
+      }
+    } catch {
+      setMsg({
+        type: 'error',
+        text: 'Bağlantı hatası oluştu. Lütfen WhatsApp destek hattımızdan bize ulaşınız.'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-10">
       <div>
@@ -80,6 +130,7 @@ export default function IletisimPage() {
             <div>
               <h4 className="font-medium mb-1">E-posta</h4>
               <p className="text-sm text-foreground/60">
+                siparis@pienparfume.com<br />
                 info@pnparfume.com
               </p>
             </div>
@@ -101,32 +152,92 @@ export default function IletisimPage() {
 
         {/* İletişim Formu */}
         <div className="bg-background border border-foreground/10 rounded-3xl p-6 md:p-8">
-          <h3 className="text-xl font-medium mb-6">Bize Yazın</h3>
-          <form className="space-y-4">
-            <div>
-              <label className="block text-xs font-medium uppercase tracking-widest text-foreground/50 mb-2">Ad Soyad</label>
-              <input type="text" className="w-full bg-foreground/5 border border-transparent rounded-lg px-4 py-3 focus:outline-none focus:border-accent-gold focus:bg-background transition-colors" />
+          <h3 className="text-xl font-medium mb-2">Bize Yazın</h3>
+          <p className="text-xs text-foreground/60 mb-6">Tüm talepleriniz doğrudan <strong className="text-accent-gold">siparis@pienparfume.com</strong> adresine iletilir.</p>
+          
+          {msg && (
+            <div className={`mb-6 p-4 rounded-2xl text-xs flex items-center gap-3 ${
+              msg.type === 'success' 
+                ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400' 
+                : 'bg-rose-500/10 border border-rose-500/30 text-rose-400'
+            }`}>
+              {msg.type === 'success' ? <CheckCircle2 size={18} className="flex-shrink-0" /> : <AlertCircle size={18} className="flex-shrink-0" />}
+              <span>{msg.text}</span>
             </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium uppercase tracking-widest text-foreground/50 mb-2">E-posta</label>
-              <input type="email" className="w-full bg-foreground/5 border border-transparent rounded-lg px-4 py-3 focus:outline-none focus:border-accent-gold focus:bg-background transition-colors" />
+              <label className="block text-xs font-medium uppercase tracking-widest text-foreground/50 mb-2">Ad Soyad *</label>
+              <input 
+                required
+                type="text" 
+                value={form.name}
+                onChange={e => setForm({ ...form, name: e.target.value })}
+                placeholder="Adınız ve Soyadınız"
+                className="w-full bg-foreground/5 border border-transparent rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-gold focus:bg-background transition-colors" 
+              />
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium uppercase tracking-widest text-foreground/50 mb-2">E-posta *</label>
+                <input 
+                  required
+                  type="email" 
+                  value={form.email}
+                  onChange={e => setForm({ ...form, email: e.target.value })}
+                  placeholder="ornek@mail.com"
+                  className="w-full bg-foreground/5 border border-transparent rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-gold focus:bg-background transition-colors" 
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium uppercase tracking-widest text-foreground/50 mb-2">Telefon</label>
+                <input 
+                  type="tel" 
+                  value={form.phone}
+                  onChange={e => setForm({ ...form, phone: e.target.value })}
+                  placeholder="05XX XXX XX XX"
+                  className="w-full bg-foreground/5 border border-transparent rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-gold focus:bg-background transition-colors" 
+                />
+              </div>
+            </div>
+
             <div>
               <label className="block text-xs font-medium uppercase tracking-widest text-foreground/50 mb-2">Konu</label>
-              <select className="w-full bg-foreground/5 border border-transparent rounded-lg px-4 py-3 focus:outline-none focus:border-accent-gold focus:bg-background transition-colors text-sm">
-                <option>Sipariş Durumu</option>
-                <option>Ürün Bilgisi</option>
-                <option>İade / Değişim</option>
-                <option>Bayilik / Kurumsal</option>
-                <option>Diğer</option>
+              <select 
+                value={form.subject}
+                onChange={e => setForm({ ...form, subject: e.target.value })}
+                className="w-full bg-foreground/5 border border-transparent rounded-lg px-4 py-3 focus:outline-none focus:border-accent-gold focus:bg-background transition-colors text-sm"
+              >
+                <option value="Sipariş Durumu">Sipariş Durumu</option>
+                <option value="Ürün & Koku Danışmanlığı">Ürün & Koku Danışmanlığı</option>
+                <option value="İade & Değişim Talebi">İade & Değişim Talebi</option>
+                <option value="Bayilik & Kurumsal Teklif">Bayilik & Kurumsal Teklif</option>
+                <option value="Genel Görüş & Öneri">Genel Görüş & Öneri</option>
               </select>
             </div>
+
             <div>
-              <label className="block text-xs font-medium uppercase tracking-widest text-foreground/50 mb-2">Mesajınız</label>
-              <textarea rows={4} className="w-full bg-foreground/5 border border-transparent rounded-lg px-4 py-3 focus:outline-none focus:border-accent-gold focus:bg-background transition-colors resize-none"></textarea>
+              <label className="block text-xs font-medium uppercase tracking-widest text-foreground/50 mb-2">Mesajınız *</label>
+              <textarea 
+                required
+                rows={4} 
+                value={form.message}
+                onChange={e => setForm({ ...form, message: e.target.value })}
+                placeholder="Size nasıl yardımcı olabiliriz?"
+                className="w-full bg-foreground/5 border border-transparent rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent-gold focus:bg-background transition-colors resize-none"
+              ></textarea>
             </div>
-            <button type="button" className="w-full bg-foreground text-background py-4 rounded-xl text-sm font-medium hover:bg-accent-gold transition-colors mt-2">
-              Mesajı Gönder
+
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="w-full bg-foreground text-background py-4 rounded-xl text-sm font-medium hover:bg-accent-gold transition-colors mt-2 flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <Send size={16} />
+              {loading ? 'Gönderiliyor...' : 'Mesajı Gönder'}
             </button>
           </form>
         </div>

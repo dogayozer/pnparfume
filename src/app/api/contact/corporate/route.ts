@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
     const mailOptions = {
       from: `"PN Parfüm Kurumsal Form" <${process.env.SMTP_USER}>`,
-      to: 'muhasebe@pienparfume.com.tr, dogayozer@gmail.com',
+      to: 'siparis@pienparfume.com, muhasebe@pienparfume.com.tr, dogayozer@gmail.com',
       subject: 'Yeni Kurumsal Ön Başvuru Formu',
       html: `
         <h2>Yeni Bir Kurumsal Ön Başvuru Alındı</h2>
