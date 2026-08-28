@@ -1,10 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { Sparkles, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
-
 import Image from 'next/image'
 
 export interface ProductProps {
@@ -33,8 +33,20 @@ export default function ProductCard({ product }: { product: ProductProps }) {
     })
   }
 
+  const [hasError, setHasError] = useState(false)
   const isOutOfStock = product.publishStatus === 'OUT_OF_STOCK'
   const title = product.seoName || `PN ${product.sku}`
+
+  const toSecureUrl = (url?: string | null) => {
+    if (!url) return ''
+    if (url.startsWith('http://parfumtasarla.com') || url.startsWith('http://kasaptanetyiyelim.com')) {
+      return `/api/media-proxy?url=${encodeURIComponent(url)}`
+    }
+    return url
+  }
+
+  const fallbackSrc = `/api/kasap-image/${encodeURIComponent("WhatsApp Image 2026-08-20 at 01.06.09.jpeg")}`
+  const finalSrc = hasError ? fallbackSrc : toSecureUrl(product.imageUrl)
 
   return (
     <Link href={`/urun/${product.sku}`}>
@@ -44,12 +56,13 @@ export default function ProductCard({ product }: { product: ProductProps }) {
       >
         <div className="relative aspect-[2/3] bg-foreground/[0.02] flex items-center justify-center p-2 md:p-6">
           <div className="w-full h-full relative group-hover:scale-105 transition-transform duration-500 flex items-center justify-center">
-             {product.imageUrl ? (
+             {finalSrc ? (
                <Image 
-                 src={product.imageUrl} 
+                 src={finalSrc} 
                  alt={title} 
                  fill 
                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                 onError={() => setHasError(true)}
                  className={`object-cover rounded-xl ${isOutOfStock ? 'grayscale' : ''}`}
                />
              ) : (

@@ -42,12 +42,12 @@ export default async function KatalogPage({
 
   let processedProducts = allProducts.map((product: any, index: number) => {
     const trendyolListing = product.marketplaceListings?.find((l: any) => l.platform === 'trendyol')
-    const kasapImageUrl = getProductKasapImage(product.sku, index)
+    const realImage = trendyolListing?.images?.[0] || getProductKasapImage(product.sku, index)
     
     return {
       ...product,
       trendyolListing,
-      finalImageUrl: kasapImageUrl
+      finalImageUrl: realImage
     }
   })
 

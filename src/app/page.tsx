@@ -15,7 +15,7 @@ export default async function Home({
   const sort = typeof params.sort === 'string' ? params.sort : 'best_sellers'
   // Fetch products for best sellers
   const allProducts = await prisma.product.findMany({
-    take: 50,
+    take: 48,
     where: {
       publish_status: {
         not: 'DRAFT'
@@ -27,12 +27,12 @@ export default async function Home({
 
   let processedProducts = allProducts.map((product: any, index: number) => {
     const trendyolListing = product.marketplaceListings?.find((l: any) => l.platform === 'trendyol')
-    const kasapImageUrl = getProductKasapImage(product.sku, index)
+    const realImage = trendyolListing?.images?.[0] || getProductKasapImage(product.sku, index)
     
     return {
       ...product,
       trendyolListing,
-      finalImageUrl: kasapImageUrl
+      finalImageUrl: realImage
     }
   })
 
