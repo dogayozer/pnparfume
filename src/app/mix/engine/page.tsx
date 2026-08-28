@@ -44,7 +44,9 @@ const getProductPrice = (p: Product) => {
   return listing?.price || p.base_cost || 0
 }
 
-export default function BlendEngine() {
+import { Suspense } from 'react'
+
+function BlendEngineContent() {
   const searchParams = useSearchParams()
   const baseSku = searchParams.get('base')
 
@@ -684,5 +686,13 @@ export default function BlendEngine() {
       </div>
 
     </div>
+  )
+}
+
+export default function BlendEngine() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#F5F0E6] flex items-center justify-center">Yükleniyor...</div>}>
+      <BlendEngineContent />
+    </Suspense>
   )
 }
