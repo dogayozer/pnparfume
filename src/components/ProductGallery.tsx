@@ -16,16 +16,22 @@ export default function ProductGallery({ images, title, isOutOfStock, sku }: Pro
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
 
-  // Auto-play
+  const isVideo = (url?: string) => Boolean(url && (url.endsWith('.mp4') || url.endsWith('.webm') || url.includes('video')))
+
+  // Auto-play: 8.5 seconds on video slide so it is fully watched, 4 seconds on images
   useEffect(() => {
     if (images.length <= 1 || isHovered) return
 
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % images.length)
-    }, 4000)
+    const currentUrl = images[currentIndex]
+    const isCurrentVideo = isVideo(currentUrl)
+    const duration = isCurrentVideo ? 8500 : 4000
 
-    return () => clearInterval(timer)
-  }, [images.length, isHovered])
+    const timer = setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % images.length)
+    }, duration)
+
+    return () => clearTimeout(timer)
+  }, [images, isHovered, currentIndex])
 
   const handleNext = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % images.length)
@@ -76,8 +82,6 @@ export default function ProductGallery({ images, title, isOutOfStock, sku }: Pro
       </div>
     )
   }
-
-  const isVideo = (url: string) => url && (url.endsWith('.mp4') || url.endsWith('.webm') || url.includes('video'))
 
   const toSecureUrl = (url: string) => {
     if (!url) return ''
