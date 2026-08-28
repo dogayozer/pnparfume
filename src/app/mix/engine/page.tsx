@@ -326,7 +326,7 @@ function BlendEngineContent() {
               initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
               className="max-w-4xl mx-auto text-center"
             >
-              <h2 className="text-4xl md:text-5xl font-serif font-light mb-4">Bu koku seninle nerede olacak?</h2>
+              <h2 className="text-2xl sm:text-3xl md:text-5xl font-serif font-light mb-4">Bu koku seninle nerede olacak?</h2>
               <p className="text-[#4A3527]/60 mb-12 text-lg">En doğru aile eşleşmesi için bize ipucu ver.</p>
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
@@ -362,7 +362,7 @@ function BlendEngineContent() {
                 className="max-w-4xl mx-auto"
               >
                 <div className="text-center mb-10">
-                  <h2 className="text-4xl md:text-5xl font-serif font-light mb-4">
+                  <h2 className="text-2xl sm:text-3xl md:text-5xl font-serif font-light mb-4">
                     PN {baseProduct?.sku || ''} Notalarını Ayarla
                   </h2>
                   <p className="text-[#4A3527]/60 text-lg">
@@ -428,14 +428,17 @@ function BlendEngineContent() {
                       <div className="pt-6 mt-6 border-t border-[#4A3527]/10">
                         <h4 className="text-xs font-bold uppercase tracking-widest text-[#4A3527]/50 mb-3">Eklenen Esanslar</h4>
                         <div className="space-y-2">
-                          {addedEssences.map(e => (
-                            <div key={e.sku} className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-[#F5F0E6]/60 text-sm">
-                              <span className="font-medium">{e.name}</span>
-                              <button onClick={() => removeEssence(e.sku)} className="text-[#4A3527]/40 hover:text-[#B48A3F] text-xs uppercase tracking-widest">
-                                Kaldır
-                              </button>
-                            </div>
-                          ))}
+                          {addedEssences.map(e => {
+                            const displayName = `Esans ${selectedEssences.findIndex(x => x.sku === e.sku) + 1}`;
+                            return (
+                              <div key={e.sku} className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-[#F5F0E6]/60 text-sm">
+                                <span className="font-medium">{displayName}</span>
+                                <button onClick={() => removeEssence(e.sku)} className="text-[#4A3527]/40 hover:text-[#B48A3F] text-xs uppercase tracking-widest">
+                                  Kaldır
+                                </button>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
@@ -465,7 +468,7 @@ function BlendEngineContent() {
               initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
               className="max-w-4xl mx-auto text-center"
             >
-              <h2 className="text-4xl md:text-5xl font-serif font-light mb-4">Senin İçin Önerilen Aileler</h2>
+              <h2 className="text-2xl sm:text-3xl md:text-5xl font-serif font-light mb-4">Senin İçin Önerilen Aileler</h2>
               <p className="text-[#4A3527]/60 mb-12 text-lg">Seçtiğin an'a en uygun koku profillerini listeledik.</p>
 
               <div className="flex flex-wrap justify-center gap-6">
@@ -493,7 +496,7 @@ function BlendEngineContent() {
               initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
             >
               <div className="text-center mb-12">
-                <h2 className="text-4xl md:text-5xl font-serif font-light mb-4">Esanslarını Seç</h2>
+                <h2 className="text-2xl sm:text-3xl md:text-5xl font-serif font-light mb-4">Esanslarını Seç</h2>
                 <p className="text-[#4A3527]/60 text-lg">
                   Kütüphaneden en fazla 3 kompozit esans harmanlayabilirsin.
                   (Seçilen: {selectedEssences.length}/3)
@@ -546,7 +549,7 @@ function BlendEngineContent() {
                       <div key={i} className="h-16 rounded-xl border border-dashed border-[#4A3527]/20 flex items-center justify-center bg-[#F5F0E6]/50">
                         {selectedEssences[i] ? (
                           <span className="font-serif font-medium text-[#B48A3F] flex items-center gap-2">
-                            <Check size={16} /> {selectedEssences[i].name}
+                            <Check size={16} /> Esans {i + 1}
                           </span>
                         ) : (
                           <span className="text-[#4A3527]/30 text-sm"><Plus size={16} /></span>
@@ -625,20 +628,23 @@ function BlendEngineContent() {
                   </p>
 
                   <div className="space-y-8 mb-12">
-                    {selectedEssences.map((essence) => (
-                      <div key={essence.sku}>
-                        <div className="flex justify-between text-sm font-medium uppercase tracking-widest mb-3">
-                          <span>{essence.name}</span>
-                          <span className="text-[#B48A3F]">{Math.round(ratios[essence.sku])}%</span>
+                    {selectedEssences.map((essence) => {
+                      const displayName = `Esans ${selectedEssences.findIndex(x => x.sku === essence.sku) + 1}`;
+                      return (
+                        <div key={essence.sku}>
+                          <div className="flex justify-between text-sm font-medium uppercase tracking-widest mb-3">
+                            <span>{displayName}</span>
+                            <span className="text-[#B48A3F]">{Math.round(ratios[essence.sku])}%</span>
+                          </div>
+                          <div className="h-2 bg-[#F5F0E6] rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-[#B48A3F] rounded-full transition-all duration-500"
+                              style={{ width: `${ratios[essence.sku]}%` }}
+                            />
+                          </div>
                         </div>
-                        <div className="h-2 bg-[#F5F0E6] rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-[#B48A3F] rounded-full transition-all duration-500"
-                            style={{ width: `${ratios[essence.sku]}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {/* Şişe Seçimi (kutu dahil) */}

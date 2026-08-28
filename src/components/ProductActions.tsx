@@ -112,14 +112,17 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
       {!isOutOfStock && (
         <div className="text-center sm:text-left mt-6">
           <div className="inline-block">
-            <button
+            <div 
+              className="relative inline-flex p-[2px] rounded-full overflow-hidden mb-3 cursor-pointer group shadow-sm hover:shadow-md transition-shadow" 
               onClick={() => setShowCustomize(v => !v)}
-              className="inline-flex items-center gap-2 text-sm text-foreground hover:text-accent-gold transition-colors font-medium tracking-wide mb-1"
             >
-              <Sparkles size={16} className="text-accent-gold" />
-              Benim İçin Özelleştir
-            </button>
-            <p className="text-xs text-foreground/50 leading-relaxed ml-6">
+              <div className="absolute inset-0 bg-[conic-gradient(from_0deg,transparent_40%,#D4AF37_100%)] animate-[spin_3s_linear_infinite]"></div>
+              <div className="relative flex items-center gap-2 px-5 py-2.5 bg-background rounded-full text-sm text-foreground group-hover:text-accent-gold transition-colors font-medium tracking-wide">
+                <Sparkles size={16} className="text-accent-gold" />
+                Benim İçin Özelleştir
+              </div>
+            </div>
+            <p className="text-[11px] md:text-xs text-foreground/50 leading-relaxed max-w-sm mx-auto sm:mx-0 sm:ml-2">
               Daha fazla yoğunlaştırabilir veya sevdiğiniz başka bir koku ile MİX edebilir, şişe ebatını değiştirebilirsiniz.
             </p>
           </div>
@@ -132,24 +135,24 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
                 exit={{ opacity: 0, height: 0 }}
                 className="overflow-hidden"
               >
-                <div className="mt-6 p-5 md:p-6 bg-foreground/5 border border-foreground/10 rounded-2xl space-y-6">
+                <div className="mt-4 md:mt-6 p-4 md:p-6 bg-foreground/5 border border-foreground/10 rounded-2xl space-y-5 md:space-y-6">
 
                   {/* Konsantrasyon */}
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-3">Konsantrasyon</h4>
-                    <div className="grid grid-cols-2 gap-3">
+                    <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-foreground/50 mb-3">Konsantrasyon</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
                       <button
                         onClick={() => setConcentration('edp')}
-                        className={`flex items-center justify-between px-4 py-3 rounded-xl border text-sm transition-colors ${concentration === 'edp' ? 'border-accent-gold bg-accent-gold/10 text-foreground' : 'border-foreground/10 text-foreground/60 hover:border-foreground/30'}`}
+                        className={`flex items-center justify-between p-3 md:px-4 md:py-3 rounded-xl border text-[11px] md:text-sm transition-colors ${concentration === 'edp' ? 'border-accent-gold bg-accent-gold/10 text-foreground' : 'border-foreground/10 text-foreground/60 hover:border-foreground/30'}`}
                       >
                         EDP (Standart)
                         {concentration === 'edp' && <Check size={14} className="text-accent-gold" />}
                       </button>
                       <button
                         onClick={() => setConcentration('extrait')}
-                        className={`flex items-center justify-between px-4 py-3 rounded-xl border text-sm transition-colors ${concentration === 'extrait' ? 'border-accent-gold bg-accent-gold/10 text-foreground' : 'border-foreground/10 text-foreground/60 hover:border-foreground/30'}`}
+                        className={`flex items-center justify-between p-3 md:px-4 md:py-3 rounded-xl border text-[11px] md:text-sm transition-colors ${concentration === 'extrait' ? 'border-accent-gold bg-accent-gold/10 text-foreground' : 'border-foreground/10 text-foreground/60 hover:border-foreground/30'}`}
                       >
-                        Daha Yoğun Esans (Extrait) +{EXTRAIT_SURCHARGE} TL
+                        Esans (Extrait) +{EXTRAIT_SURCHARGE} ₺
                         {concentration === 'extrait' && <Check size={14} className="text-accent-gold" />}
                       </button>
                     </div>
@@ -157,18 +160,18 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
 
                   {/* Şişe Seçimi (kutu dahil) */}
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-3">Şişe Seçimi (Kutu Dahil)</h4>
-                    <div className="grid grid-cols-3 gap-3">
+                    <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-foreground/50 mb-3">Şişe Seçimi (Kutu Dahil)</h4>
+                    <div className="grid grid-cols-3 gap-2 md:gap-3">
                       {BOTTLE_OPTIONS.map(b => (
                         <button
                           key={b.code}
                           onClick={() => setBottleCode(b.code)}
-                          className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-colors ${bottleCode === b.code ? 'border-accent-gold bg-accent-gold/10' : 'border-foreground/10 hover:border-foreground/30'}`}
+                          className={`flex flex-col items-center gap-1.5 p-2 md:p-3 rounded-xl border transition-colors ${bottleCode === b.code ? 'border-accent-gold bg-accent-gold/10' : 'border-foreground/10 hover:border-foreground/30'}`}
                         >
-                          <img src={toSecureImageUrl(b.imageUrl)} alt={b.label} className="w-14 h-14 object-contain" />
-                          <span className="text-[11px] font-medium text-foreground text-center leading-tight">{b.label}</span>
-                          <span className="text-[10px] text-foreground/50">{b.volumeMl}ml · {b.price} TL</span>
-                          {bottleCode === b.code && <Check size={14} className="text-accent-gold" />}
+                          <img src={toSecureImageUrl(b.imageUrl)} alt={b.label} className="w-10 h-10 md:w-14 md:h-14 object-contain" />
+                          <span className="text-[10px] md:text-[11px] font-medium text-foreground text-center leading-tight">{b.label}</span>
+                          <span className="text-[9px] md:text-[10px] text-foreground/50">{b.volumeMl}ml · {b.price} ₺</span>
+                          {bottleCode === b.code && <Check size={12} className="text-accent-gold mt-1" />}
                         </button>
                       ))}
                     </div>
@@ -182,7 +185,7 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
                     </div>
                     <button
                       onClick={handleAddCustomToCart}
-                      className="flex items-center justify-center gap-2 px-6 py-3 bg-foreground text-background rounded-full text-sm font-medium uppercase tracking-widest hover:bg-accent-gold/80 transition-colors"
+                      className="flex items-center justify-center gap-2 px-4 py-3 md:px-6 md:py-3 bg-foreground text-background rounded-full text-[10px] md:text-sm font-medium uppercase tracking-widest hover:bg-accent-gold/80 transition-colors"
                     >
                       <ShoppingCart size={16} /> Bu Konfigürasyonu Sepete Ekle
                     </button>
@@ -194,7 +197,7 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
                       onClick={handleMix}
                       disabled={!canMix}
                       title={!canMix ? 'Mix seçeneği yalnızca Extrait konsantrasyonunda aktif olur' : undefined}
-                      className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-medium uppercase tracking-widest border transition-colors ${
+                      className={`w-full flex items-center justify-center gap-2 px-4 py-3 md:px-6 md:py-3 rounded-full text-xs md:text-sm font-medium uppercase tracking-widest border transition-colors ${
                         canMix
                           ? 'border-accent-gold text-accent-gold hover:bg-accent-gold hover:text-background'
                           : 'border-foreground/10 text-foreground/30 cursor-not-allowed'
