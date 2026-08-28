@@ -12,9 +12,10 @@ export interface BottleOption {
 }
 
 export const BOTTLE_OPTIONS: BottleOption[] = [
-  { code: 'pn50', label: 'PN Klasik Şişe', volumeMl: 50, price: 250, imageUrl: 'http://parfumtasarla.com/resimler/sise/50mlsise.jpeg' },
+  { code: 'pn50', label: 'Selective Şişe + Kutu', volumeMl: 50, price: 250, imageUrl: 'http://parfumtasarla.com/resimler/sise/50mlsise.jpeg' },
   { code: 'asik100', label: 'Aşık Model Şişe', volumeMl: 100, price: 400, imageUrl: 'http://parfumtasarla.com/resimler/sise/100mlasik.jpg' },
   { code: 'pien100', label: 'Pien Model Şişe', volumeMl: 100, price: 400, imageUrl: 'http://parfumtasarla.com/resimler/sise/100mlpien.jpg' },
+  { code: 'kompakt50', label: 'Kompakt Şişe', volumeMl: 50, price: 0, imageUrl: 'http://parfumtasarla.com/resimler/sise/50mlkompakt.jpeg' },
 ]
 
 export const DEFAULT_BOTTLE_CODE = BOTTLE_OPTIONS[0].code
