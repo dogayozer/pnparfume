@@ -11,16 +11,22 @@ import { getProductKasapImage } from '@/lib/kasapImages'
 export const revalidate = 86400 // Cache for 24 hours (super fast loading)
 
 function parseDescription(desc: string) {
+  if (!desc) return '';
   if (desc.includes('<p>') || desc.includes('<div>') || desc.includes('<br>')) return desc;
   
-  if (desc.includes(';')) {
-    const lines = desc.split(';').map(s => s.trim().replace(/^-/, '').trim()).filter(Boolean);
-    if (lines.length > 1) {
-      return `<ul class="list-disc pl-5 space-y-2">\n${lines.map(line => `<li>${line}</li>`).join('\n')}\n</ul>`;
-    }
+  // Split by newlines or semicolons if formatted as bullet points
+  let lines: string[] = []
+  if (desc.includes('\n')) {
+    lines = desc.split('\n').map(s => s.trim().replace(/^[-•*]\s*/, '').trim()).filter(Boolean);
+  } else if (desc.includes(';')) {
+    lines = desc.split(';').map(s => s.trim().replace(/^[-•*]\s*/, '').trim()).filter(Boolean);
+  }
+
+  if (lines.length > 1) {
+    return `<ul class="list-disc pl-5 space-y-2.5 text-foreground/80 leading-relaxed text-sm">\n${lines.map(line => `<li>${line}</li>`).join('\n')}\n</ul>`;
   }
   
-  return `<p>${desc}</p>`;
+  return `<p class="text-foreground/80 leading-relaxed text-sm">${desc}</p>`;
 }
 
 const getSeasonIcon = (tag: string | null) => {
