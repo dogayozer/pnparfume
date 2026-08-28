@@ -77,9 +77,13 @@ export default function ProductGallery({ images, title, isOutOfStock, sku }: Pro
     )
   }
 
+  const isVideo = (url: string) => url && (url.endsWith('.mp4') || url.endsWith('.webm') || url.includes('video'))
+
+  const currentMedia = images[currentIndex]
+
   return (
     <div className="flex flex-col gap-4">
-      {/* Main Image */}
+      {/* Main Image / Video */}
       <div 
         className={`relative aspect-[2/3] bg-foreground/[0.02] rounded-3xl overflow-hidden flex items-center justify-center border border-foreground/5 group ${isOutOfStock ? 'opacity-80' : ''}`}
         onMouseEnter={() => setIsHovered(true)}
@@ -97,14 +101,26 @@ export default function ProductGallery({ images, title, isOutOfStock, sku }: Pro
             transition={{ duration: 0.3 }}
             className="w-full h-full relative"
           >
-            <Image 
-              src={images[currentIndex]} 
-              alt={`${title} - Görsel ${currentIndex + 1}`} 
-              fill 
-              priority={currentIndex === 0}
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className={`object-cover ${isOutOfStock ? 'grayscale' : ''}`} 
-            />
+            {isVideo(currentMedia) ? (
+              <video 
+                src={currentMedia} 
+                autoPlay 
+                loop 
+                muted 
+                playsInline 
+                controls
+                className="w-full h-full object-cover rounded-3xl"
+              />
+            ) : (
+              <Image 
+                src={currentMedia} 
+                alt={`${title} - Görsel ${currentIndex + 1}`} 
+                fill 
+                priority={currentIndex === 0}
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className={`object-cover ${isOutOfStock ? 'grayscale' : ''}`} 
+              />
+            )}
           </motion.div>
         </AnimatePresence>
 
@@ -113,14 +129,14 @@ export default function ProductGallery({ images, title, isOutOfStock, sku }: Pro
           <>
             <button 
               onClick={(e) => { e.stopPropagation(); handlePrev(); }}
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-md border border-foreground/10 flex items-center justify-center text-foreground hover:bg-foreground hover:text-background transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-0"
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-md border border-foreground/10 flex items-center justify-center text-foreground hover:bg-foreground hover:text-background transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-0 z-20"
               aria-label="Önceki Görsel"
             >
               <ChevronLeft size={20} />
             </button>
             <button 
               onClick={(e) => { e.stopPropagation(); handleNext(); }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-md border border-foreground/10 flex items-center justify-center text-foreground hover:bg-foreground hover:text-background transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-0"
+              className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-md border border-foreground/10 flex items-center justify-center text-foreground hover:bg-foreground hover:text-background transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-0 z-20"
               aria-label="Sonraki Görsel"
             >
               <ChevronRight size={20} />
@@ -138,21 +154,33 @@ export default function ProductGallery({ images, title, isOutOfStock, sku }: Pro
       {/* Thumbnails */}
       {images.length > 1 && (
         <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x">
-          {images.map((img, idx) => (
-            <button
-              key={idx}
-              onClick={() => setCurrentIndex(idx)}
-              className={`relative flex-shrink-0 w-20 h-24 rounded-xl overflow-hidden border-2 transition-all snap-start ${currentIndex === idx ? 'border-accent-gold opacity-100 scale-105 shadow-md' : 'border-transparent opacity-50 hover:opacity-100'}`}
-            >
-              <Image 
-                src={img} 
-                alt={`${title} - Küçük Görsel ${idx + 1}`} 
-                fill 
-                sizes="80px"
-                className={`object-cover ${isOutOfStock ? 'grayscale' : ''}`} 
-              />
-            </button>
-          ))}
+          {images.map((img, idx) => {
+            const isVid = isVideo(img)
+            return (
+              <button
+                key={idx}
+                onClick={() => setCurrentIndex(idx)}
+                className={`relative flex-shrink-0 w-20 h-24 rounded-xl overflow-hidden border-2 transition-all snap-start bg-foreground/5 flex items-center justify-center ${currentIndex === idx ? 'border-accent-gold opacity-100 scale-105 shadow-md' : 'border-transparent opacity-50 hover:opacity-100'}`}
+              >
+                {isVid ? (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-black/40 text-white gap-1">
+                    <div className="w-8 h-8 rounded-full bg-accent-gold/80 flex items-center justify-center text-black font-bold">
+                      ▶
+                    </div>
+                    <span className="text-[9px] uppercase font-bold tracking-wider text-accent-gold">Video</span>
+                  </div>
+                ) : (
+                  <Image 
+                    src={img} 
+                    alt={`${title} - Küçük Görsel ${idx + 1}`} 
+                    fill 
+                    sizes="80px"
+                    className={`object-cover ${isOutOfStock ? 'grayscale' : ''}`} 
+                  />
+                )}
+              </button>
+            )
+          })}
         </div>
       )}
     </div>
