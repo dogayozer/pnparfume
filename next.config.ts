@@ -9,6 +9,26 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'http',
+        hostname: 'cdn.dsmcdn.com',
+      },
+      {
+        protocol: 'http',
+        hostname: 'parfumtasarla.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'parfumtasarla.com',
+      },
+      {
+        protocol: 'http',
+        hostname: 'www.parfumtasarla.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.parfumtasarla.com',
+      },
+      {
+        protocol: 'http',
         hostname: 'kasaptanetyiyelim.com',
       },
       {

@@ -79,7 +79,19 @@ export default function ProductGallery({ images, title, isOutOfStock, sku }: Pro
 
   const isVideo = (url: string) => url && (url.endsWith('.mp4') || url.endsWith('.webm') || url.includes('video'))
 
+  const toSecureUrl = (url: string) => {
+    if (!url) return ''
+    if (url.startsWith('http://parfumtasarla.com') || url.startsWith('http://kasaptanetyiyelim.com')) {
+      return `/api/media-proxy?url=${encodeURIComponent(url)}`
+    }
+    return url
+  }
+
+  const [failedImages, setFailedImages] = useState<Record<number, boolean>>({})
+
   const currentMedia = images[currentIndex]
+  const isFailed = failedImages[currentIndex]
+  const fallbackSrc = `/api/kasap-image/${encodeURIComponent("WhatsApp Image 2026-08-20 at 01.06.09.jpeg")}`
 
   return (
     <div className="flex flex-col gap-4">
@@ -103,7 +115,7 @@ export default function ProductGallery({ images, title, isOutOfStock, sku }: Pro
           >
             {isVideo(currentMedia) ? (
               <video 
-                src={currentMedia} 
+                src={toSecureUrl(currentMedia)} 
                 autoPlay 
                 loop 
                 muted 
@@ -113,11 +125,12 @@ export default function ProductGallery({ images, title, isOutOfStock, sku }: Pro
               />
             ) : (
               <Image 
-                src={currentMedia} 
+                src={isFailed ? fallbackSrc : toSecureUrl(currentMedia)} 
                 alt={`${title} - Görsel ${currentIndex + 1}`} 
                 fill 
                 priority={currentIndex === 0}
                 sizes="(max-width: 768px) 100vw, 50vw"
+                onError={() => setFailedImages(prev => ({ ...prev, [currentIndex]: true }))}
                 className={`object-cover ${isOutOfStock ? 'grayscale' : ''}`} 
               />
             )}
@@ -156,6 +169,7 @@ export default function ProductGallery({ images, title, isOutOfStock, sku }: Pro
         <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x">
           {images.map((img, idx) => {
             const isVid = isVideo(img)
+            const imgFailed = failedImages[idx]
             return (
               <button
                 key={idx}
@@ -171,10 +185,11 @@ export default function ProductGallery({ images, title, isOutOfStock, sku }: Pro
                   </div>
                 ) : (
                   <Image 
-                    src={img} 
+                    src={imgFailed ? fallbackSrc : toSecureUrl(img)} 
                     alt={`${title} - Küçük Görsel ${idx + 1}`} 
                     fill 
                     sizes="80px"
+                    onError={() => setFailedImages(prev => ({ ...prev, [idx]: true }))}
                     className={`object-cover ${isOutOfStock ? 'grayscale' : ''}`} 
                   />
                 )}
