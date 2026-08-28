@@ -61,6 +61,7 @@ export default function DiscoverySetPage() {
   const [genderFilter, setGenderFilter] = useState('all')
   const [familyFilter, setFamilyFilter] = useState('all')
   const [addedAnimation, setAddedAnimation] = useState(false)
+  const [customNote, setCustomNote] = useState('')
 
   const BOX_PRICE = 690 // 5x10ml Avantajlı Set Fiyatı (Tekil 1000 TL yerine)
 
@@ -127,15 +128,20 @@ export default function DiscoverySetPage() {
     }
   }
 
+  const isCartReady = selectedScents.length === 5 || customNote.trim().length > 3;
+
   // Add Entire Discovery Set to Cart
   const handleAddSetToCart = () => {
-    if (selectedScents.length !== 5) return
+    if (!isCartReady) return
 
     const scentList = selectedScents.map(s => `PN ${s.sku}`)
+    if (customNote.trim()) {
+      scentList.push(`Talepler: ${customNote.trim()}`)
+    }
     
     addToCart({
       sku: 'DISCOVERY-5X10',
-      name: "5'li Lüks Keşif Kutusu (5x10ml Sprey)",
+      name: "5'li Lüks Keşif Kutusu (5x10ml Cam Şişe)",
       price: BOX_PRICE,
       quantity: 1,
       size: '5x10ml',
@@ -161,10 +167,10 @@ export default function DiscoverySetPage() {
             <Sparkles size={14} /> Kendi Kutunu Tasarla
           </div>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-light tracking-tight mb-4">
-            5'li Keşif Kutusu <span className="text-amber-400 italic">(Discovery Set)</span>
+            5'li Keşif Kutusu <span className="text-amber-400 italic">(10 ml Cam Şişe)</span>
           </h1>
           <p className="text-zinc-400 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
-            338 farklı lüks parfümümüz arasından merak ettiğin <b>5 adet 10ml</b> sprey şişeyi seç. Kendi kişisel koku gardırobunu oluştur, evinin konforunda dene.
+            338 farklı lüks parfümümüz arasından kendi setini oluştur. İster aşağıdaki katalogdan beğendiğin kokuları seç, ister nasıl kokular sevdiğini (mekan, tarz, marka vb.) bize yaz; uzmanlarımız senin için hazırlasın.
           </p>
         </div>
 
@@ -189,19 +195,19 @@ export default function DiscoverySetPage() {
 
               <button
                 onClick={handleAddSetToCart}
-                disabled={selectedScents.length !== 5}
-                className={`px-6 py-3.5 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-lg ${
-                  selectedScents.length === 5
+                disabled={!isCartReady}
+                className={`px-6 py-3.5 rounded-2xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-lg ${
+                  isCartReady
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black shadow-amber-500/20 hover:scale-105 active:scale-95'
                     : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
                 }`}
               >
-                {selectedScents.length === 5 ? (
+                {isCartReady ? (
                   <>
                     <ShoppingCart size={16} /> Kutuyu Sepete Ekle
                   </>
                 ) : (
-                  `${5 - selectedScents.length} Koku Daha Seç`
+                  '5 Koku Seç veya Not Yaz'
                 )}
               </button>
             </div>
@@ -258,7 +264,39 @@ export default function DiscoverySetPage() {
               )
             })}
           </div>
+
+          <div className="mt-6 pt-6 border-t border-zinc-800">
+            <h4 className="text-sm font-bold text-amber-400 mb-2">Kararsız mısın? Tarzını Bize Yaz</h4>
+            <p className="text-xs text-zinc-400 mb-3">
+              Kutuyu katalogdan doldurmak yerine sevdiğin koku ailelerini, kullanacağın mekanları veya benzerini istediğin popüler parfümleri yaz, uzmanlarımız senin için seçsin.
+            </p>
+            
+            {/* Clickable Tags */}
+            <div className="flex flex-wrap gap-2 mb-3">
+              {['Odunsu', 'Çiçeksi', 'Ferah', 'Baharatlı', 'Oryantal', 'Ofis / İş', 'Gece / Davet', 'Spor / Günlük', 'Romantik'].map(tag => (
+                <button 
+                  key={tag}
+                  onClick={() => setCustomNote(prev => prev ? `${prev}, ${tag}` : tag)}
+                  className="px-3 py-1 rounded-full border border-zinc-700 bg-zinc-800/50 text-[10px] text-zinc-300 hover:border-amber-500 hover:text-amber-400 transition-colors"
+                >
+                  + {tag}
+                </button>
+              ))}
+            </div>
+
+            <textarea
+              value={customNote}
+              onChange={e => setCustomNote(e.target.value)}
+              placeholder="Örn: 2 tane ofis için ferah koku, 1 tane odunsu gece kokusu, diğerleri Tom Ford tarzı olsun..."
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-sm text-zinc-200 focus:outline-none focus:border-amber-500 h-20 resize-none"
+            />
+            
+            <p className="text-[10px] text-zinc-500 mt-2 italic">
+              * PN koku kütüphanemizdeki koku notalarına en yakın ürünler numune olarak gönderilecektir.
+            </p>
+          </div>
         </div>
+
 
         {/* ===================== CURATED FAST PACKS ===================== */}
         <div className="mb-14">
