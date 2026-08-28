@@ -8,7 +8,7 @@ const FILTERS = {
   occasions: ['Günlük Kullanım', 'Toplantı / Ofis', 'Davet / Gece Etkinliği', 'Spor / Dinamik'],
   genders: ['Erkek', 'Kadın', 'Unisex'],
   personas: ['Modern ve Dinamik', 'Zarif / Sofistike', 'İddialı / Romantik', 'Lider / Otoriter', 'Samimi / Dostane'],
-  families: ['Odunsu', 'Çiçeksi', 'Baharatlı', 'Ferah', 'Oryantal', 'Tatlı', 'Meyvemsi']
+  families: ['Odunsu', 'Çiçeksi', 'Baharatlı', 'Ferah', 'Oryantal', 'Tatlı', 'Meyveli']
 }
 
 export default function FilterSidebar() {

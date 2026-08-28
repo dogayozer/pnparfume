@@ -28,7 +28,13 @@ export default async function KatalogPage({
 
   if (season) whereClause.season_tag = season
   if (occasion) whereClause.occasion_tag = occasion
-  if (gender) whereClause.gender = gender
+  if (gender) {
+    if (gender === 'Unisex') {
+      whereClause.gender = { in: ['Unisex', 'UNISEX', 'unisex'] }
+    } else {
+      whereClause.gender = gender
+    }
+  }
   if (persona) whereClause.persona_tag = persona
   if (family) whereClause.fragrance_family = { has: family }
 

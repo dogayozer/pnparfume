@@ -99,7 +99,11 @@ export default function ChatWidget() {
       const suggestionMsg = messages.find(m => m.step === 'did_you_mean')
       if (value === 'Evet' && suggestionMsg?.suggestion) {
         setFlowMode('similar')
-        handleSubmit(undefined, suggestionMsg.suggestion)
+        // Kısa bir "aranıyor" anı — gerçek bir gecikme değil, arka planda sonuç
+        // zaten kendi kataloğumuzdan LLM'siz geliyor, sadece kullanıcıya bir
+        // arama hissi veriyor.
+        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'Kütüphanemizde koku profilini arıyorum...' }])
+        setTimeout(() => handleSubmit(undefined, suggestionMsg.suggestion, 'Evet, doğru.'), 800)
       } else {
         setFlowMode('initial')
         setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'Anladım. Rica etsem aradığınızı biraz daha detaylı tarif edebilir misiniz?' }])
@@ -241,9 +245,9 @@ export default function ChatWidget() {
     }
   }
 
-  const handleSubmit = async (e?: React.FormEvent, customInput?: string) => {
+  const handleSubmit = async (e?: React.FormEvent, customInput?: string, displayOverride?: string) => {
     if (e) e.preventDefault()
-    
+
     const textToSend = customInput || input
     if (!textToSend.trim() || isLoading) return
     
@@ -267,8 +271,14 @@ export default function ChatWidget() {
       }
     }
 
-    const newMessages = [...messages, { id: Date.now().toString(), role: 'user', content: textToSend }]
-    setMessages(newMessages)
+    // Backend'e her zaman GERÇEK metin gönderilir (fast-path eşleştirmesi için — örn.
+    // "Evet" onayında marka adı taşıyan suggestion). Ekranda gösterilen balon farklı
+    // olabilir (displayOverride) — müşteriye marka adı asla gösterilmez (telif kuralı).
+    const sentMessageId = Date.now().toString()
+    const newMessages = [...messages, { id: sentMessageId, role: 'user', content: textToSend }]
+    setMessages(displayOverride
+      ? [...messages, { id: sentMessageId, role: 'user', content: displayOverride }]
+      : newMessages)
     if (!customInput) setInput('')
     setIsLoading(true)
     

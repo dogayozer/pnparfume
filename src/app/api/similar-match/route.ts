@@ -1,10 +1,45 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAIModel } from '@/lib/ai-gateway'
-import { generateText, generateObject } from 'ai'
+import { generateObject } from 'ai'
 import { z } from 'zod'
 
 export const maxDuration = 30
+
+// Maliyet kuralı: web araması YOK, en fazla 1 LLM çağrısı. Önce kendi kataloğumuzda
+// (sıfır maliyetli metin eşleştirmesi) arıyoruz; eşleşme varsa müşteriye önce
+// "PN {kod} bu mu?" diye onay soruyoruz (telif kuralı: marka adı asla müşteriye
+// gösterilmez, sadece kendi kodumuz), eşleşme yoksa TEK bir generateObject çağrısıyla
+// niyet/nota çıkarıp yine kendi kataloğumuza karşı skorluyoruz. Bu tek LLM çağrısı,
+// yazım hatalarını/marka adını farklı dilde tanımayı da üstleniyor (aşağıya bakın) —
+// ayrı bir "yazım kontrolü" adımı veya web araması YOK.
+
+// Dile duyarlı şablonlar — SADECE bu LLM çağrısının kapsadığı cevaplar için (site
+// geneli çeviri projesi ayrı/daha büyük bir iş, kapsam dışı). Fast-path (LLM'siz)
+// yanıtlar şimdilik Türkçe kalıyor çünkü orada dil algılayacak bir LLM çağrısı yok.
+const TEMPLATES: Record<string, { didYouMean: (sku: string) => string, notFound: string, results: (summary: string) => string }> = {
+  tr: {
+    didYouMean: (sku) => `Bahsettiğiniz koku PN ${sku} olabilir mi?`,
+    notFound: "Maalesef tarif ettiğiniz özelliklerde tam bir benzerlik bulamadım. Katalog sayfamızdan tüm ürünleri inceleyebilirsiniz.",
+    results: (s) => `"${s}" arayanlar için kütüphanemizden önerdiklerimiz:`
+  },
+  en: {
+    didYouMean: (sku) => `Could you mean PN ${sku}?`,
+    notFound: "We couldn't find a close match for that. Feel free to browse our full catalog.",
+    results: (s) => `Our picks from the library for "${s}":`
+  },
+  ru: {
+    didYouMean: (sku) => `Возможно, вы имеете в виду PN ${sku}?`,
+    notFound: "К сожалению, точного совпадения не нашлось. Посмотрите весь каталог.",
+    results: (s) => `Наши рекомендации из библиотеки для «${s}»:`
+  },
+  ar: {
+    didYouMean: (sku) => `هل تقصد PN ${sku}؟`,
+    notFound: "للأسف لم نجد تطابقًا دقيقًا. يمكنك تصفح الكتالوج الكامل.",
+    results: (s) => `توصياتنا من مكتبتنا لـ "${s}":`
+  }
+}
+const getTemplate = (lang?: string) => TEMPLATES[lang || 'tr'] || TEMPLATES.tr
 
 export async function POST(req: Request) {
   try {
@@ -31,165 +66,108 @@ export async function POST(req: Request) {
       }
     })
 
-    // FAST PATH: Doğrudan veritabanındaki original_name ile basit metin eşleşmesi yap (Sıfır LLM maliyeti)
-    const userMsgLower = lastUserMessage.toLowerCase().trim()
-    let matchedProducts = allProducts.filter(p => p.original_name && (userMsgLower.includes(p.original_name.toLowerCase()) || p.original_name.toLowerCase().includes(userMsgLower)))
+    const findBrandMatches = (needle: string) => {
+      const needleLower = needle.toLowerCase()
+      return allProducts.filter(p => p.original_name && (needleLower.includes(p.original_name.toLowerCase()) || p.original_name.toLowerCase().includes(needleLower)))
+    }
 
-    // Eğer kullanıcı sadece "good girl" yazdıysa ve veritabanında bulduysak, LLM'i tamamen atla!
-    if (matchedProducts.length > 0 && userMsgLower.length > 3) {
-      // Sadece en iyi 3 eşleşmeyi al
-      matchedProducts = matchedProducts.slice(0, 3)
-      return NextResponse.json({ 
-        text: `Harika, kastettiğiniz kokuyu buldum! İşte kendi koleksiyonumuzdaki en yakın alternatifleri:`, 
-        products: matchedProducts 
+    // FAST PATH: veritabanındaki original_name ile basit metin eşleşmesi (sıfır LLM/web maliyeti).
+    // Not: bu birebir metin eşleşmesi — yazım hatalarını yakalamaz, onu LLM adımı yakalıyor.
+    const userMsgLower = lastUserMessage.toLowerCase().trim()
+    const fastMatches = findBrandMatches(lastUserMessage)
+
+    if (fastMatches.length > 0 && userMsgLower.length > 3) {
+      // Kullanıcı "Evet" deyip önerilen ismi (suggestion) geri gönderdiyse — bu, bir
+      // ürünün original_name'iyle TAM eşleşir. Bu durumda onay sormadan doğrudan sonucu ver.
+      const exactMatch = fastMatches.find(p => p.original_name!.toLowerCase() === userMsgLower)
+      if (exactMatch) {
+        const ordered = [exactMatch, ...fastMatches.filter(p => p.sku !== exactMatch.sku)]
+        return NextResponse.json({
+          text: `Kütüphanemizdeki en yakın koku(lar):`,
+          products: ordered.slice(0, 3)
+        })
+      }
+
+      // İlk kez eşleşti — sonucu göstermeden önce onay iste.
+      const top = fastMatches[0]
+      return NextResponse.json({
+        type: 'did_you_mean',
+        suggestion: top.original_name,
+        text: `Bahsettiğiniz koku PN ${top.sku} olabilir mi?`,
+        products: []
       })
     }
 
-    // FAST PATH başarısız olduysa, kullanıcının yanlış yazmış olma ihtimaline karşı Web Araması (Sıfır LLM maliyeti)
-    if (userMsgLower.length > 3) {
-      try {
-        const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(lastUserMessage + ' perfume')}`
-        const searchRes = await fetch(searchUrl, {
-          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-        })
-        const html = await searchRes.text()
-        const titles = [...html.matchAll(/<h2 class="result__title">\s*<a[^>]*>(.*?)<\/a>\s*<\/h2>/gi)]
-          .map(m => m[1].replace(/<\/?[^>]+(>|$)/g, "").trim())
-
-        let suggestedName = ''
-        for (const title of titles) {
-          const titleLower = title.toLowerCase()
-          for (const p of allProducts) {
-            if (p.original_name && titleLower.includes(p.original_name.toLowerCase()) && p.original_name.length > 3) {
-              suggestedName = p.original_name
-              break
-            }
-          }
-          if (suggestedName) break
-        }
-
-        if (suggestedName) {
-          // Not: suggestedName eşleştirme için kullanılıyor ama müşteriye
-          // gösterilen metinde marka/orijinal isim yerine yalnızca genel bir
-          // ifade kullanıyoruz (telif riski) — eşleşen ürünler zaten PN kodlarıyla listeleniyor.
-          const suggestedProduct = allProducts.find(p => p.original_name === suggestedName)
-          return NextResponse.json({
-            type: 'did_you_mean',
-            suggestion: suggestedName,
-            text: `Aradığınız kokuya en yakın alternatifimizi bulduk, ister misiniz?`,
-            products: suggestedProduct ? [suggestedProduct] : []
-          })
-        }
-      } catch (e) {
-        console.error('Spelling check error:', e)
-      }
-    }
-
-    // WEB ARAMASI da başarısız olduysa LLM kullan
+    // FAST PATH eşleşmedi → tek bir LLM çağrısıyla niyet/nota/vibe/dil çıkar (web araması yok).
+    // Bu çağrı ayrıca yazım hatalarını ve farklı dilde yazılmış marka adlarını da normalize
+    // ediyor — ayrı bir "yazım kontrolü" adımı veya web araması eklemeden.
     const model = getAIModel()
 
-    // 1. Niyet Çıkarma (Intent Extraction via JSON)
     const { object: intent } = await generateObject({
       model,
       schema: z.object({
-        brand: z.string().nullable().describe("Kullanıcının bahsettiği bilinen bir parfüm markası veya ismi varsa buraya yazın, yoksa null."),
+        brand: z.string().nullable().describe("Kullanıcının kastettiği bilinen bir parfüm/marka adı varsa, YAZIM HATASI olsa veya başka bir dilde yazılmış olsa bile düzeltilmiş/normalize edilmiş İngilizce haliyle yaz (örn. 'sovaj' veya 'соваж' -> 'Sauvage'). Yoksa null."),
         notes: z.array(z.string()).describe("Kullanıcının istediği kokunun notalarını (limon, vanilya, odunsu vs.) bir dizi olarak yazın."),
-        vibe: z.string().nullable().describe("Kullanıcının istediği genel hissiyat veya etki (ferah, ağır, seksi, vb.).")
+        vibe: z.string().nullable().describe("Kullanıcının istediği genel hissiyat veya etki (ferah, ağır, seksi, vb.)."),
+        language: z.string().describe("Kullanıcının mesajının yazıldığı dilin ISO 639-1 kodu (tr, en, ru, ar gibi).")
       }),
-      prompt: `Kullanıcının şu parfüm arama mesajını analiz et: "${lastUserMessage}"`
+      prompt: `Kullanıcının şu parfüm arama mesajını analiz et — yazım hatası içerebilir veya Türkçe dışında bir dilde olabilir: "${lastUserMessage}"`
     })
 
-    // Fast Path'i geçip LLM'e düşen sorgularda marka eşleşmesi kontrolü
+    console.log('[SIMILAR-MATCH-DEBUG] intent =', JSON.stringify(intent))
+    const t = getTemplate(intent.language)
 
-    // 2. Marka eşleşmesi
+    // LLM bir marka tanıdıysa (yazım hatası/başka dil olsa bile), kendi kataloğumuzda
+    // tekrar dene — hâlâ web araması yok, sadece normalize edilmiş isimle aynı
+    // ücretsiz DB eşleştirmesini tekrarlıyoruz.
     if (intent.brand) {
-      const brandLower = intent.brand.toLowerCase()
-      matchedProducts = allProducts.filter(p => p.original_name && p.original_name.toLowerCase().includes(brandLower))
-    }
-
-    let webSearchNotes: string[] = []
-    
-    // 2.5 WEB SEARCH: Eğer marka varsa ama DB'mizde eşleşmediyse notalarını web'den bul
-    if (intent.brand && matchedProducts.length === 0) {
-      try {
-        const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(intent.brand + ' perfume notes fragrantica basenotes')}`
-        const searchRes = await fetch(searchUrl, {
-          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/111.0' }
+      const brandMatches = findBrandMatches(intent.brand)
+      if (brandMatches.length > 0) {
+        const top = brandMatches[0]
+        return NextResponse.json({
+          type: 'did_you_mean',
+          suggestion: top.original_name,
+          text: t.didYouMean(top.sku),
+          products: []
         })
-        const html = await searchRes.text()
-        const matches = [...html.matchAll(/<a class="result__snippet[^>]*>(.*?)<\/a>/gi)];
-        const snippets = matches.map(m => m[1].replace(/<\/?[^>]+(>|$)/g, "")).join(' ');
-        
-        if (snippets.length > 50) {
-          const { object: webNotes } = await generateObject({
-            model,
-            schema: z.object({
-              notes: z.array(z.string()).describe("Arama metninden sadece koku notalarını (limon, sedir, gül vs.) çıkar")
-            }),
-            prompt: `Şu arama sonuçlarından parfümün notalarını çıkar: "${snippets.substring(0, 1500)}"`
-          })
-          if (webNotes.notes) webSearchNotes = webNotes.notes
-        }
-      } catch (e) {
-        console.error('Web search error:', e)
       }
     }
 
-    const allNotes = [...(intent.notes || []), ...webSearchNotes]
+    const scoredProducts = allProducts.map(p => {
+      let score = 0
+      const pStr = `${p.top_notes} ${p.heart_notes} ${p.base_notes} ${p.fragrance_family.join(' ')} ${p.mood_tag}`.toLowerCase()
 
-    // 3. Eşleşme yoksa KOD tabanlı benzerlik skoru hesapla (Kendi notalarımız + Web'den gelenler)
-    if (matchedProducts.length === 0 && allNotes.length > 0) {
-      const scoredProducts = allProducts.map(p => {
-        let score = 0
-        const pStr = `${p.top_notes} ${p.heart_notes} ${p.base_notes} ${p.fragrance_family.join(' ')} ${p.mood_tag}`.toLowerCase()
-        
-        allNotes.forEach(note => {
-          if (pStr.includes(note.toLowerCase())) score += 2
-        })
-        if (intent.vibe && pStr.includes(intent.vibe.toLowerCase())) score += 1
-        
-        return { product: p, score }
-      }).filter(item => item.score > 0)
-      
-      scoredProducts.sort((a, b) => b.score - a.score)
-      matchedProducts = scoredProducts.slice(0, 3).map(i => i.product)
-    }
+      ;(intent.notes || []).forEach(note => {
+        if (pStr.includes(note.toLowerCase())) score += 2
+      })
+      if (intent.vibe && pStr.includes(intent.vibe.toLowerCase())) score += 1
 
-    // Hala eşleşme yoksa boş döndür, rastgele ürün önerme! (Brief kuralı: Tutarlı cevap)
+      return { product: p, score }
+    }).filter(item => item.score > 0)
+
+    scoredProducts.sort((a, b) => b.score - a.score)
+    const matchedProducts = scoredProducts.slice(0, 3).map(i => i.product)
+
+    // Eşleşme yoksa boş döndür, rastgele ürün önerme!
     if (matchedProducts.length === 0) {
-      return NextResponse.json({ 
-        text: "Maalesef tarif ettiğiniz özelliklerde veya markada tam bir benzerlik bulamadım. Katalog sayfamızdan tüm ürünleri inceleyebilirsiniz.", 
-        products: [] 
+      return NextResponse.json({
+        text: t.notFound,
+        products: []
       })
     }
 
-    // 4. Sonuç Sunumu (Kısa LLM Çağrısı)
-    const prompt = `Kullanıcı şu tarz bir parfüm arıyor:
-Mesajı: "${lastUserMessage}"
-Analiz edilen niyet: Marka: ${intent.brand || '-'}, Notalar: ${intent.notes?.join(', ') || '-'}, Hissiyat: ${intent.vibe || '-'}
-
-Sistemde eşleşen en iyi parfümler şunlar:
-${matchedProducts.map(p => `- PN ${p.sku} (Notalar: ${p.top_notes}, ${p.heart_notes}, ${p.base_notes} | Aile: ${p.fragrance_family.join(', ')})`).join('\n')}
-
-GÖREV: Kullanıcının talebine doğrudan yanıt vererek, bu ürünleri NEDEN önerdiğini belirten 2-3 cümlelik çok kısa, ikna edici ve doğal bir yanıt yaz. 
-KESİN KURAL: Barkod, fiyat, stok gibi verileri asla yazma. Çok uzun listeler yapma.`
-
-    const { text } = await generateText({
-      model,
-      prompt,
-      temperature: 0.7,
-    })
-
-    return NextResponse.json({ 
-      text, 
-      products: matchedProducts 
+    // Deterministik şablon — ekstra bir LLM çağrısı (generateText) yapmadan sonucu sunuyoruz.
+    const summary = intent.vibe || intent.notes?.[0] || 'aradığınız tarza'
+    return NextResponse.json({
+      text: t.results(summary),
+      products: matchedProducts
     })
 
   } catch (error) {
     console.error('Similar Match API Error:', error)
-    return NextResponse.json({ 
-      text: 'Şu anda sistemlerimizde yoğunluk var. Lütfen birkaç dakika sonra tekrar deneyin.', 
-      products: [] 
+    return NextResponse.json({
+      text: 'Şu anda sistemlerimizde yoğunluk var. Lütfen birkaç dakika sonra tekrar deneyin.',
+      products: []
     })
   }
 }
