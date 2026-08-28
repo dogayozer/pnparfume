@@ -425,7 +425,7 @@ export default function ChatWidget() {
                   <img src="/aura-avatar.jpg" alt="Aura AI" className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-sm">Aura - Yapay Zeka Uzmanı</h3>
+                  <h3 className="font-medium text-sm">Aura Parfüm Danışmanınız</h3>
                   <p className="text-[10px] text-background/60">Aktif, size yardımcı olmaya hazır.</p>
                 </div>
               </div>

@@ -62,8 +62,9 @@ export default function Navbar() {
       className="fixed top-0 left-0 right-0 z-40 bg-background/50 backdrop-blur-md border-b border-foreground/5"
     >
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <Link href="/" className="text-2xl font-light tracking-widest hover:text-accent-gold transition-colors">
-          PN.
+        <Link href="/" className="group inline-flex flex-col items-center justify-center border border-foreground/20 rounded-lg px-3 py-1 hover:border-accent-gold transition-colors">
+          <span className="text-xl font-light tracking-widest leading-none text-foreground group-hover:text-accent-gold transition-colors">PN</span>
+          <span className="text-[8px] font-medium tracking-[0.3em] text-foreground/50 uppercase leading-none mt-1 group-hover:text-accent-gold/70 transition-colors">Parfume</span>
         </Link>
         
         <div className="hidden md:flex items-center space-x-8">
