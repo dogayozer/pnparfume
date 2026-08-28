@@ -3,7 +3,6 @@ import ProductCard from '@/components/ProductCard'
 import FilterSidebar from '@/components/catalog/FilterSidebar'
 import MobileFilterSort from '@/components/catalog/MobileFilterSort'
 import Pagination from '@/components/catalog/Pagination'
-import { getProductKasapImage } from '@/lib/kasapImages'
 
 export default async function KatalogPage({
   searchParams,
@@ -46,14 +45,17 @@ export default async function KatalogPage({
     include: { marketplaceListings: true }
   })
 
-  let processedProducts = allProducts.map((product: any, index: number) => {
+  let processedProducts = allProducts.map((product: any) => {
     const trendyolListing = product.marketplaceListings?.find((l: any) => l.platform === 'trendyol')
-    const realImage = trendyolListing?.images?.[0] || getProductKasapImage(product.sku, index)
-    
+    // Gerçek fotoğrafı olmayan ürünlerde artık rastgele/alakasız bir görsel (eski
+    // "kasap" placeholder seti) gösterilmiyor — imageUrl boş kalır, ProductCard
+    // bu durumda kendi zarif "fotoğraf yok" görünümünü (SKU çerçevesi) gösterir.
+    // Katalogda ürünü tamamen gizlemiyoruz (best-sellers vitrininden farklı olarak),
+    // çünkü müşteri hâlâ inceleyip satın alabilmeli.
     return {
       ...product,
       trendyolListing,
-      finalImageUrl: realImage
+      finalImageUrl: trendyolListing?.images?.[0] || null
     }
   })
 

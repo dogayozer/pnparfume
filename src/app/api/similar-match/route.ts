@@ -66,9 +66,31 @@ export async function POST(req: Request) {
         top_notes: true,
         heart_notes: true,
         base_notes: true,
-        mood_tag: true
+        mood_tag: true,
+        base_cost: true,
+        marketplaceListings: { where: { platform: 'trendyol' }, select: { images: true, price: true } }
       }
     })
+
+    // Müşteriye giden ürün nesnesinden original_name (gerçek marka adı) HER ZAMAN
+    // çıkarılır — telif kuralı: bu alan sadece sunucu tarafı eşleştirme için var,
+    // ağ isteğinde bile (devtools) müşteriye görünmemeli. Gerçek fotoğraf/fiyat
+    // varsa o kullanılır; yoksa ürünle alakasız bir görsel/uydurma fiyat yerine
+    // image: null (ChatWidget zarifçe gösterir) ve base_cost'a düşülür.
+    const toClientProduct = (p: (typeof allProducts)[number]) => {
+      const listing = p.marketplaceListings?.[0]
+      return {
+        sku: p.sku,
+        gender: p.gender,
+        fragrance_family: p.fragrance_family,
+        top_notes: p.top_notes,
+        heart_notes: p.heart_notes,
+        base_notes: p.base_notes,
+        mood_tag: p.mood_tag,
+        price: listing?.price || p.base_cost || 850,
+        image: listing?.images?.[0] || null
+      }
+    }
 
     // Kataloğumuzda gündelik İngilizce/Türkçe konuşmada sık geçen, tek kelimelik
     // isimler var (BLUE, BOSS, WISH, BLACK, ESCAPE, ADDICT, BELIEVE, ROMA, SOIR,
@@ -114,7 +136,7 @@ export async function POST(req: Request) {
         const ordered = [exactMatch, ...fastMatches.filter(p => p.sku !== exactMatch.sku)]
         return NextResponse.json({
           text: getTemplate(lang).confirmed,
-          products: ordered.slice(0, 3)
+          products: ordered.slice(0, 3).map(toClientProduct)
         })
       }
 
@@ -191,7 +213,7 @@ export async function POST(req: Request) {
     const summary = intent.vibe || intent.notes?.[0] || 'aradığınız tarza'
     return NextResponse.json({
       text: t.results(summary),
-      products: matchedProducts
+      products: matchedProducts.map(toClientProduct)
     })
 
   } catch (error) {

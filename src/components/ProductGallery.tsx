@@ -95,7 +95,6 @@ export default function ProductGallery({ images, title, isOutOfStock, sku }: Pro
 
   const currentMedia = images[currentIndex]
   const isFailed = failedImages[currentIndex]
-  const fallbackSrc = `/api/kasap-image/${encodeURIComponent("WhatsApp Image 2026-08-20 at 01.06.09.jpeg")}`
 
   return (
     <div className="flex flex-col gap-4">
@@ -118,24 +117,30 @@ export default function ProductGallery({ images, title, isOutOfStock, sku }: Pro
             className="w-full h-full relative"
           >
             {isVideo(currentMedia) ? (
-              <video 
-                src={toSecureUrl(currentMedia)} 
-                autoPlay 
-                loop 
-                muted 
-                playsInline 
+              <video
+                src={toSecureUrl(currentMedia)}
+                autoPlay
+                loop
+                muted
+                playsInline
                 controls
                 className="w-full h-full object-cover rounded-3xl"
               />
+            ) : isFailed ? (
+              // Gerçek görsel yüklenemedi (bozuk link) — ürünle alakasız bir görsel
+              // göstermek yerine, boş galeri durumundaki gibi zarif bir "yok" durumu.
+              <div className="w-full h-full flex items-center justify-center bg-foreground/5">
+                <span className="text-foreground/20 font-light text-2xl tracking-widest">{sku}</span>
+              </div>
             ) : (
-              <Image 
-                src={isFailed ? fallbackSrc : toSecureUrl(currentMedia)} 
-                alt={`${title} - Görsel ${currentIndex + 1}`} 
-                fill 
+              <Image
+                src={toSecureUrl(currentMedia)}
+                alt={`${title} - Görsel ${currentIndex + 1}`}
+                fill
                 priority={currentIndex === 0}
                 sizes="(max-width: 768px) 100vw, 50vw"
                 onError={() => setFailedImages(prev => ({ ...prev, [currentIndex]: true }))}
-                className={`object-cover ${isOutOfStock ? 'grayscale' : ''}`} 
+                className={`object-cover ${isOutOfStock ? 'grayscale' : ''}`}
               />
             )}
           </motion.div>
@@ -187,14 +192,18 @@ export default function ProductGallery({ images, title, isOutOfStock, sku }: Pro
                     </div>
                     <span className="text-[10px] uppercase font-bold tracking-wider text-accent-gold">Video</span>
                   </div>
+                ) : imgFailed ? (
+                  <div className="w-full h-full flex items-center justify-center bg-foreground/5">
+                    <span className="text-foreground/20 font-light text-[10px] tracking-widest">{sku}</span>
+                  </div>
                 ) : (
-                  <Image 
-                    src={imgFailed ? fallbackSrc : toSecureUrl(img)} 
-                    alt={`${title} - Küçük Görsel ${idx + 1}`} 
-                    fill 
+                  <Image
+                    src={toSecureUrl(img)}
+                    alt={`${title} - Küçük Görsel ${idx + 1}`}
+                    fill
                     sizes="80px"
                     onError={() => setFailedImages(prev => ({ ...prev, [idx]: true }))}
-                    className={`object-cover ${isOutOfStock ? 'grayscale' : ''}`} 
+                    className={`object-cover ${isOutOfStock ? 'grayscale' : ''}`}
                   />
                 )}
               </button>

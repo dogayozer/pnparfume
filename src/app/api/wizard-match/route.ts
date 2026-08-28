@@ -26,7 +26,9 @@ export async function POST(req: Request) {
         top_notes: true,
         heart_notes: true,
         base_notes: true,
-        mood_tag: true
+        mood_tag: true,
+        base_cost: true,
+        marketplaceListings: { where: { platform: 'trendyol' }, select: { images: true, price: true } }
       }
     })
 
@@ -62,12 +64,25 @@ export async function POST(req: Request) {
     // Sort randomly and take up to 12 to allow local filtering
     matched = matched.sort(() => 0.5 - Math.random()).slice(0, 12)
 
+    // Gerçek fotoğraf/fiyat varsa onlar kullanılır; yoksa ürünle alakasız bir görsel
+    // (eski "kasap" placeholder seti) veya uydurma fiyat göstermek yerine image: null
+    // (ChatWidget zarifçe gösterir) ve base_cost'a düşülür.
+    const clientProducts = matched.map((p: any) => {
+      const listing = p.marketplaceListings?.[0]
+      const { marketplaceListings, ...rest } = p
+      return {
+        ...rest,
+        price: listing?.price || p.base_cost || 850,
+        image: listing?.images?.[0] || null
+      }
+    })
+
     // 4. Static Response: No LLM needed for this step
     const text = `Aramanıza uygun ${matched.length} adet ürünümüz var.`;
 
-    return NextResponse.json({ 
-      text: text, 
-      products: matched 
+    return NextResponse.json({
+      text: text,
+      products: clientProducts
     })
 
   } catch (error: any) {

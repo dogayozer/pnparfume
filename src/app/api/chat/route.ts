@@ -3,7 +3,6 @@ import { getAIModel } from '@/lib/ai-gateway'
 import { streamText, tool } from 'ai'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { getProductKasapImage } from '@/lib/kasapImages'
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30
@@ -164,34 +163,46 @@ ${customer.referral_code
                 select: {
                   sku: true,
                   gender: true,
-                  fragrance_family: true, 
+                  fragrance_family: true,
                   mood_tag: true,
                   top_notes: true,
                   heart_notes: true,
-                  base_notes: true
+                  base_notes: true,
+                  base_cost: true,
+                  marketplaceListings: { where: { platform: 'trendyol' }, select: { images: true, price: true } }
                 }
               })
-              
+
               if (products.length === 0) {
                 products = await prisma.product.findMany({
                   take: 3,
                   select: {
                     sku: true,
                     gender: true,
-                    fragrance_family: true, 
+                    fragrance_family: true,
                     mood_tag: true,
                     top_notes: true,
                     heart_notes: true,
-                    base_notes: true
+                    base_notes: true,
+                    base_cost: true,
+                    marketplaceListings: { where: { platform: 'trendyol' }, select: { images: true, price: true } }
                   }
                 })
               }
 
-              const enriched = products.map(p => ({
-                ...p,
-                price: 850,
-                image: getProductKasapImage(p.sku)
-              }))
+              // Gerçek fiyat ve gerçek fotoğraf varsa onlar kullanılır — yoksa uydurma bir
+              // fiyat (eski sabit "850") veya ürünle alakasız bir görsel (eski "kasap"
+              // placeholder seti) göstermek yerine, sırasıyla ürünün gerçek maliyet fiyatına
+              // ve "fotoğraf yok" durumuna (image: null, ChatWidget bunu zarifçe gösterir) düşer.
+              const enriched = products.map((p: any) => {
+                const listing = p.marketplaceListings?.[0]
+                const { marketplaceListings, ...rest } = p
+                return {
+                  ...rest,
+                  price: listing?.price || p.base_cost || 850,
+                  image: listing?.images?.[0] || null
+                }
+              })
 
               collectedToolResults.push({
                 toolName: 'searchProducts',

@@ -7,7 +7,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { useCart } from '@/contexts/CartContext'
-import { getProductKasapImage } from '@/lib/kasapImages'
 
 // Mesaj ID üretici: sadece Date.now().toString() kullanmak, aynı milisaniye içinde
 // art arda oluşturulan mesajların (örn. "wizard" adımlarının otomatik eklenmesi)
@@ -523,12 +522,23 @@ export default function ChatWidget() {
                             <p className="text-[10px] font-medium text-accent-gold mb-2 tracking-widest uppercase">Önerilen İmza Parfümler ({Array.isArray(resultData) ? resultData.length : 0})</p>
                             <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1 custom-scrollbar">
                               {Array.isArray(resultData) && resultData.length > 0 ? resultData.map((prod: any) => {
-                                const prodImg = getProductKasapImage(prod.sku)
+                                // Gerçek fotoğraf yoksa (prod.image null), ürünle alakasız rastgele
+                                // bir görsel (eski "kasap" placeholder seti) göstermek yerine SKU
+                                // yazılı zarif bir çerçeve gösterilir.
+                                const prodImgSrc = prod.image
+                                  ? (prod.image.startsWith('http://parfumtasarla.com') || prod.image.startsWith('http://kasaptanetyiyelim.com')
+                                      ? `/api/media-proxy?url=${encodeURIComponent(prod.image)}`
+                                      : prod.image)
+                                  : null
                                 return (
                                   <div key={prod.sku} className="p-2.5 bg-background rounded-xl border border-foreground/10 flex items-center justify-between gap-2 shadow-sm">
                                     <div className="flex items-center gap-2.5 min-w-0">
-                                      <div className="w-10 h-10 rounded-lg overflow-hidden relative flex-shrink-0 bg-foreground/5">
-                                        <Image src={prodImg} alt={prod.sku} fill className="object-cover" />
+                                      <div className="w-10 h-10 rounded-lg overflow-hidden relative flex-shrink-0 bg-foreground/5 flex items-center justify-center">
+                                        {prodImgSrc ? (
+                                          <Image src={prodImgSrc} alt={prod.sku} fill className="object-cover" />
+                                        ) : (
+                                          <span className="text-foreground/20 font-light text-[8px] tracking-widest">{prod.sku}</span>
+                                        )}
                                       </div>
                                       <div className="min-w-0">
                                         <Link href={`/urun/${prod.sku}`} className="font-bold text-foreground hover:text-accent-gold transition-colors text-xs truncate block">

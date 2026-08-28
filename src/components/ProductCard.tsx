@@ -45,8 +45,10 @@ export default function ProductCard({ product }: { product: ProductProps }) {
     return url
   }
 
-  const fallbackSrc = `/api/kasap-image/${encodeURIComponent("WhatsApp Image 2026-08-20 at 01.06.09.jpeg")}`
-  const finalSrc = hasError ? fallbackSrc : toSecureUrl(product.imageUrl)
+  // Gerçek görsel yoksa ya da yüklenemezse (bozuk link), ürünle alakasız rastgele bir
+  // görsel göstermek yerine finalSrc boş kalır — aşağıdaki zarif "fotoğraf yok" görünümü
+  // (SKU çerçevesi) devreye girer.
+  const finalSrc = hasError ? '' : toSecureUrl(product.imageUrl)
 
   return (
     <Link href={`/urun/${product.sku}`}>
