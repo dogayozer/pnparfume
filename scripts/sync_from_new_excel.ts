@@ -202,8 +202,21 @@ async function main() {
   console.log('\n--- 4. Trendyol Listelemeleri & Sütun M Açıklamaları Aktarılıyor ---')
   const trendyolSheet = wb.Sheets['trendyol']
   const rawTrendyol = xlsx.utils.sheet_to_json(trendyolSheet, { header: 1 }) as any[][]
-  let listingCount = 0
+  // Dosya_Esleme sayfasını da yükleyelim (görseller için ek güvence)
+  const dosyaEslemeSheet = wb.Sheets['Dosya_Esleme']
+  const dosyaEslemeRows = xlsx.utils.sheet_to_json(dosyaEslemeSheet) as any[]
+  const dosyaEslemeMap = new Map<string, string[]>()
+  dosyaEslemeRows.forEach(d => {
+    const b = String(d.Barkod || '').trim()
+    const g1 = d['GÃ¶rsel 1 URL (ÃœrÃ¼n - parfumtasarla.com)'] || d['Görsel 1 URL (Ürün - parfumtasarla.com)']
+    const g2 = d['GÃ¶rsel 2 URL (Koku Ailesi Grubu)'] || d['Görsel 2 URL (Koku Ailesi Grubu)']
+    const g3 = d['GÃ¶rsel 3 URL (Profil Grubu)'] || d['Görsel 3 URL (Profil Grubu)']
+    const g4 = d['GÃ¶rsel 4 URL (PN Marka TanÄ±tÄ±mÄ± - Ortak)'] || d['Görsel 4 URL (PN Marka Tanıtımı - Ortak)']
+    const imgs = [g1, g2, g3, g4].filter(u => u && typeof u === 'string' && u.startsWith('http'))
+    if (b && imgs.length > 0) dosyaEslemeMap.set(b, imgs)
+  })
 
+  let listingCount = 0
   const trendyolRows = rawTrendyol.slice(1)
   await runInChunks(trendyolRows, 25, async (r) => {
     if (!r || r.length === 0) return
@@ -214,7 +227,17 @@ async function main() {
     const marketPrice = r[13] ? parseFloat(String(r[13])) : null
     const price = r[14] ? parseFloat(String(r[14])) : 599
     const stock = r[16] ? parseInt(String(r[16])) : 98
-    const images = [r[20], r[21], r[22]].filter(url => url && typeof url === 'string' && url.startsWith('http'))
+    
+    // Sütun U (20), V (21), W (22), X (23), Y (24) -> 5 Görsel
+    let images = [r[20], r[21], r[22], r[23], r[24]].filter(url => url && typeof url === 'string' && url.startsWith('http'))
+    
+    // Eğer Trendyol tablosunda 4'ten az görsel varsa Dosya_Esleme ile zenginleştir
+    if (barcode && dosyaEslemeMap.has(barcode)) {
+      const fallbackImgs = dosyaEslemeMap.get(barcode)!
+      fallbackImgs.forEach(fImg => {
+        if (!images.includes(fImg)) images.push(fImg)
+      })
+    }
 
     let product = null
     if (barcode) {
