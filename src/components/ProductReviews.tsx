@@ -89,7 +89,7 @@ export default function ProductReviews({ sku, productName }: { sku: string; prod
           <h2 className="text-2xl md:text-3xl font-serif font-light text-foreground mb-2 flex items-center gap-2">
             <MessageSquare className="text-accent-gold" size={24} /> Müşteri Yorumları & Deneyimleri
           </h2>
-          <p className="text-sm text-foreground/60">
+          <p className="text-base text-foreground/60">
             {productName} hakkında gerçek kullanıcı değerlendirmeleri ve koku deneyimleri.
           </p>
         </div>
@@ -106,12 +106,12 @@ export default function ProductReviews({ sku, productName }: { sku: string; prod
               ))}
             </div>
             <span className="font-bold text-sm text-foreground">{avgRating} / 5</span>
-            <span className="text-xs text-foreground/40 font-light">({totalCount} Yorum)</span>
+            <span className="text-sm text-foreground/40 font-light">({totalCount} Yorum)</span>
           </div>
 
           <button
             onClick={() => setIsModalOpen(true)}
-            className="px-5 py-2.5 bg-foreground text-background hover:bg-accent-gold transition-colors rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm"
+            className="px-5 py-2.5 bg-foreground text-background hover:bg-accent-gold transition-colors rounded-xl text-sm font-bold uppercase tracking-wider shadow-sm"
           >
             + Yorum Yaz
           </button>
@@ -130,7 +130,7 @@ export default function ProductReviews({ sku, productName }: { sku: string; prod
           </p>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="px-6 py-2 bg-foreground text-background hover:bg-accent-gold transition-colors rounded-xl text-xs font-bold uppercase tracking-wider"
+            className="px-6 py-2 bg-foreground text-background hover:bg-accent-gold transition-colors rounded-xl text-sm font-bold uppercase tracking-wider"
           >
             Yorum Yap
           </button>
@@ -146,7 +146,7 @@ export default function ProductReviews({ sku, productName }: { sku: string; prod
                       {rev.customerName.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <div className="text-xs font-medium text-foreground flex items-center gap-1.5">
+                      <div className="text-sm font-medium text-foreground flex items-center gap-1.5">
                         {rev.customerName}
                         <span className="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5 bg-emerald-500/10 px-1.5 py-0.5 rounded font-normal">
                           <CheckCircle2 size={10} /> Doğrulanmış
@@ -165,7 +165,7 @@ export default function ProductReviews({ sku, productName }: { sku: string; prod
                   </div>
                 </div>
 
-                <p className="text-xs text-foreground/80 leading-relaxed italic mt-2">
+                <p className="text-sm text-foreground/80 leading-relaxed italic mt-2">
                   "{rev.comment}"
                 </p>
               </div>
@@ -259,7 +259,7 @@ export default function ProductReviews({ sku, productName }: { sku: string; prod
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-3.5 bg-foreground text-background hover:bg-accent-gold transition-colors rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2"
+                  className="w-full py-3.5 bg-foreground text-background hover:bg-accent-gold transition-colors rounded-xl text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2"
                 >
                   {submitting ? 'Gönderiliyor...' : 'Yorumu Yayınlanmak Üzere Gönder'}
                 </button>

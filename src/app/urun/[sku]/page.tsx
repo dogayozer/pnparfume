@@ -23,10 +23,10 @@ function parseDescription(desc: string) {
   }
 
   if (lines.length > 1) {
-    return `<ul class="list-disc pl-5 space-y-2.5 text-foreground/80 leading-relaxed text-sm">\n${lines.map(line => `<li>${line}</li>`).join('\n')}\n</ul>`;
+    return `<ul class="list-disc pl-5 space-y-2.5 text-foreground/80 leading-relaxed text-base">\n${lines.map(line => `<li>${line}</li>`).join('\n')}\n</ul>`;
   }
   
-  return `<p class="text-foreground/80 leading-relaxed text-sm">${desc}</p>`;
+  return `<p class="text-foreground/80 leading-relaxed text-base">${desc}</p>`;
 }
 
 const getSeasonIcon = (tag: string | null) => {
@@ -101,8 +101,8 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
 
   return (
     <div className="min-h-screen max-w-5xl mx-auto px-4 md:px-12 py-6 md:py-12">
-      <Link href="/katalog" className="inline-flex items-center gap-2 text-foreground/50 hover:text-accent-rose mb-6 md:mb-12 transition-colors text-sm md:text-base">
-        <ArrowLeft size={16} /> Kataloğa Dön
+      <Link href="/katalog" className="inline-flex items-center gap-2 text-foreground/50 hover:text-accent-rose mb-6 md:mb-12 transition-colors text-base md:text-lg">
+        <ArrowLeft size={18} /> Kataloğa Dön
       </Link>
 
       <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-start">
@@ -118,19 +118,19 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
           {/* Etkinlik ve Kullanım Simgeleri */}
           <div className="flex flex-wrap gap-3 justify-center pt-6">
             {product.season_tag && product.season_tag !== 'Bilinmiyor' && (
-               <div className="flex items-center gap-2 px-4 py-2 bg-foreground/5 hover:bg-foreground/10 transition-colors rounded-full text-xs font-medium text-foreground/70 cursor-default" title="Mevsimsellik">
+               <div className="flex items-center gap-2 px-4 py-2 bg-foreground/5 hover:bg-foreground/10 transition-colors rounded-full text-sm font-medium text-foreground/70 cursor-default" title="Mevsimsellik">
                   {getSeasonIcon(product.season_tag)}
                   {product.season_tag}
                </div>
             )}
             {product.time_of_day_tag && product.time_of_day_tag !== 'Bilinmiyor' && (
-               <div className="flex items-center gap-2 px-4 py-2 bg-foreground/5 hover:bg-foreground/10 transition-colors rounded-full text-xs font-medium text-foreground/70 cursor-default" title="Kullanım Zamanı">
+               <div className="flex items-center gap-2 px-4 py-2 bg-foreground/5 hover:bg-foreground/10 transition-colors rounded-full text-sm font-medium text-foreground/70 cursor-default" title="Kullanım Zamanı">
                   {getTimeIcon(product.time_of_day_tag)}
                   {product.time_of_day_tag}
                </div>
             )}
             {product.occasion_tag && product.occasion_tag !== 'Bilinmiyor' && (
-               <div className="flex items-center gap-2 px-4 py-2 bg-foreground/5 hover:bg-foreground/10 transition-colors rounded-full text-xs font-medium text-foreground/70 cursor-default" title="Etkinlik / Mekan">
+               <div className="flex items-center gap-2 px-4 py-2 bg-foreground/5 hover:bg-foreground/10 transition-colors rounded-full text-sm font-medium text-foreground/70 cursor-default" title="Etkinlik / Mekan">
                   {getOccasionIcon(product.occasion_tag)}
                   {product.occasion_tag}
                </div>
@@ -141,51 +141,51 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
           <div className="mt-8 md:mt-16 pt-8 md:pt-12 border-t border-foreground/10">
             <div className="flex items-center gap-4 md:gap-6 mb-6 md:mb-8 text-foreground/50">
               <div className="flex flex-col">
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] mb-1">
+                <span className="text-xs font-bold uppercase tracking-[0.2em] mb-1">
                   Kalıcılık <span className="text-accent-gold ml-1">({product.longevity_score || 0}/10)</span>
                 </span>
                 <div className="flex gap-1">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className={`h-1 w-4 rounded-full ${i < Math.ceil((product.longevity_score || 0) / 2) ? 'bg-accent-gold' : 'bg-foreground/10'}`}></div>
+                    <div key={i} className={`h-1.5 w-4 rounded-full ${i < Math.ceil((product.longevity_score || 0) / 2) ? 'bg-accent-gold' : 'bg-foreground/10'}`}></div>
                   ))}
                 </div>
               </div>
               <span className="text-foreground/20">|</span>
               <div className="flex flex-col">
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] mb-1">
+                <span className="text-xs font-bold uppercase tracking-[0.2em] mb-1">
                   Silaj (İz) <span className="text-accent-gold ml-1">({product.sillage_score || 0}/10)</span>
                 </span>
                 <div className="flex gap-1">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className={`h-1 w-4 rounded-full ${i < Math.ceil((product.sillage_score || 0) / 2) ? 'bg-accent-gold' : 'bg-foreground/10'}`}></div>
+                    <div key={i} className={`h-1.5 w-4 rounded-full ${i < Math.ceil((product.sillage_score || 0) / 2) ? 'bg-accent-gold' : 'bg-foreground/10'}`}></div>
                   ))}
                 </div>
               </div>
             </div>
 
-            <h3 className="text-xl md:text-2xl font-light mb-6 md:mb-8 tracking-tight">Koku Mimarisi</h3>
+            <h3 className="text-2xl md:text-3xl font-light mb-6 md:mb-8 tracking-tight">Koku Mimarisi</h3>
             
             <div className="space-y-8 relative before:absolute before:inset-y-0 before:left-[5px] before:w-[1px] before:bg-gradient-to-b before:from-accent-gold/50 before:to-transparent ml-2">
               <div className="relative pl-8">
                 <div className="absolute left-[3px] top-2 w-1.5 h-1.5 rounded-full bg-accent-gold"></div>
-                <h4 className="text-xs font-bold text-foreground/40 uppercase tracking-[0.2em] mb-2">Tepe Notaları</h4>
-                <p className="text-foreground text-sm font-medium tracking-wide leading-relaxed">
+                <h4 className="text-sm font-bold text-foreground/40 uppercase tracking-[0.2em] mb-2">Tepe Notaları</h4>
+                <p className="text-foreground text-base font-medium tracking-wide leading-relaxed">
                   {(product.top_notes || 'Gizli Formül').split(',').map(n => n.trim()).join(' • ')}
                 </p>
               </div>
 
               <div className="relative pl-8">
                 <div className="absolute left-[3px] top-2 w-1.5 h-1.5 rounded-full bg-accent-gold/60"></div>
-                <h4 className="text-xs font-bold text-foreground/40 uppercase tracking-[0.2em] mb-2">Kalp Notaları</h4>
-                <p className="text-foreground text-sm font-medium tracking-wide leading-relaxed">
+                <h4 className="text-sm font-bold text-foreground/40 uppercase tracking-[0.2em] mb-2">Kalp Notaları</h4>
+                <p className="text-foreground text-base font-medium tracking-wide leading-relaxed">
                   {(product.heart_notes || 'Gizli Formül').split(',').map(n => n.trim()).join(' • ')}
                 </p>
               </div>
 
               <div className="relative pl-8">
                 <div className="absolute left-[3px] top-2 w-1.5 h-1.5 rounded-full bg-foreground/20"></div>
-                <h4 className="text-xs font-bold text-foreground/40 uppercase tracking-[0.2em] mb-2">Dip Notalar</h4>
-                <p className="text-foreground text-sm font-medium tracking-wide leading-relaxed">
+                <h4 className="text-sm font-bold text-foreground/40 uppercase tracking-[0.2em] mb-2">Dip Notalar</h4>
+                <p className="text-foreground text-base font-medium tracking-wide leading-relaxed">
                   {(product.base_notes || 'Gizli Formül').split(',').map(n => n.trim()).join(' • ')}
                 </p>
               </div>
@@ -197,33 +197,33 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
         <div className="space-y-6 md:space-y-8 mt-4 md:mt-0">
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 md:gap-4 mb-3">
-              <span className="text-xs md:text-sm font-medium tracking-widest text-accent-gold">
+              <span className="text-sm md:text-base font-medium tracking-widest text-accent-gold">
                 {product.fragrance_family?.[0]?.toUpperCase() || 'ÖZEL HARMAN'}
               </span>
               <div className="flex items-center gap-3">
-                <span className="text-2xl md:text-3xl font-light text-foreground">{displayPrice.toLocaleString('tr-TR')} ₺</span>
+                <span className="text-3xl md:text-4xl font-light text-foreground">{displayPrice.toLocaleString('tr-TR')} ₺</span>
                 {marketPrice && marketPrice > displayPrice && (
-                  <span className="text-base md:text-lg text-foreground/40 line-through">{marketPrice.toLocaleString('tr-TR')} ₺</span>
+                  <span className="text-lg md:text-xl text-foreground/40 line-through">{marketPrice.toLocaleString('tr-TR')} ₺</span>
                 )}
                 {displayPrice > 3000 && !isOutOfStock && (
-                  <span className="text-[10px] md:text-xs bg-foreground/10 px-2 py-1 uppercase tracking-widest text-foreground/70">Premium Kargo</span>
+                  <span className="text-xs md:text-sm bg-foreground/10 px-2 py-1 uppercase tracking-widest text-foreground/70">Premium Kargo</span>
                 )}
               </div>
             </div>
-            <h1 className="text-2xl md:text-4xl font-light text-foreground tracking-tight leading-snug">
+            <h1 className="text-3xl md:text-5xl font-light text-foreground tracking-tight leading-snug">
               PN {product.sku}
             </h1>
             {product.seo_name && (
-              <h2 className="text-base md:text-lg text-foreground/70 mt-1 md:mt-2 font-medium leading-relaxed">
+              <h2 className="text-lg md:text-xl text-foreground/70 mt-1 md:mt-2 font-medium leading-relaxed">
                 {product.seo_name}
               </h2>
             )}
-            <p className="text-[10px] md:text-xs text-foreground/40 mt-1 md:mt-2 uppercase tracking-widest">
+            <p className="text-xs md:text-sm text-foreground/40 mt-1 md:mt-2 uppercase tracking-widest">
               {product.fragrance_family?.join(', ') || 'Gizli Formül'}
             </p>
           </div>
 
-          <div className="text-foreground/80 leading-relaxed text-sm md:text-lg font-light" dangerouslySetInnerHTML={{ __html: description }} />
+          <div className="text-foreground/80 leading-relaxed text-base md:text-lg font-light" dangerouslySetInnerHTML={{ __html: description }} />
 
           <ProductActions
             sku={product.sku}

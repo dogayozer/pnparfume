@@ -122,7 +122,7 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
                 Benim İçin Özelleştir
               </div>
             </div>
-            <p className="text-[11px] md:text-xs text-foreground/50 leading-relaxed max-w-sm mx-auto sm:mx-0 sm:ml-2">
+            <p className="text-xs md:text-sm text-foreground/50 leading-relaxed max-w-sm mx-auto sm:mx-0 sm:ml-2">
               Daha fazla yoğunlaştırabilir veya sevdiğiniz başka bir koku ile MİX edebilir, şişe ebatını değiştirebilirsiniz.
             </p>
           </div>
@@ -139,18 +139,18 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
 
                   {/* Konsantrasyon */}
                   <div>
-                    <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-foreground/50 mb-3">Konsantrasyon</h4>
+                    <h4 className="text-xs md:text-sm font-bold uppercase tracking-widest text-foreground/50 mb-3">Konsantrasyon</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
                       <button
                         onClick={() => setConcentration('edp')}
-                        className={`flex items-center justify-between p-3 md:px-4 md:py-3 rounded-xl border text-[11px] md:text-sm transition-colors ${concentration === 'edp' ? 'border-accent-gold bg-accent-gold/10 text-foreground' : 'border-foreground/10 text-foreground/60 hover:border-foreground/30'}`}
+                        className={`flex items-center justify-between p-3 md:px-4 md:py-3 rounded-xl border text-sm md:text-base transition-colors ${concentration === 'edp' ? 'border-accent-gold bg-accent-gold/10 text-foreground' : 'border-foreground/10 text-foreground/60 hover:border-foreground/30'}`}
                       >
                         EDP (Standart)
                         {concentration === 'edp' && <Check size={14} className="text-accent-gold" />}
                       </button>
                       <button
                         onClick={() => setConcentration('extrait')}
-                        className={`flex items-center justify-between p-3 md:px-4 md:py-3 rounded-xl border text-[11px] md:text-sm transition-colors ${concentration === 'extrait' ? 'border-accent-gold bg-accent-gold/10 text-foreground' : 'border-foreground/10 text-foreground/60 hover:border-foreground/30'}`}
+                        className={`flex items-center justify-between p-3 md:px-4 md:py-3 rounded-xl border text-sm md:text-base transition-colors ${concentration === 'extrait' ? 'border-accent-gold bg-accent-gold/10 text-foreground' : 'border-foreground/10 text-foreground/60 hover:border-foreground/30'}`}
                       >
                         Esans (Extrait) +{EXTRAIT_SURCHARGE} ₺
                         {concentration === 'extrait' && <Check size={14} className="text-accent-gold" />}
@@ -160,7 +160,7 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
 
                   {/* Şişe Seçimi (kutu dahil) */}
                   <div>
-                    <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-foreground/50 mb-3">Şişe Seçimi (Kutu Dahil)</h4>
+                    <h4 className="text-xs md:text-sm font-bold uppercase tracking-widest text-foreground/50 mb-3">Şişe Seçimi (Kutu Dahil)</h4>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3">
                       {BOTTLE_OPTIONS.map(b => (
                         <button
@@ -169,8 +169,8 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
                           className={`flex flex-col items-center gap-1.5 p-2 md:p-3 rounded-xl border transition-colors ${bottleCode === b.code ? 'border-accent-gold bg-accent-gold/10' : 'border-foreground/10 hover:border-foreground/30'}`}
                         >
                           <img src={toSecureImageUrl(b.imageUrl)} alt={b.label} className="w-10 h-10 md:w-14 md:h-14 object-contain" />
-                          <span className="text-[10px] md:text-[11px] font-medium text-foreground text-center leading-tight">{b.label}</span>
-                          <span className="text-[9px] md:text-[10px] text-foreground/50">{b.volumeMl}ml • {b.price} ₺</span>
+                          <span className="text-xs md:text-sm font-medium text-foreground text-center leading-tight">{b.label}</span>
+                          <span className="text-[10px] md:text-xs text-foreground/50">{b.volumeMl}ml • {b.price} ₺</span>
                           {bottleCode === b.code && <Check size={12} className="text-accent-gold mt-1" />}
                         </button>
                       ))}
@@ -185,7 +185,7 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
                     </div>
                     <button
                       onClick={handleAddCustomToCart}
-                      className="flex items-center justify-center gap-2 px-4 py-3 md:px-6 md:py-3 bg-foreground text-background rounded-full text-[10px] md:text-sm font-medium uppercase tracking-widest hover:bg-accent-gold/80 transition-colors"
+                      className="flex items-center justify-center gap-2 px-4 py-3 md:px-6 md:py-3 bg-foreground text-background rounded-full text-xs md:text-sm font-medium uppercase tracking-widest hover:bg-accent-gold/80 transition-colors"
                     >
                       <ShoppingCart size={16} /> Sepete Ekle
                     </button>
@@ -206,7 +206,7 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
                       <Wand2 size={16} /> Bu Ürünü Bana Mix&apos;le (+{300} TL&apos;den başlar)
                     </button>
                     {!canMix && (
-                      <p className="text-[11px] text-foreground/40 mt-2 text-center">
+                      <p className="text-xs text-foreground/40 mt-2 text-center">
                         Mix seçeneği yalnızca &quot;Extrait&quot; konsantrasyonu seçildiğinde aktif olur.
                       </p>
                     )}
