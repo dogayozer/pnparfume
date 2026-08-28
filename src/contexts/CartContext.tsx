@@ -27,6 +27,11 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isCartOpen, setIsCartOpen] = useState(false)
+  // İlk yükleme tamamlanana kadar "kaydet" efekti localStorage'a yazmasın —
+  // aksi halde başlangıçtaki boş items state'i, henüz işlenmemiş "yükle"
+  // güncellemesinden önce localStorage'daki gerçek sepeti kalıcı olarak ezer
+  // (bkz. checkout sonrası sepetin sıfırlanması hatası).
+  const [isLoaded, setIsLoaded] = useState(false)
 
   // Load from local storage
   useEffect(() => {
@@ -34,10 +39,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (saved) {
       try { setItems(JSON.parse(saved)) } catch (e) {}
     }
+    setIsLoaded(true)
   }, [])
 
   // Save to local storage and sync with account if logged in (Debounced 1500ms for Neon compute savings)
   useEffect(() => {
+    if (!isLoaded) return
     localStorage.setItem('pn_cart', JSON.stringify(items))
 
     const timer = setTimeout(() => {
@@ -57,7 +64,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }, 1500)
 
     return () => clearTimeout(timer)
-  }, [items])
+  }, [items, isLoaded])
 
   const addToCart = (item: CartItem) => {
     setItems(prev => {

@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     const config = await prisma.aiConfig.findFirst()
     const configMs = Date.now() - tConfigStart
     
-    let systemPrompt = config?.system_prompt || `Sen PN Parfüm'ün Kişisel Koku Uzmanı ve Yapay Zeka Satış Asistanısın. 
+    const DEFAULT_SYSTEM_PROMPT = `Sen PN Parfüm'ün Kişisel Koku Uzmanı ve Yapay Zeka Satış Asistanısın. 
 Adın "Aura". Müşterilerle son derece lüks, samimi ve ikna edici bir dille konuşuyorsun.
 Mesajların kısa, zarif ve vurucu olmalı.
 
@@ -64,6 +64,13 @@ KULLANICI PARFÜM ÖNERİSİ İSTEDİĞİNDE:
 SATIŞ KAPATMA VE İNDİRİM:
 - Müşteri kararsız kaldığında veya indirim istediğinde, inisiyatif alarak "generateDiscount" aracını kullan ve ona özel bir kupon kodu oluştur.
 - Her ürün önerdiğinde SKU kodunu belirt (Örn: "PN 101").`
+
+    let systemPrompt = config?.system_prompt || DEFAULT_SYSTEM_PROMPT;
+
+    // TELİF/MARKA KURALI (KESİN): HER ZAMAN EKLENMELİ
+    systemPrompt += `\n\nTELİF/MARKA KURALI (KESİN):
+- Kendi ürünlerimizden bahsederken ASLA başka bir markanın veya "ilham alınan" orijinal parfümün adını yazma (Örn: Gucci, Dior, Tom Ford, Sauvage vb.) — SADECE "PN {kod}" formatını kullan.
+- Müşteri "Sauvage'e benzer bir şey var mı?" gibi bir marka adı söylerse, cevabında o marka adını tekrar etme; doğrudan "PN {kod}" ile öner.`
 
     if (config?.active_campaign) {
       systemPrompt += `\n\nAKTİF KAMPANYA:\n${config.active_campaign}`
@@ -113,10 +120,9 @@ SATIŞ KAPATMA VE İNDİRİM:
                   ]
                 },
                 take: 3,
-                select: { 
-                  sku: true, 
-                  original_name: true, 
-                  gender: true, 
+                select: {
+                  sku: true,
+                  gender: true,
                   fragrance_family: true, 
                   mood_tag: true,
                   top_notes: true,
@@ -128,10 +134,9 @@ SATIŞ KAPATMA VE İNDİRİM:
               if (products.length === 0) {
                 products = await prisma.product.findMany({
                   take: 3,
-                  select: { 
-                    sku: true, 
-                    original_name: true, 
-                    gender: true, 
+                  select: {
+                    sku: true,
+                    gender: true,
                     fragrance_family: true, 
                     mood_tag: true,
                     top_notes: true,

@@ -19,7 +19,6 @@ export async function POST(req: Request) {
       where: { publish_status: { not: 'DRAFT' } },
       select: {
         sku: true,
-        original_name: true,
         gender: true,
         fragrance_family: true,
         occasion_tag: true,
@@ -27,8 +26,7 @@ export async function POST(req: Request) {
         top_notes: true,
         heart_notes: true,
         base_notes: true,
-        mood_tag: true,
-        price: true
+        mood_tag: true
       }
     })
 

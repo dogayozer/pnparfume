@@ -27,8 +27,7 @@ export async function POST(req: Request) {
         top_notes: true,
         heart_notes: true,
         base_notes: true,
-        mood_tag: true,
-        price: true
+        mood_tag: true
       }
     })
 
@@ -70,11 +69,15 @@ export async function POST(req: Request) {
         }
 
         if (suggestedName) {
+          // Not: suggestedName eşleştirme için kullanılıyor ama müşteriye
+          // gösterilen metinde marka/orijinal isim yerine yalnızca genel bir
+          // ifade kullanıyoruz (telif riski) — eşleşen ürünler zaten PN kodlarıyla listeleniyor.
+          const suggestedProduct = allProducts.find(p => p.original_name === suggestedName)
           return NextResponse.json({
             type: 'did_you_mean',
             suggestion: suggestedName,
-            text: `Şunu mu demek istediniz: ${suggestedName}?`,
-            products: []
+            text: `Aradığınız kokuya en yakın alternatifimizi bulduk, ister misiniz?`,
+            products: suggestedProduct ? [suggestedProduct] : []
           })
         }
       } catch (e) {

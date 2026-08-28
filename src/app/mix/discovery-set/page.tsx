@@ -131,7 +131,7 @@ export default function DiscoverySetPage() {
   const handleAddSetToCart = () => {
     if (selectedScents.length !== 5) return
 
-    const scentList = selectedScents.map(s => `PN ${s.sku} - ${s.original_name}`)
+    const scentList = selectedScents.map(s => `PN ${s.sku}`)
     
     addToCart({
       sku: 'DISCOVERY-5X10',
@@ -237,7 +237,7 @@ export default function DiscoverySetPage() {
                       </div>
 
                       <div className="my-1">
-                        <h4 className="font-medium text-xs text-zinc-100 line-clamp-1">{scent.original_name}</h4>
+                        <h4 className="font-medium text-xs text-zinc-100 line-clamp-1">{scent.fragrance_family?.[0] || 'Özel Seri'}</h4>
                         <p className="text-[10px] text-zinc-400 line-clamp-1">{scent.mood_tag || 'Özel Seri'}</p>
                       </div>
 
@@ -391,7 +391,7 @@ export default function DiscoverySetPage() {
                         </span>
                       </div>
 
-                      <h4 className="font-serif font-bold text-base text-zinc-100 mb-1">{perfume.original_name}</h4>
+                      <h4 className="font-serif font-bold text-base text-zinc-100 mb-1">{perfume.fragrance_family?.[0] || 'Özel Seri'}</h4>
                       <p className="text-xs text-zinc-400 line-clamp-1 mb-3">{perfume.mood_tag || 'Özel Seri'}</p>
 
                       {/* Note Pyramid summary */}

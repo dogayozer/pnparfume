@@ -153,7 +153,7 @@ export default function AuraWidget() {
   const handleAddToCart = (prod: any) => {
     addToCart({
       sku: prod.sku,
-      name: prod.original_name || `PN ${prod.sku}`,
+      name: `PN ${prod.sku}`,
       price: prod.price || 850,
       quantity: 1
     })

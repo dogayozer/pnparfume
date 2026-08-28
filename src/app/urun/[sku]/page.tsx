@@ -225,12 +225,13 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
 
           <div className="text-foreground/80 leading-relaxed text-sm md:text-lg font-light" dangerouslySetInnerHTML={{ __html: description }} />
 
-          <ProductActions 
+          <ProductActions
             sku={product.sku}
             name={title}
             price={displayPrice}
-            trendyolUrl={trendyolListing?.url} 
-            isOutOfStock={isOutOfStock} 
+            trendyolUrl={trendyolListing?.url}
+            isOutOfStock={isOutOfStock}
+            gender={product.gender}
           />
 
         </div>

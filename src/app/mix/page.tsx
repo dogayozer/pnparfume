@@ -53,19 +53,21 @@ export default function MixparfumHome() {
               </p>
               
               <div className="flex flex-col sm:flex-row items-center gap-6 justify-center md:justify-start">
-                <div 
-                  className="group relative flex items-center justify-center gap-4 px-10 py-5 bg-[#4A3527] text-[#F5F0E6] rounded-full overflow-hidden w-full sm:w-auto opacity-50 cursor-not-allowed"
+                <Link
+                  href="/mix/engine"
+                  className="group relative flex items-center justify-center gap-4 px-10 py-5 bg-[#4A3527] text-[#F5F0E6] rounded-full overflow-hidden w-full sm:w-auto hover:bg-[#3a2a1e] transition-colors"
                 >
-                  <span className="relative z-10 font-medium tracking-wide uppercase text-sm">Blend Engine (Yakında)</span>
+                  <span className="relative z-10 font-medium tracking-wide uppercase text-sm">Blend Engine'i Dene</span>
                   <div className="relative z-10 w-8 h-8 rounded-full bg-[#B48A3F] flex items-center justify-center">
                     <Wand2 size={14} className="text-white" />
                   </div>
-                </div>
-                <div 
-                  className="flex items-center gap-2 text-sm font-medium tracking-widest uppercase text-[#4A3527]/50 cursor-not-allowed"
+                </Link>
+                <Link
+                  href="/mix/discovery-set"
+                  className="flex items-center gap-2 text-sm font-medium tracking-widest uppercase text-[#4A3527]/70 hover:text-[#B48A3F] transition-colors"
                 >
-                  Keşif Seti Al (Yakında)
-                </div>
+                  Keşif Seti Al
+                </Link>
               </div>
             </motion.div>
           </div>
