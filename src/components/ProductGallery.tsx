@@ -170,7 +170,7 @@ export default function ProductGallery({ images, title, isOutOfStock, sku }: Pro
 
       {/* Thumbnails */}
       {images.length > 1 && (
-        <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x">
+        <div className="w-full flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x">
           {images.map((img, idx) => {
             const isVid = isVideo(img)
             const imgFailed = failedImages[idx]

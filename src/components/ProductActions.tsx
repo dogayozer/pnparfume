@@ -161,7 +161,7 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
                   {/* Şişe Seçimi (kutu dahil) */}
                   <div>
                     <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-foreground/50 mb-3">Şişe Seçimi (Kutu Dahil)</h4>
-                    <div className="grid grid-cols-3 gap-2 md:gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3">
                       {BOTTLE_OPTIONS.map(b => (
                         <button
                           key={b.code}
@@ -170,7 +170,7 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
                         >
                           <img src={toSecureImageUrl(b.imageUrl)} alt={b.label} className="w-10 h-10 md:w-14 md:h-14 object-contain" />
                           <span className="text-[10px] md:text-[11px] font-medium text-foreground text-center leading-tight">{b.label}</span>
-                          <span className="text-[9px] md:text-[10px] text-foreground/50">{b.volumeMl}ml · {b.price} ₺</span>
+                          <span className="text-[9px] md:text-[10px] text-foreground/50">{b.volumeMl}ml • {b.price} ₺</span>
                           {bottleCode === b.code && <Check size={12} className="text-accent-gold mt-1" />}
                         </button>
                       ))}
@@ -187,7 +187,7 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
                       onClick={handleAddCustomToCart}
                       className="flex items-center justify-center gap-2 px-4 py-3 md:px-6 md:py-3 bg-foreground text-background rounded-full text-[10px] md:text-sm font-medium uppercase tracking-widest hover:bg-accent-gold/80 transition-colors"
                     >
-                      <ShoppingCart size={16} /> Bu Konfigürasyonu Sepete Ekle
+                      <ShoppingCart size={16} /> Sepete Ekle
                     </button>
                   </div>
 

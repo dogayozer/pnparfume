@@ -40,7 +40,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="tr" className="scroll-smooth" suppressHydrationWarning>
-      <body className={`${inter.className} bg-background text-foreground antialiased selection:bg-accent-gold/30 selection:text-accent-gold`} suppressHydrationWarning>
+      <body className={`${inter.className} bg-background text-foreground antialiased selection:bg-accent-gold/30 selection:text-accent-gold overflow-x-hidden w-full`} suppressHydrationWarning>
         <CartProvider>
           <Navbar />
           <main className="min-h-screen pt-20">
