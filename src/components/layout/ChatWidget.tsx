@@ -9,6 +9,14 @@ import { useEffect, useRef, useState } from 'react'
 import { useCart } from '@/contexts/CartContext'
 import { getProductKasapImage } from '@/lib/kasapImages'
 
+// Mesaj ID üretici: sadece Date.now().toString() kullanmak, aynı milisaniye içinde
+// art arda oluşturulan mesajların (örn. "wizard" adımlarının otomatik eklenmesi)
+// AYNI id'yi almasına yol açıyordu — React'te "duplicate key" uyarısına ve
+// mesajların birbirinin yerine geçmesi riskine sebep olan asıl neden buydu.
+// Sayaç + zaman damgası birlikte her çağrıda benzersiz bir id garanti eder.
+let msgIdCounter = 0
+const genId = () => `${Date.now()}-${msgIdCounter++}`
+
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<any[]>([])
@@ -53,7 +61,7 @@ export default function ChatWidget() {
   const addWizardStep = (step: string) => {
     if (step === 'gender') {
       setMessages(prev => [...prev, {
-        id: Date.now().toString(),
+        id: genId(),
         role: 'wizard',
         content: 'Kimin için bir parfüm arıyoruz?',
         options: ['Kadın', 'Erkek', 'Unisex', 'Farketmez'],
@@ -61,7 +69,7 @@ export default function ChatWidget() {
       }])
     } else if (step === 'family') {
       setMessages(prev => [...prev, {
-        id: Date.now().toString(),
+        id: genId(),
         role: 'wizard',
         content: 'Hangi koku ailesi size daha çekici geliyor?',
         options: ['Çiçeksi', 'Odunsu', 'Oryantal', 'Ferah / Narenciye', 'Baharatlı', 'Gurme / Tatlı', 'Farketmez'],
@@ -69,7 +77,7 @@ export default function ChatWidget() {
       }])
     } else if (step === 'refinement') {
       setMessages(prev => [...prev, {
-        id: Date.now().toString(),
+        id: genId(),
         role: 'wizard',
         content: 'Sonuçları daraltmak ister misiniz?',
         options: [
@@ -93,7 +101,7 @@ export default function ChatWidget() {
     setMessages(prev => prev.map(m => m.step === step ? { ...m, options: [] } : m))
     
     // Add user message
-    setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', content: value }])
+    setMessages(prev => [...prev, { id: genId(), role: 'user', content: value }])
 
     if (step === 'did_you_mean') {
       const suggestionMsg = messages.find(m => m.step === 'did_you_mean')
@@ -102,11 +110,11 @@ export default function ChatWidget() {
         // Kısa bir "aranıyor" anı — gerçek bir gecikme değil, arka planda sonuç
         // zaten kendi kataloğumuzdan LLM'siz geliyor, sadece kullanıcıya bir
         // arama hissi veriyor.
-        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'Kütüphanemizde koku profilini arıyorum...' }])
-        setTimeout(() => handleSubmit(undefined, suggestionMsg.suggestion, 'Evet, doğru.'), 800)
+        setMessages(prev => [...prev, { id: genId(), role: 'assistant', content: 'Kütüphanemizde koku profilini arıyorum...' }])
+        setTimeout(() => handleSubmit(undefined, suggestionMsg.suggestion, 'Evet, doğru.', suggestionMsg.language), 800)
       } else {
         setFlowMode('initial')
-        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'Anladım. Rica etsem aradığınızı biraz daha detaylı tarif edebilir misiniz?' }])
+        setMessages(prev => [...prev, { id: genId(), role: 'assistant', content: 'Anladım. Rica etsem aradığınızı biraz daha detaylı tarif edebilir misiniz?' }])
       }
       return
     }
@@ -114,7 +122,7 @@ export default function ChatWidget() {
     if (step === 'show_results') {
       if (value === 'Sonuçları Gör') {
         setMessages(prev => [...prev, {
-          id: Date.now().toString(),
+          id: genId(),
           role: 'assistant',
           content: 'İşte size özel önerilerimiz:',
           toolResults: wizardProducts.length > 0 ? [{ toolName: 'searchProducts', result: wizardProducts }] : []
@@ -132,7 +140,7 @@ export default function ChatWidget() {
     if (step === 'refinement') {
       if (value === 'Filtreleme İstemiyorum') {
         setFlowMode('initial')
-        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'Harika! Yukarıdaki listeden beğendiğiniz ürünleri detaylı inceleyebilirsiniz. Başka bir konuda yardımcı olabilir miyim?' }])
+        setMessages(prev => [...prev, { id: genId(), role: 'assistant', content: 'Harika! Yukarıdaki listeden beğendiğiniz ürünleri detaylı inceleyebilirsiniz. Başka bir konuda yardımcı olabilir miyim?' }])
         return
       }
 
@@ -162,7 +170,7 @@ export default function ChatWidget() {
 
       if (filtered.length === 0) {
         setMessages(prev => [...prev, { 
-          id: Date.now().toString(), 
+          id: genId(), 
           role: 'assistant', 
           content: `Maalesef "${value}" filtresine uyan ürün kalmadı. Bir önceki listedeki ürünlere göz atabilirsiniz.`
         }])
@@ -171,7 +179,7 @@ export default function ChatWidget() {
       }
 
       setMessages(prev => [...prev, {
-        id: Date.now().toString(),
+        id: genId(),
         role: 'assistant',
         content: `İşte "${value}" kriterine göre daraltılmış sonuçlar:`,
         toolResults: [{ toolName: 'searchProducts', result: filtered }]
@@ -205,7 +213,7 @@ export default function ChatWidget() {
 
         if (data.products && data.products.length > 0) {
           setMessages(prev => [...prev, {
-            id: Date.now().toString(),
+            id: genId(),
             role: 'wizard',
             content: data.text || `Aramanıza uygun ${data.products.length} ürünümüz var.`,
             options: ['Sonuçları Gör'],
@@ -213,7 +221,7 @@ export default function ChatWidget() {
           }])
         } else {
           setMessages(prev => [...prev, {
-            id: Date.now().toString(),
+            id: genId(),
             role: 'assistant',
             content: data.text || 'Maalesef bu kriterlere uygun ürün bulamadık.',
             toolResults: []
@@ -222,7 +230,7 @@ export default function ChatWidget() {
         }
 
       } catch (error) {
-        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'Üzgünüm, sonuçları getirirken bir hata oluştu.' }])
+        setMessages(prev => [...prev, { id: genId(), role: 'assistant', content: 'Üzgünüm, sonuçları getirirken bir hata oluştu.' }])
         setFlowMode('initial')
       } finally {
         setIsLoading(false)
@@ -231,50 +239,62 @@ export default function ChatWidget() {
   }
 
   const handleInitialAction = (action: string) => {
-    setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', content: action }])
+    setMessages(prev => [...prev, { id: genId(), role: 'user', content: action }])
     
     if (action === 'Adım Adım Parfüm Öner') {
       setFlowMode('wizard')
       setTimeout(() => addWizardStep('gender'), 300)
     } else if (action === 'Benzer Bir Koku Arıyorum') {
       setFlowMode('similar')
-      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: 'Lütfen aradığınız kokuyu tarif edin veya sevdiğiniz bir parfüm adı yazın.' }])
+      setMessages(prev => [...prev, { id: genId(), role: 'assistant', content: 'Lütfen aradığınız kokuyu tarif edin veya sevdiğiniz bir parfüm adı yazın.' }])
     } else {
       setFlowMode('chat')
       handleSubmit(undefined, action)
     }
   }
 
-  const handleSubmit = async (e?: React.FormEvent, customInput?: string, displayOverride?: string) => {
+  const handleSubmit = async (e?: React.FormEvent, customInput?: string, displayOverride?: string, langOverride?: string) => {
     if (e) e.preventDefault()
 
     const textToSend = customInput || input
     if (!textToSend.trim() || isLoading) return
-    
+
     const lowerText = textToSend.toLowerCase()
-    
+
+    // targetFlowMode: setFlowMode(...) bu fonksiyon çağrısı SIRASINDA senkron olarak
+    // okunamıyor — React state güncellemesi bir sonraki render'a kadar closure'daki
+    // `flowMode`'u değiştirmiyor. Aşağıdaki endpoint seçimi bu yüzden `flowMode`
+    // state'i yerine bu local değişkeni kullanmalı (aksi halde ilk "chat" moduna
+    // geçişte istek yanlışlıkla /api/similar-match'e gidiyordu).
+    let targetFlowMode = flowMode
+
     // Intent Interception
     if (flowMode === 'initial' || flowMode === 'chat') {
       const isWizardIntent = /öner|oner|tavsiye|tavsıye|hangi parfüm|hangi parfum|koku seç|koku sec|yardım|yardim/i.test(lowerText) && !/gibi|benzer|muadil/i.test(lowerText)
       const isSimilarIntent = /gibi|benzer|muadil/i.test(lowerText)
 
       if (isWizardIntent) {
-        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', content: textToSend }])
+        setMessages(prev => [...prev, { id: genId(), role: 'user', content: textToSend }])
         setInput('')
         setFlowMode('wizard')
         setTimeout(() => addWizardStep('gender'), 300)
         return
       }
-      
+
       if (isSimilarIntent) {
+        targetFlowMode = 'similar'
         setFlowMode('similar')
+      } else if (flowMode === 'initial') {
+        // Genel bir soru/quick action — serbest sohbet moduna geçiyoruz, bu istek /api/chat'e gitmeli.
+        targetFlowMode = 'chat'
+        setFlowMode('chat')
       }
     }
 
     // Backend'e her zaman GERÇEK metin gönderilir (fast-path eşleştirmesi için — örn.
     // "Evet" onayında marka adı taşıyan suggestion). Ekranda gösterilen balon farklı
     // olabilir (displayOverride) — müşteriye marka adı asla gösterilmez (telif kuralı).
-    const sentMessageId = Date.now().toString()
+    const sentMessageId = genId()
     const newMessages = [...messages, { id: sentMessageId, role: 'user', content: textToSend }]
     setMessages(displayOverride
       ? [...messages, { id: sentMessageId, role: 'user', content: displayOverride }]
@@ -282,50 +302,90 @@ export default function ChatWidget() {
     if (!customInput) setInput('')
     setIsLoading(true)
     
+    // Giriş yapmış müşteriyi Aura'ya tanıtmak için — CartContext'in de kullandığı
+    // localStorage 'user' anahtarından okunuyor. Anonim ziyaretçide null gider,
+    // backend bu durumda hiçbir özel bilgi uydurmuyor (bkz. api/chat/route.ts).
+    let loggedInUserId: string | null = null
     try {
-      const endpoint = flowMode === 'chat' ? '/api/chat' : '/api/similar-match'
-      
+      const rawUser = localStorage.getItem('user')
+      if (rawUser) loggedInUserId = JSON.parse(rawUser)?.id || null
+    } catch { /* localStorage okunamadı, anonim devam et */ }
+
+    try {
+      const endpoint = targetFlowMode === 'chat' ? '/api/chat' : '/api/similar-match'
+
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          messages: newMessages.map(m => ({ role: m.role, content: m.content })).filter(m => m.role === 'user' || m.role === 'assistant')
+        body: JSON.stringify({
+          messages: newMessages.map(m => ({ role: m.role, content: m.content })).filter(m => m.role === 'user' || m.role === 'assistant'),
+          userId: loggedInUserId,
+          lang: langOverride
         })
       })
-      
-      const rawText = await res.text()
-      let data: any = {}
-      try {
-        data = JSON.parse(rawText.trim())
-      } catch {
-        data = { text: rawText }
-      }
-      
-      if (data.type === 'did_you_mean') {
-        const assistantMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'wizard',
-          content: data.text,
-          options: ['Evet', 'Hayır'],
-          step: 'did_you_mean',
-          suggestion: data.suggestion
+
+      if (endpoint === '/api/chat') {
+        // /api/chat standart JSON değil, NDJSON (satır başına bir JSON nesnesi) akışı
+        // döner: {"type":"token","value":...} satırları ve son olarak
+        // {"type":"done","toolResults":[...]}. Tek seferde JSON.parse etmeye çalışmak
+        // (aşağıdaki similar-match dalındaki gibi) burada her zaman başarısız olur.
+        const rawText = await res.text()
+        let assembledText = ''
+        let toolResults: any[] = []
+        for (const line of rawText.split('\n')) {
+          const trimmed = line.trim()
+          if (!trimmed) continue
+          try {
+            const evt = JSON.parse(trimmed)
+            if (evt.type === 'token') assembledText += evt.value
+            else if (evt.type === 'done') toolResults = evt.toolResults || []
+          } catch { /* bozuk/parçalı satır, atla */ }
         }
-        setMessages(prev => [...prev, assistantMessage])
-      } else {
-        const assistantMessage = {
-          id: (Date.now() + 1).toString(),
+        setMessages(prev => [...prev, {
+          id: genId(),
           role: 'assistant',
-          content: data.text,
-          toolResults: data.products ? [{ toolName: 'searchProducts', result: data.products }] : data.toolResults || []
-        }
-        setMessages(prev => [...prev, assistantMessage])
-        if (flowMode === 'similar') {
+          content: assembledText,
+          toolResults
+        }])
+        if (targetFlowMode === 'similar') {
           setFlowMode('initial')
+        }
+      } else {
+        const rawText = await res.text()
+        let data: any = {}
+        try {
+          data = JSON.parse(rawText.trim())
+        } catch {
+          data = { text: rawText }
+        }
+
+        if (data.type === 'did_you_mean') {
+          const assistantMessage = {
+            id: genId(),
+            role: 'wizard',
+            content: data.text,
+            options: ['Evet', 'Hayır'],
+            step: 'did_you_mean',
+            suggestion: data.suggestion,
+            language: data.language
+          }
+          setMessages(prev => [...prev, assistantMessage])
+        } else {
+          const assistantMessage = {
+            id: genId(),
+            role: 'assistant',
+            content: data.text,
+            toolResults: data.products ? [{ toolName: 'searchProducts', result: data.products }] : data.toolResults || []
+          }
+          setMessages(prev => [...prev, assistantMessage])
+          if (targetFlowMode === 'similar') {
+            setFlowMode('initial')
+          }
         }
       }
     } catch (err) {
       console.error(err)
-      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', content: 'Üzgünüm, şu an bağlantı kuramıyorum. Lütfen tekrar deneyin.' }])
+      setMessages(prev => [...prev, { id: genId(), role: 'assistant', content: 'Üzgünüm, şu an bağlantı kuramıyorum. Lütfen tekrar deneyin.' }])
     } finally {
       setIsLoading(false)
     }

@@ -105,7 +105,7 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
         <ArrowLeft size={18} /> Kataloğa Dön
       </Link>
 
-      <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-start min-w-0">
         <div>
           {/* Left: Product Visual/Gallery */}
           <ProductGallery 

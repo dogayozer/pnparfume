@@ -44,13 +44,28 @@ export async function POST(req: Request) {
       )
     }
 
-    const { messages } = await req.json()
+    const { messages, userId } = await req.json()
 
     // 1. Fetch AI Config from DB with timing
     const tConfigStart = Date.now()
     const config = await prisma.aiConfig.findFirst()
     const configMs = Date.now() - tConfigStart
-    
+
+    // 1.5 Giriş yapmış müşteriyi tanı (varsa) — Aura'nın ismiyle hitap edebilmesi,
+    // gerçek referans kodunu/cüzdan bakiyesini söyleyebilmesi için. userId yoksa
+    // (anonim ziyaretçi) bu adım tamamen atlanır, ekstra sorgu yapılmaz.
+    let customer: { name: string | null, referral_code: string | null, wallet_balance: number } | null = null
+    if (userId) {
+      try {
+        customer = await prisma.customer.findUnique({
+          where: { id: userId },
+          select: { name: true, referral_code: true, wallet_balance: true }
+        })
+      } catch (e) {
+        console.error('Customer lookup error:', e)
+      }
+    }
+
     const DEFAULT_SYSTEM_PROMPT = `Sen PN Parfüm'ün Kişisel Koku Uzmanı ve Yapay Zeka Satış Asistanısın. 
 Adın "Aura". Müşterilerle son derece lüks, samimi ve ikna edici bir dille konuşuyorsun.
 Mesajların kısa, zarif ve vurucu olmalı.
@@ -71,6 +86,32 @@ SATIŞ KAPATMA VE İNDİRİM:
     systemPrompt += `\n\nTELİF/MARKA KURALI (KESİN):
 - Kendi ürünlerimizden bahsederken ASLA başka bir markanın veya "ilham alınan" orijinal parfümün adını yazma (Örn: Gucci, Dior, Tom Ford, Sauvage vb.) — SADECE "PN {kod}" formatını kullan.
 - Müşteri "Sauvage'e benzer bir şey var mı?" gibi bir marka adı söylerse, cevabında o marka adını tekrar etme; doğrudan "PN {kod}" ile öner.`
+
+    // SATIŞ ÖNCELİĞİ (KESİN): HER ZAMAN EKLENMELİ — deneyim iyi olsun ama nihai
+    // görev satış. Kupon/tavsiye programı ÇAKTIRMADAN, sohbetin doğal bir parçası
+    // gibi geçmeli — asla ısrarcı, asla "İNDİRİM! FIRSAT!" tonunda değil.
+    systemPrompt += `\n\nSATIŞ ÖNCELİĞİ (KESİN):
+- Deneyimi kusursuz ve samimi tut, ama unutma: nihai görevin satış yapmak. Her sohbeti, doğal bir şekilde bir öneriye veya sepete ekleme adımına yönlendir.
+- Müşteri kararsız kaldığında, fiyat sorduğunda veya "pahalı" dediğinde inisiyatif al ve "generateDiscount" aracıyla ona özel bir kod oluştur. Bunu bir satış taktiği gibi değil, kişisel bir jest gibi sun (Örn: "Sizin için özel bir şey hazırladım").
+- Müşteri hemen karar vermek istemiyorsa, oluşturduğun kodu "şimdi değil, 24 saat içinde istediğin an kullanabilirsin" diye çerçevele — yani kodun sadece şu anki sohbete değil, bugün içindeki SONRAKİ bir alışverişine de geçerli olduğunu belirt (kod müşterinin hesabındaki kupon kasasına kaydedilir, 24 saat geçerlidir — bu süreyi asla "sınırsız" veya "hep geçerli" gibi yanlış tanıtma).
+- Sohbetin doğal bir anında (örn. müşteri memnun görünüyorsa veya vedalaşırken), tavsiye/referans programını ÇAKTIRMADAN, tek cümleyle hatırlat: bir arkadaşını PN Parfüm'e davet edip alışveriş yaptırırsa, kendi hesabına cüzdan bakiyesi/puan kazanır. Bunu her mesajda tekrarlama, zorlama, ısrar etme — sohbeti bitiren bir "bu arada" notu gibi bırak.
+- Bu üç unsuru (indirim kodu, sonraki alışveriş için geçerliliği, tavsiye programı) asla aynı anda, liste halinde, reklam gibi sıralama — sohbetin akışına göre en fazla birini, en doğal olanını seç.
+- KOD/ORAN UYDURMA (KESİN): Cevabında bir indirim kodu veya yüzdesi yazacaksan, bu MUTLAKA "generateDiscount" aracını çağırıp dönen sonuçtaki GERÇEK kod ve GERÇEK yüzde olmalı — asla kendi uydurduğun bir kod (örn. "AURA15") veya farklı bir yüzde yazma. Aracı çağırmadan indirimden bahsetme.`
+
+    // MÜŞTERİ BİLGİSİ: sadece giriş yapmış (userId gönderilmiş) ziyaretçilerde var.
+    // Anonim ziyaretçide bu blok hiç eklenmez — o durumda Aura ismiyle hitap etmemeli,
+    // "senin kodun X" dememeli, programı sadece genel hatlarıyla anlatmalı.
+    if (customer) {
+      systemPrompt += `\n\nGİRİŞ YAPMIŞ MÜŞTERİ BİLGİSİ (gerçek veri, uydurma):
+- Adı: ${customer.name || 'bilinmiyor (isimle hitap etme)'}
+- Cüzdan bakiyesi: ${customer.wallet_balance} TL
+- Kendi tavsiye/referans kodu: ${customer.referral_code || 'YOK — henüz Marka Elçisi programına katılmamış'}
+${customer.referral_code
+  ? `Tavsiye programından bahsederken kendi GERÇEK kodunu ("${customer.referral_code}") söyleyebilirsin.`
+  : `Referans kodu YOK — "senin kodun şu" diye bir kod UYDURMA. Bunun yerine, tavsiye programından bahsedeceğin doğal bir anda, "Girişimcilere Özel" / Marka Elçisi programına katılarak kendi kodunu edinebileceğini nazikçe belirt.`}`
+    } else {
+      systemPrompt += `\n\nMÜŞTERİ ANONİM (giriş yapmamış): İsimle hitap etme, hiçbir özel kod/bakiye uydurma. Tavsiye programından bahsedeceksen sadece genel hatlarıyla anlat.`
+    }
 
     if (config?.active_campaign) {
       systemPrompt += `\n\nAKTİF KAMPANYA:\n${config.active_campaign}`

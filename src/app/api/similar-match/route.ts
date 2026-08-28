@@ -17,26 +17,30 @@ export const maxDuration = 30
 // Dile duyarlı şablonlar — SADECE bu LLM çağrısının kapsadığı cevaplar için (site
 // geneli çeviri projesi ayrı/daha büyük bir iş, kapsam dışı). Fast-path (LLM'siz)
 // yanıtlar şimdilik Türkçe kalıyor çünkü orada dil algılayacak bir LLM çağrısı yok.
-const TEMPLATES: Record<string, { didYouMean: (sku: string) => string, notFound: string, results: (summary: string) => string }> = {
+const TEMPLATES: Record<string, { didYouMean: (sku: string) => string, notFound: string, results: (summary: string) => string, confirmed: string }> = {
   tr: {
     didYouMean: (sku) => `Bahsettiğiniz koku PN ${sku} olabilir mi?`,
     notFound: "Maalesef tarif ettiğiniz özelliklerde tam bir benzerlik bulamadım. Katalog sayfamızdan tüm ürünleri inceleyebilirsiniz.",
-    results: (s) => `"${s}" arayanlar için kütüphanemizden önerdiklerimiz:`
+    results: (s) => `"${s}" arayanlar için kütüphanemizden önerdiklerimiz:`,
+    confirmed: `Kütüphanemizdeki en yakın koku(lar):`
   },
   en: {
     didYouMean: (sku) => `Could you mean PN ${sku}?`,
     notFound: "We couldn't find a close match for that. Feel free to browse our full catalog.",
-    results: (s) => `Our picks from the library for "${s}":`
+    results: (s) => `Our picks from the library for "${s}":`,
+    confirmed: `Our closest match(es) from the library:`
   },
   ru: {
     didYouMean: (sku) => `Возможно, вы имеете в виду PN ${sku}?`,
     notFound: "К сожалению, точного совпадения не нашлось. Посмотрите весь каталог.",
-    results: (s) => `Наши рекомендации из библиотеки для «${s}»:`
+    results: (s) => `Наши рекомендации из библиотеки для «${s}»:`,
+    confirmed: `Наш самый близкий вариант из библиотеки:`
   },
   ar: {
     didYouMean: (sku) => `هل تقصد PN ${sku}؟`,
     notFound: "للأسف لم نجد تطابقًا دقيقًا. يمكنك تصفح الكتالوج الكامل.",
-    results: (s) => `توصياتنا من مكتبتنا لـ "${s}":`
+    results: (s) => `توصياتنا من مكتبتنا لـ "${s}":`,
+    confirmed: `أقرب توصياتنا من المكتبة:`
   }
 }
 const getTemplate = (lang?: string) => TEMPLATES[lang || 'tr'] || TEMPLATES.tr
@@ -44,7 +48,7 @@ const getTemplate = (lang?: string) => TEMPLATES[lang || 'tr'] || TEMPLATES.tr
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { messages } = body
+    const { messages, lang } = body
 
     if (!messages || messages.length === 0) {
       return NextResponse.json({ text: "Mesaj bulunamadı." })
@@ -66,24 +70,50 @@ export async function POST(req: Request) {
       }
     })
 
-    const findBrandMatches = (needle: string) => {
+    // Kataloğumuzda gündelik İngilizce/Türkçe konuşmada sık geçen, tek kelimelik
+    // isimler var (BLUE, BOSS, WISH, BLACK, ESCAPE, ADDICT, BELIEVE, ROMA, SOIR,
+    // AURA...) — bunlar HAM METİN üzerinde substring eşleşmesinde sürekli yanlış
+    // pozitif üretiyor (örn. "that popular blue bottle" -> "BLUE" ile eşleşir).
+    // Bu yüzden serbest metin taramasında (fast path) hariç tutuluyorlar; ama LLM
+    // zaten "brand" olarak bu ismi çıkardıysa (çok daha isabetli bir sinyal) yine
+    // de eşleştirmeye izin veriliyor — allowAmbiguous parametresiyle. Kataloğa
+    // yeni ürün eklendikçe bu liste gözden geçirilmeli.
+    const AMBIGUOUS_NAMES = new Set(['BLUE', 'BOSS', 'WISH', 'BLACK', 'ESCAPE', 'ADDICT', 'BELIEVE', 'ROMA', 'SOIR', 'BRUT', 'ENVY', 'AURA', 'CHROME'])
+
+    const findBrandMatches = (needle: string, allowAmbiguous = false) => {
       const needleLower = needle.toLowerCase()
-      return allProducts.filter(p => p.original_name && (needleLower.includes(p.original_name.toLowerCase()) || p.original_name.toLowerCase().includes(needleLower)))
+      // original_name en az 4 karakter olmalı — yoksa "GO", "PI", "ZEN" gibi kısa
+      // isimler her mesajda ("gourmand", "logo", "zen" içeren her cümle) yanlış
+      // pozitif eşleşme üretiyor.
+      return allProducts.filter(p => p.original_name && p.original_name.length >= 4 &&
+        (allowAmbiguous || !AMBIGUOUS_NAMES.has(p.original_name.toUpperCase())) &&
+        (needleLower.includes(p.original_name.toLowerCase()) || p.original_name.toLowerCase().includes(needleLower)))
     }
 
     // FAST PATH: veritabanındaki original_name ile basit metin eşleşmesi (sıfır LLM/web maliyeti).
     // Not: bu birebir metin eşleşmesi — yazım hatalarını yakalamaz, onu LLM adımı yakalıyor.
     const userMsgLower = lastUserMessage.toLowerCase().trim()
-    const fastMatches = findBrandMatches(lastUserMessage)
+    let fastMatches = findBrandMatches(lastUserMessage)
+
+    // Serbest metinde hiç eşleşme yoksa ama mesajın TAMAMI bir ürün adına birebir
+    // eşitse (örn. "Evet" onayında resubmit edilen "Blue"), bu artık belirsiz bir
+    // substring değil — tam eşitlik, ambiguous isim olsa bile kabul edilir.
+    if (fastMatches.length === 0 && userMsgLower.length > 0) {
+      const exactAmbiguous = allProducts.find(p => p.original_name && p.original_name.toLowerCase() === userMsgLower)
+      if (exactAmbiguous) fastMatches = [exactAmbiguous]
+    }
 
     if (fastMatches.length > 0 && userMsgLower.length > 3) {
       // Kullanıcı "Evet" deyip önerilen ismi (suggestion) geri gönderdiyse — bu, bir
       // ürünün original_name'iyle TAM eşleşir. Bu durumda onay sormadan doğrudan sonucu ver.
       const exactMatch = fastMatches.find(p => p.original_name!.toLowerCase() === userMsgLower)
       if (exactMatch) {
+        // "Evet" onayı burada bir önceki (LLM'li) cevabın dilini `lang` ile geri
+        // taşıyor — aksi halde İngilizce/Rusça/Arapça bir onaydan sonra sonuç
+        // her zaman Türkçe dönerdi (LLM'siz bu adımda dil algılama yok).
         const ordered = [exactMatch, ...fastMatches.filter(p => p.sku !== exactMatch.sku)]
         return NextResponse.json({
-          text: `Kütüphanemizdeki en yakın koku(lar):`,
+          text: getTemplate(lang).confirmed,
           products: ordered.slice(0, 3)
         })
       }
@@ -114,19 +144,20 @@ export async function POST(req: Request) {
       prompt: `Kullanıcının şu parfüm arama mesajını analiz et — yazım hatası içerebilir veya Türkçe dışında bir dilde olabilir: "${lastUserMessage}"`
     })
 
-    console.log('[SIMILAR-MATCH-DEBUG] intent =', JSON.stringify(intent))
     const t = getTemplate(intent.language)
 
     // LLM bir marka tanıdıysa (yazım hatası/başka dil olsa bile), kendi kataloğumuzda
     // tekrar dene — hâlâ web araması yok, sadece normalize edilmiş isimle aynı
-    // ücretsiz DB eşleştirmesini tekrarlıyoruz.
+    // ücretsiz DB eşleştirmesini tekrarlıyoruz. allowAmbiguous:true çünkü LLM'in
+    // marka olarak tanıması, ham metin substring taramasından çok daha isabetli.
     if (intent.brand) {
-      const brandMatches = findBrandMatches(intent.brand)
+      const brandMatches = findBrandMatches(intent.brand, true)
       if (brandMatches.length > 0) {
         const top = brandMatches[0]
         return NextResponse.json({
           type: 'did_you_mean',
           suggestion: top.original_name,
+          language: intent.language,
           text: t.didYouMean(top.sku),
           products: []
         })

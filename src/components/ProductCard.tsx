@@ -85,10 +85,10 @@ export default function ProductCard({ product }: { product: ProductProps }) {
         
         <div className="p-3 md:p-6 flex flex-col flex-grow">
           <div className="flex items-center justify-between mb-1 md:mb-2">
-            <span className="text-[9px] md:text-[10px] font-bold text-foreground/40 uppercase tracking-[0.2em]">
+            <span className="text-[10px] md:text-[11px] font-bold text-foreground/40 uppercase tracking-[0.2em]">
               PN {product.sku}
             </span>
-            <span className="text-[9px] md:text-[10px] font-bold text-accent-gold uppercase tracking-widest line-clamp-1 text-right ml-1 md:ml-2">
+            <span className="text-[10px] md:text-[11px] font-bold text-accent-gold uppercase tracking-widest line-clamp-1 text-right ml-1 md:ml-2">
               {product.families?.[0] || 'ÖZEL'}
             </span>
           </div>

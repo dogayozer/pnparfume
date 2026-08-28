@@ -185,7 +185,7 @@ export default function ProductGallery({ images, title, isOutOfStock, sku }: Pro
                     <div className="w-8 h-8 rounded-full bg-accent-gold/80 flex items-center justify-center text-black font-bold">
                       ▶
                     </div>
-                    <span className="text-[9px] uppercase font-bold tracking-wider text-accent-gold">Video</span>
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-accent-gold">Video</span>
                   </div>
                 ) : (
                   <Image 
