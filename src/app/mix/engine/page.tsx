@@ -294,6 +294,23 @@ function BlendEngineContent() {
     setIsCartOpen(true)
   }
 
+  // Add the 10ml discovery set version of the blend to the cart
+  const handleAddDiscoveryToCart = () => {
+    const scentList = selectedEssences.map(e => `PN ${e.sku} (%${Math.round(ratios[e.sku] || 0)})`)
+
+    addToCart({
+      sku: `${designCode}-10ML`,
+      name: `Tekli Keşif Seti (${designCode})`,
+      price: 200,
+      quantity: 1,
+      size: `10ml Numune`,
+      selectedScents: scentList,
+      imageUrl: toSecureImageUrl(selectedBottle.imageUrl)
+    })
+
+    setIsCartOpen(true)
+  }
+
   return (
     <div className="min-h-screen bg-[#F5F0E6] text-[#4A3527] font-sans pt-24 pb-20">
 
@@ -641,13 +658,16 @@ function BlendEngineContent() {
                   <div className="flex gap-4">
                     <button
                       onClick={handleAddBlendToCart}
-                      className="flex-1 py-4 bg-[#4A3527] text-white rounded-full text-sm font-medium uppercase tracking-widest hover:bg-[#B48A3F] transition-colors flex items-center justify-center gap-2"
+                      className="flex-1 py-4 bg-[#4A3527] text-white rounded-full text-xs md:text-sm font-medium uppercase tracking-widest hover:bg-[#B48A3F] transition-colors flex items-center justify-center gap-2"
                     >
                       <ShoppingCart size={16} /> Sepete Ekle
                     </button>
-                    <Link href="/mix/discovery-set" className="flex-1 py-4 bg-[#F5F0E6] text-[#4A3527] rounded-full text-sm font-medium uppercase tracking-widest hover:bg-[#B48A3F]/20 transition-colors text-center">
-                      Keşif Seti Al
-                    </Link>
+                    <button 
+                      onClick={handleAddDiscoveryToCart}
+                      className="flex-1 py-4 bg-[#F5F0E6] text-[#4A3527] rounded-full text-xs md:text-sm font-medium uppercase tracking-widest hover:bg-[#B48A3F]/20 transition-colors text-center"
+                    >
+                      Keşif Seti Al (200 ₺)
+                    </button>
                   </div>
                 </div>
 
