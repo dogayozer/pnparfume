@@ -496,49 +496,22 @@ function BlendEngineContent() {
               initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
             >
               <div className="text-center mb-12">
-                <h2 className="text-2xl sm:text-3xl md:text-5xl font-serif font-light mb-4">Esanslarını Seç</h2>
+                <h2 className="text-2xl sm:text-3xl md:text-5xl font-serif font-light mb-4">Harman Özeti</h2>
                 <p className="text-[#4A3527]/60 text-lg">
-                  Kütüphaneden en fazla 3 kompozit esans harmanlayabilirsin.
-                  (Seçilen: {selectedEssences.length}/3)
+                  Kişisel parfüm profiliniz hazır. Sağdaki panelden harman uyumunu inceleyip, son adıma geçebilirsiniz.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-                <div className="md:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-6">
-                  {loadingProducts ? (
-                    <div className="col-span-full py-16 text-center text-[#4A3527]/50">
-                      <RefreshCw className="animate-spin mx-auto mb-3" size={24} />
-                      Kütüphane yükleniyor...
-                    </div>
-                  ) : filteredEssences.length === 0 ? (
-                    <div className="col-span-full py-16 text-center text-[#4A3527]/50">
-                      Bu koku ailesinde henüz esans bulunmuyor.
-                    </div>
-                  ) : (
-                    filteredEssences.map(essence => {
-                    const isSelected = selectedEssences.find(e => e.sku === essence.sku)
-                    const intensity = essence.sillage_score || 5
-                    return (
-                      <button
-                        key={essence.sku}
-                        onClick={() => toggleEssence(essence)}
-                        disabled={!isSelected && selectedEssences.length >= 3}
-                        className={`text-left p-6 rounded-2xl border transition-all duration-300 flex flex-col h-full
-                          ${isSelected ? 'border-[#B48A3F] bg-[#B48A3F]/10 shadow-lg' : 'border-[#4A3527]/10 bg-white hover:border-[#B48A3F]/50'}
-                          ${(!isSelected && selectedEssences.length >= 3) ? 'opacity-40 cursor-not-allowed' : ''}
-                        `}
-                      >
-                        <div className="text-[#B48A3F] text-[10px] font-bold uppercase tracking-widest mb-2">{essence.fragrance_family?.[0] || 'Özel Seri'}</div>
-                        <h4 className="font-serif text-xl mb-4 flex-grow">PN {essence.sku}</h4>
-                        <div className="flex items-center gap-1">
-                          {[...Array(10)].map((_, i) => (
-                            <div key={i} className={`h-1 w-full rounded-full ${i < intensity ? 'bg-[#4A3527]' : 'bg-[#4A3527]/10'}`} />
-                          ))}
-                        </div>
-                      </button>
-                    )
-                  })
-                  )}
+                <div className="md:col-span-2 flex items-center justify-center p-8 bg-white/50 rounded-3xl border border-[#4A3527]/10 min-h-[400px]">
+                  <motion.img 
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.8 }}
+                    src="/images/products/pnunisexsise.png"
+                    alt="Harman Şişesi" 
+                    className="max-w-full max-h-[400px] object-contain drop-shadow-2xl mix-blend-multiply" 
+                  />
                 </div>
 
                 {/* Selection Sidebar */}
