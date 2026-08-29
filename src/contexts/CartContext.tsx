@@ -52,10 +52,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (savedUser) {
         try {
           const user = JSON.parse(savedUser)
+          const sessionToken = localStorage.getItem('pn_session')
           if (user && user.id) {
             fetch('/api/user/cart-sync', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {})
+              },
               body: JSON.stringify({ userId: user.id, cart: items })
             }).catch(() => {})
           }

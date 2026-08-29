@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireCustomer } from '@/lib/customerAuth'
 
 export async function POST(request: Request) {
   try {
@@ -7,6 +8,13 @@ export async function POST(request: Request) {
 
     if (!userId) {
       return NextResponse.json({ error: 'Kullanıcı ID gereklidir' }, { status: 400 })
+    }
+
+    // Önceden herhangi bir userId gönderildiğinde o müşterinin TÜM siparişlerini,
+    // cüzdan bakiyesini ve referans kazancını dönüyordu — kimlik doğrulaması yoktu.
+    // Artık istek, tam olarak bu userId'ye ait geçerli bir oturum token'ı taşımalı.
+    if (!requireCustomer(request, userId)) {
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
     }
 
     let user = await prisma.customer.findUnique({

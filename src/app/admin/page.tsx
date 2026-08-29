@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { 
   Settings, Save, AlertCircle, RefreshCw, Box, Users, TrendingUp, 
   Sparkles, Server, PackagePlus, UploadCloud, Percent, Truck, 
@@ -262,6 +262,11 @@ export default function AdminDashboard() {
   const [rememberMe, setRememberMe] = useState(true)
   const [loginError, setLoginError] = useState('')
   const [adminUser, setAdminUser] = useState<{ id?: string, username?: string, name?: string } | null>(null)
+  // Admin API'lerine giden her istekte Authorization header'ı olarak eklenen imzalı
+  // oturum token'ı. "Beni Hatırla" işaretli değilse localStorage'a yazılmaz ama bu
+  // state, sekme açık kaldığı sürece token'ı hafızada tutar (aksi halde her istek
+  // korumasız API'lere düşerdi).
+  const [adminToken, setAdminToken] = useState<string | null>(null)
 
   // Modals
   const [showPasswordModal, setShowPasswordModal] = useState(false)
@@ -372,6 +377,7 @@ export default function AdminDashboard() {
     if (savedSession && savedUser) {
       try {
         setAdminUser(JSON.parse(savedUser))
+        setAdminToken(savedSession)
         setIsAuthenticated(true)
       } catch (e) {
         localStorage.removeItem('pn_admin_session')
@@ -379,10 +385,31 @@ export default function AdminDashboard() {
     }
   }, [])
 
+  // Tüm /api/admin/* isteklerini bu fonksiyon üzerinden atıyoruz — Authorization
+  // header'ını otomatik ekler. 401 dönerse (token geçersiz/süresi dolmuş), admin
+  // oturumunu güvenli şekilde sonlandırıp giriş ekranına döner.
+  const adminFetch = useCallback(async (url: string, options: RequestInit = {}) => {
+    const res = await fetch(url, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        ...(adminToken ? { Authorization: `Bearer ${adminToken}` } : {})
+      }
+    })
+    if (res.status === 401) {
+      localStorage.removeItem('pn_admin_session')
+      localStorage.removeItem('pn_admin_user')
+      setAdminToken(null)
+      setIsAuthenticated(false)
+      setAdminUser(null)
+    }
+    return res
+  }, [adminToken])
+
   const fetchData = async (endpoint: string, setter: any) => {
     setLoading(true)
     try {
-      const res = await fetch(endpoint)
+      const res = await adminFetch(endpoint)
       if (res.ok) setter(await res.json())
     } catch (err) { console.error(err) }
     finally { setLoading(false) }
@@ -409,7 +436,7 @@ export default function AdminDashboard() {
     setCustomSmsSending(true)
 
     try {
-      const res = await fetch('/api/admin/notifications', {
+      const res = await adminFetch('/api/admin/notifications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -451,8 +478,12 @@ export default function AdminDashboard() {
       if (res.ok && data.success) {
         setIsAuthenticated(true)
         setAdminUser(data.user)
+        // Token'ı her zaman hafızada tut (adminFetch bunu kullanıyor) — "Beni Hatırla"
+        // yalnızca localStorage'a KALICI olarak yazılıp yazılmayacağını belirler,
+        // mevcut sekimde oturumun çalışıp çalışmayacağını değil.
+        setAdminToken(data.token)
         setNewUsernameInput(data.user.username || 'admin')
-        
+
         // Handle "Beni Hatırla"
         if (rememberMe) {
           localStorage.setItem('pn_admin_session', data.token)
@@ -477,6 +508,7 @@ export default function AdminDashboard() {
     setIsAuthenticated(false)
     setPassword('')
     setAdminUser(null)
+    setAdminToken(null)
   }
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -488,7 +520,7 @@ export default function AdminDashboard() {
 
     setSavingId('change_pass')
     try {
-      const res = await fetch('/api/admin/auth', {
+      const res = await adminFetch('/api/admin/auth', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -522,7 +554,7 @@ export default function AdminDashboard() {
   const handleUpdateRule = async (rule_key: string, newValue: number) => {
     setSavingId(rule_key)
     try {
-      const res = await fetch('/api/admin/scenarios', {
+      const res = await adminFetch('/api/admin/scenarios', {
         method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rule_key, rule_value: newValue })
       })
       if (res.ok) showMsg('success', 'Kural güncellendi.')
@@ -535,7 +567,7 @@ export default function AdminDashboard() {
     if (!aiConfig) return
     setSavingId('ai_config')
     try {
-      const res = await fetch('/api/admin/ai', {
+      const res = await adminFetch('/api/admin/ai', {
         method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(aiConfig)
       })
       if (res.ok) showMsg('success', 'AI ayarları kaydedildi.')
@@ -546,7 +578,7 @@ export default function AdminDashboard() {
 
   const handleToggleReviewApproval = async (reviewId: string, currentStatus: boolean) => {
     try {
-      const res = await fetch('/api/admin/reviews', {
+      const res = await adminFetch('/api/admin/reviews', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reviewId, isApproved: !currentStatus })
@@ -563,7 +595,7 @@ export default function AdminDashboard() {
   const handleDeleteReview = async (reviewId: string) => {
     if (!confirm('Bu yorumu kalıcı olarak silmek istediğinize emin misiniz?')) return
     try {
-      const res = await fetch(`/api/admin/reviews?id=${reviewId}`, { method: 'DELETE' })
+      const res = await adminFetch(`/api/admin/reviews?id=${reviewId}`, { method: 'DELETE' })
       if (res.ok) {
         showMsg('success', 'Yorum silindi.')
         setReviews(prev => prev.filter(r => r.id !== reviewId))
@@ -576,7 +608,7 @@ export default function AdminDashboard() {
   const handleUpdateOrderStatus = async (orderId: string, status: string, cargoCompany?: string, trackingCode?: string) => {
     setSavingId(`order_${orderId}`)
     try {
-      const res = await fetch('/api/admin/orders', {
+      const res = await adminFetch('/api/admin/orders', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -621,7 +653,7 @@ export default function AdminDashboard() {
     setSavingId('save_customer')
 
     try {
-      const res = await fetch('/api/admin/customers', {
+      const res = await adminFetch('/api/admin/customers', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -662,7 +694,7 @@ export default function AdminDashboard() {
     e.preventDefault()
     setSavingId('add_store')
     try {
-      const res = await fetch('/api/admin/marketplace/stores', {
+      const res = await adminFetch('/api/admin/marketplace/stores', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newStore)
       })
       if (res.ok) {
@@ -704,7 +736,7 @@ export default function AdminDashboard() {
 
       let totalProcessed = 0
       for (let i = 0; i < chunks.length; i++) {
-        const res = await fetch('/api/admin/products/import', {
+        const res = await adminFetch('/api/admin/products/import', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ products: chunks[i] })
@@ -738,7 +770,7 @@ export default function AdminDashboard() {
 
     setSavingId('bulk_price')
     try {
-      const res = await fetch('/api/admin/products/bulk-price', {
+      const res = await adminFetch('/api/admin/products/bulk-price', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(bulkPriceData)
@@ -818,7 +850,7 @@ export default function AdminDashboard() {
 
     try {
       const method = productModalMode === 'create' ? 'POST' : 'PUT'
-      const res = await fetch('/api/admin/products', {
+      const res = await adminFetch('/api/admin/products', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -847,7 +879,7 @@ export default function AdminDashboard() {
     setSavingId(`del_${sku}`)
 
     try {
-      const res = await fetch(`/api/admin/products?sku=${sku}`, { method: 'DELETE' })
+      const res = await adminFetch(`/api/admin/products?sku=${sku}`, { method: 'DELETE' })
       const data = await res.json()
       if (res.ok && data.success) {
         showMsg('success', data.message || 'Ürün silindi.')
@@ -865,7 +897,7 @@ export default function AdminDashboard() {
   const handleToggleProductStatus = async (prod: any) => {
     const newStatus = prod.publish_status === 'ACTIVE' ? 'PASSIVE' : 'ACTIVE'
     try {
-      const res = await fetch('/api/admin/products', {
+      const res = await adminFetch('/api/admin/products', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sku: prod.sku, publish_status: newStatus })

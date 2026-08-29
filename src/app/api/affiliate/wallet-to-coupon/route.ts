@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireCustomer } from '@/lib/customerAuth'
 
 export async function POST(req: Request) {
   try {
@@ -7,6 +8,13 @@ export async function POST(req: Request) {
 
     if (!userId || !amount || amount <= 0) {
       return NextResponse.json({ error: 'Geçerli bir tutar giriniz' }, { status: 400 })
+    }
+
+    // Bu koruma olmadan, birinin başka bir müşterinin ID'sini bilmesi/tahmin etmesi
+    // yeterliydi — onun cüzdan bakiyesini kendi adına kupona çevirebiliyordu
+    // (doğrudan finansal dolandırıcılık riski).
+    if (!requireCustomer(req, userId)) {
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
     }
 
     const user = await prisma.customer.findUnique({

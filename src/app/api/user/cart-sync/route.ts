@@ -1,11 +1,16 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireCustomer } from '@/lib/customerAuth'
 
 export async function POST(req: Request) {
   try {
     const { userId, cart } = await req.json()
     if (!userId) {
       return NextResponse.json({ error: 'User ID gereklidir' }, { status: 400 })
+    }
+
+    if (!requireCustomer(req, userId)) {
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
     }
 
     await prisma.customer.update({

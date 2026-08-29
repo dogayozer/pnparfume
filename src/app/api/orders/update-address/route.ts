@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireCustomer } from '@/lib/customerAuth'
 
 export async function POST(request: Request) {
   try {
@@ -7,6 +8,13 @@ export async function POST(request: Request) {
 
     if (!orderId || !newAddress || !userId) {
       return NextResponse.json({ error: 'Eksik bilgi' }, { status: 400 })
+    }
+
+    // Aşağıdaki "order.customerId !== userId" kontrolü tek başına yeterli değildi —
+    // userId istemciden geldiği için, orderId+userId ikilisini bilen biri yine de
+    // geçebiliyordu. Artık userId'nin GERÇEKTEN o oturuma ait olduğu da doğrulanıyor.
+    if (!requireCustomer(request, userId)) {
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
     }
 
     const order = await prisma.order.findUnique({

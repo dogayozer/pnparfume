@@ -5,9 +5,13 @@ import {
   sendOrderDeliveredNotification, 
   sendAffiliateCommissionNotification 
 } from '@/lib/notifications/notificationEngine'
+import { requireAdmin } from '@/lib/adminAuth'
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const admin = requireAdmin(req)
+    if (!admin) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
+
     const orders = await prisma.order.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
@@ -32,6 +36,9 @@ export async function GET() {
 
 export async function PUT(req: Request) {
   try {
+    const admin = requireAdmin(req)
+    if (!admin) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
+
     const body = await req.json()
     const { orderId, status, cargoCompany, trackingCode, customerAddress } = body
 

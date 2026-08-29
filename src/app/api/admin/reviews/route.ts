@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAdmin } from '@/lib/adminAuth'
 
 export async function GET(req: Request) {
   try {
+    const admin = requireAdmin(req)
+    if (!admin) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
+
     const { searchParams } = new URL(req.url)
     const status = searchParams.get('status') // 'all', 'pending', 'approved'
 
@@ -32,6 +36,9 @@ export async function GET(req: Request) {
 
 export async function PUT(req: Request) {
   try {
+    const admin = requireAdmin(req)
+    if (!admin) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
+
     const { reviewId, isApproved } = await req.json()
 
     if (!reviewId) {
@@ -56,6 +63,9 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
+    const admin = requireAdmin(req)
+    if (!admin) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
+
     const { searchParams } = new URL(req.url)
     const id = searchParams.get('id')
 

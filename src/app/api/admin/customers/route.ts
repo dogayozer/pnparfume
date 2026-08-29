@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAdmin } from '@/lib/adminAuth'
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const admin = requireAdmin(req)
+    if (!admin) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
+
     const customers = await prisma.customer.findMany({
       orderBy: { createdAt: 'desc' },
       take: 200,
@@ -46,6 +50,9 @@ export async function GET() {
 
 export async function PUT(req: Request) {
   try {
+    const admin = requireAdmin(req)
+    if (!admin) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
+
     const body = await req.json()
     const { customerId, partner_type, wallet_balance, earned_samples, phone, name, address, profession } = body
 

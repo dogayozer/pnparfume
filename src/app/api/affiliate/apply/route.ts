@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireCustomer } from '@/lib/customerAuth'
 
 export async function POST(req: Request) {
   try {
@@ -7,6 +8,10 @@ export async function POST(req: Request) {
 
     if (!userId) {
       return NextResponse.json({ error: 'Kullanıcı ID gereklidir' }, { status: 400 })
+    }
+
+    if (!requireCustomer(req, userId)) {
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
     }
 
     const user = await prisma.customer.findUnique({

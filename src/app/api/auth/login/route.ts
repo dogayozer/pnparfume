@@ -1,9 +1,29 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { signCustomerToken } from '@/lib/customerAuth'
+
+// Basit IP bazlı deneme sınırı — önceden hiç yoktu, şifre brute-force denemesine açıktı.
+const loginAttempts = new Map<string, { attempts: number; resetAt: number }>()
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const record = loginAttempts.get(ip)
+  if (!record || now > record.resetAt) {
+    loginAttempts.set(ip, { attempts: 1, resetAt: now + 15 * 60 * 1000 })
+    return true
+  }
+  if (record.attempts >= 10) return false
+  record.attempts += 1
+  return true
+}
 
 export async function POST(request: Request) {
   try {
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown-ip'
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json({ error: 'Çok fazla hatalı deneme yapıldı. Lütfen 15 dakika sonra tekrar deneyin.' }, { status: 429 })
+    }
+
     const { email, password } = await request.json()
 
     if (!email || !password) {
@@ -33,7 +53,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       message: 'Giriş başarılı.',
-      user: userWithoutPassword
+      user: userWithoutPassword,
+      // Bu token'sız daha önce /api/user/* uçları herhangi bir userId'ye körü körüne
+      // güveniyordu (herkes başka bir müşterinin verisini görebiliyordu). Artık bu
+      // imzalı token'ı Authorization header'ında göndermeyen/kendine ait olmayan bir
+      // userId ile eşleşmeyen istekler reddediliyor.
+      token: signCustomerToken(user.id)
     }, { status: 200 })
     
   } catch (error) {

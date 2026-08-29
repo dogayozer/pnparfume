@@ -1,12 +1,17 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/adminAuth'
 
+// NOT: Bu uç, frontend'de artık HİÇ kullanılmıyor gibi görünüyor (kod tabanında
+// çağrıldığı hiçbir yer bulunamadı) ve kaynak kodda düz metin, sabit kodlanmış bir
+// şifre ("Pds135596") içeriyordu — requireAdmin ile korumaya aldım ama bu eski
+// şifre artık hiçbir işe yaramıyor. Kullanılmıyorsa dosyanın tamamen silinmesi
+// önerilir (git geçmişinde o şifre yine de kalır, gerçek bir admin şifresi olarak
+// tekrar kullanılmamalı).
 export async function POST(req: Request) {
   try {
-    const { password } = await req.json()
-    if (password !== 'Pds135596') {
-      return NextResponse.json({ error: 'Hatalı şifre' }, { status: 401 })
-    }
+    const admin = requireAdmin(req)
+    if (!admin) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
 
     const totalOrders = await prisma.order.count()
     const totalCoupons = await prisma.coupon.count()

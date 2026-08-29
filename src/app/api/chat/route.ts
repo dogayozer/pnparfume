@@ -3,6 +3,7 @@ import { getAIModel } from '@/lib/ai-gateway'
 import { streamText, tool } from 'ai'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { requireCustomer } from '@/lib/customerAuth'
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30
@@ -54,7 +55,11 @@ export async function POST(req: Request) {
     // gerçek referans kodunu/cüzdan bakiyesini söyleyebilmesi için. userId yoksa
     // (anonim ziyaretçi) bu adım tamamen atlanır, ekstra sorgu yapılmaz.
     let customer: { name: string | null, referral_code: string | null, wallet_balance: number } | null = null
-    if (userId) {
+    // userId'nin GERÇEKTEN bu isteği atan oturuma ait olduğunu doğruluyoruz — aksi
+    // halde herhangi bir userId göndererek başka bir müşterinin adını/cüzdan
+    // bakiyesini/referans kodunu Aura'nın ağzından öğrenmek mümkündü. Token
+    // geçersizse sohbeti tamamen reddetmiyoruz, sadece anonim gibi devam ediyoruz.
+    if (userId && requireCustomer(req, userId)) {
       try {
         customer = await prisma.customer.findUnique({
           where: { id: userId },

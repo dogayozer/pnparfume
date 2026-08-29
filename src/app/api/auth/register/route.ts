@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { signCustomerToken } from '@/lib/customerAuth'
 
 export async function POST(request: Request) {
   try {
@@ -10,6 +11,12 @@ export async function POST(request: Request) {
     // Validate inputs
     if (!email || !password || !firstName) {
       return NextResponse.json({ error: 'E-posta, şifre ve ad zorunludur.' }, { status: 400 })
+    }
+
+    // Önceden şifre uzunluğu hiç kontrol edilmiyordu, 1 karakterlik şifreyle üye
+    // olunabiliyordu.
+    if (password.length < 6) {
+      return NextResponse.json({ error: 'Şifre en az 6 karakter olmalıdır.' }, { status: 400 })
     }
 
     // Check if user exists
@@ -64,7 +71,8 @@ export async function POST(request: Request) {
     return NextResponse.json({
       message: 'Üyelik başarıyla oluşturuldu.',
       user: userWithoutPassword,
-      coupon: coupon.code
+      coupon: coupon.code,
+      token: signCustomerToken(user.id)
     }, { status: 201 })
     
   } catch (error) {

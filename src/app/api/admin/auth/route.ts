@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { signAdminToken, requireAdmin } from '@/lib/adminAuth'
 
 // In-memory rate limiting map: IP -> { attempts: number, resetAt: number }
 const loginAttempts = new Map<string, { attempts: number; resetAt: number }>()
@@ -78,7 +79,10 @@ export async function POST(req: Request) {
         username: admin.username,
         name: admin.name
       },
-      token: `admin_session_${admin.id}_${Date.now()}`
+      // Önceden burada imzasız, hiçbir yerde doğrulanmayan rastgele bir string
+      // dönüyordu — tüm admin API'leri fiilen korumasızdı. Artık HMAC ile imzalanmış,
+      // requireAdmin() ile her admin isteğinde gerçekten doğrulanan bir token dönüyor.
+      token: signAdminToken(admin.id)
     })
   } catch (error) {
     console.error('Admin login error:', error)
@@ -88,6 +92,21 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
+    // Önceden bu endpoint'te (POST /api/admin/auth'un aksine) ne oturum kontrolü ne
+    // de deneme sınırı vardı — biri hiç giriş yapmadan doğrudan buraya istek atıp
+    // currentPassword'ü sınırsız deneyerek admin şifresini bulmaya çalışabilirdi.
+    const admin_ = requireAdmin(req)
+    if (!admin_) {
+      return NextResponse.json({ error: 'Yetkisiz erişim — lütfen tekrar giriş yapın' }, { status: 401 })
+    }
+
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown-ip'
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json({
+        error: 'Çok fazla hatalı deneme yapıldı. Güvenliğiniz için 15 dakika bekleyin.'
+      }, { status: 429 })
+    }
+
     const { currentPassword, newUsername, newPassword, newName } = await req.json()
 
     if (!currentPassword) {
@@ -113,6 +132,8 @@ export async function PUT(req: Request) {
     if (!isMatch) {
       return NextResponse.json({ error: 'Mevcut şifreniz hatalı' }, { status: 401 })
     }
+
+    resetRateLimit(ip)
 
     const updateData: any = {}
     if (newUsername && newUsername.trim()) updateData.username = newUsername.trim()

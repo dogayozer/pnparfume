@@ -305,9 +305,11 @@ export default function ChatWidget() {
     // localStorage 'user' anahtarından okunuyor. Anonim ziyaretçide null gider,
     // backend bu durumda hiçbir özel bilgi uydurmuyor (bkz. api/chat/route.ts).
     let loggedInUserId: string | null = null
+    let sessionToken: string | null = null
     try {
       const rawUser = localStorage.getItem('user')
       if (rawUser) loggedInUserId = JSON.parse(rawUser)?.id || null
+      sessionToken = localStorage.getItem('pn_session')
     } catch { /* localStorage okunamadı, anonim devam et */ }
 
     try {
@@ -315,7 +317,13 @@ export default function ChatWidget() {
 
       const res = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          // Aura, userId ile kişiselleştirilmiş bilgi (isim/cüzdan/referans kodu)
+          // vereceği için, o userId'nin gerçekten bu oturuma ait olduğunu bu token
+          // ile kanıtlıyoruz (bkz. api/chat/route.ts).
+          ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {})
+        },
         body: JSON.stringify({
           messages: newMessages.map(m => ({ role: m.role, content: m.content })).filter(m => m.role === 'user' || m.role === 'assistant'),
           userId: loggedInUserId,

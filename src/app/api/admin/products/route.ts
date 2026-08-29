@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAdmin } from '@/lib/adminAuth'
 
+// NOT: Bu dosyanın GET metodu kasıtlı olarak requireAdmin ile korunmuyor — admin
+// paneli dışında /mix/engine ve /mix/discovery-set (herkese açık, müşteri tarafı
+// sayfalar) de aktif ürün kataloğunu çekmek için bu uca istek atıyor. Ürün kataloğu
+// zaten /katalog sayfasında herkese açık olduğu için burada risk yok; sadece
+// POST/PUT/DELETE (ürün oluşturma/düzenleme/silme) admin yetkisi gerektiriyor.
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url)
@@ -45,6 +51,9 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const admin = requireAdmin(req)
+    if (!admin) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
+
     const body = await req.json()
     const {
       sku,
@@ -140,6 +149,9 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
+    const admin = requireAdmin(req)
+    if (!admin) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
+
     const body = await req.json()
     const {
       sku,
@@ -229,6 +241,9 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
+    const admin = requireAdmin(req)
+    if (!admin) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
+
     const { searchParams } = new URL(req.url)
     const sku = searchParams.get('sku')
 

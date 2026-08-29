@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAdmin } from '@/lib/adminAuth'
 
 const DEFAULT_RULES = [
   { rule_key: 'FREE_SHIPPING_LIMIT', rule_value: 500, description: 'Ücretsiz Kargo Barajı (TL)' },
@@ -9,8 +10,11 @@ const DEFAULT_RULES = [
 ]
 
 // Bütün senaryo kurallarını getirir
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const admin = requireAdmin(req)
+    if (!admin) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
+
     let scenarios = await prisma.scenarioRule.findMany({
       orderBy: { rule_key: 'asc' }
     })
@@ -37,6 +41,9 @@ export async function GET() {
 // Senaryo kuralını günceller
 export async function PUT(request: Request) {
   try {
+    const admin = requireAdmin(request)
+    if (!admin) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
+
     const body = await request.json()
     const { rule_key, rule_value } = body
 

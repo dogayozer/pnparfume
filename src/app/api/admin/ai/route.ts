@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAdmin } from '@/lib/adminAuth'
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const admin = requireAdmin(req)
+    if (!admin) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
+
     let config = await prisma.aiConfig.findFirst()
     
     if (!config) {
@@ -38,8 +42,11 @@ Kullanıcı iki farklı parfümü üst üste sıkmak isterse veya "bunu neyle ko
 
 export async function PUT(req: Request) {
   try {
+    const admin = requireAdmin(req)
+    if (!admin) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
+
     const data = await req.json()
-    
+
     let config = await prisma.aiConfig.findFirst()
     
     if (config) {

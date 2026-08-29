@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendNotification } from '@/lib/notifications/notificationEngine'
+import { requireAdmin } from '@/lib/adminAuth'
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const admin = requireAdmin(req)
+    if (!admin) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
+
     const notifications = await prisma.notification.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
@@ -22,6 +26,9 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const admin = requireAdmin(req)
+    if (!admin) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
+
     const { phone, message, type = 'sms' } = await req.json()
 
     if (!phone || !message) {

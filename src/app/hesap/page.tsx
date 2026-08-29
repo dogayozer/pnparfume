@@ -61,6 +61,9 @@ export default function AccountPage() {
       }
       
       localStorage.setItem('user', JSON.stringify(data.user))
+      // Bu token olmadan /api/user/* ve ilişkili uçlar artık isteği reddediyor —
+      // hesap sahipliği artık gerçekten doğrulanıyor (bkz. src/lib/customerAuth.ts).
+      if (data.token) localStorage.setItem('pn_session', data.token)
       window.location.href = '/profil'
     } catch (err: any) {
       setLoginError(err.message)
@@ -82,7 +85,12 @@ export default function AccountPage() {
       setError('Şifreler birbiriyle eşleşmiyor.')
       return
     }
-    
+
+    if (password.length < 6) {
+      setError('Şifre en az 6 karakter olmalıdır.')
+      return
+    }
+
     if (!termsConsent) {
       setError('Üyelik Koşulları ve Kişisel Verilerimin Korunması metinlerini onaylamanız gerekmektedir.')
       return
@@ -110,6 +118,7 @@ export default function AccountPage() {
       
       // Auto login after register
       localStorage.setItem('user', JSON.stringify(data.user))
+      if (data.token) localStorage.setItem('pn_session', data.token)
       setSuccess(true)
       setCouponCode(data.coupon)
     } catch (err: any) {

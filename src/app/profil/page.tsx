@@ -45,11 +45,22 @@ export default function ProfilePage() {
   const [convertLoading, setConvertLoading] = useState(false)
   const [convertMsg, setConvertMsg] = useState<{type: 'success' | 'error', text: string} | null>(null)
 
+  // Tüm /api/user/* ve ilgili çağrılar artık kimlik doğrulaması istiyor (bkz.
+  // src/lib/customerAuth.ts) — bu yardımcı, kayıtlı oturum token'ını okuyup
+  // Authorization header'ı olarak ekler.
+  const authHeaders = () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('pn_session') : null
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    }
+  }
+
   const fetchUserData = async (userId: string) => {
     try {
       const res = await fetch('/api/user/me', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({ userId })
       })
       if (res.ok) {
@@ -85,7 +96,7 @@ export default function ProfilePage() {
     try {
       const res = await fetch('/api/orders/update-address', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({ orderId, customerAddress: newOrderAddr })
       })
       const data = await res.json()
@@ -110,7 +121,7 @@ export default function ProfilePage() {
     try {
       const res = await fetch('/api/user/update', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({
           userId: user.id,
           phone: addressData.phone,
@@ -146,7 +157,7 @@ export default function ProfilePage() {
     try {
       const res = await fetch('/api/user/update', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({
           userId: user.id,
           currentPassword: passwordData.current,
@@ -177,7 +188,7 @@ export default function ProfilePage() {
     try {
       const res = await fetch('/api/affiliate/apply', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({
           userId: user.id,
           instagramHandle: applyInstagram,
@@ -212,7 +223,7 @@ export default function ProfilePage() {
     try {
       const res = await fetch('/api/affiliate/wallet-to-coupon', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({
           userId: user.id,
           amount: amountNum
