@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { ArrowLeft, Eye, EyeOff, Copy, Check } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 export default function AccountPage() {
   // Login State
@@ -17,7 +18,16 @@ export default function AccountPage() {
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
-  
+
+  // QR kutu sayfasından (/hosgeldin) "Kurucu Üyeliğimi Tamamla" ile gelen müşterinin
+  // az önce bıraktığı telefon numarasını burada tekrar yazdırmıyoruz — form baştan
+  // dolu geliyor, "üyelik formunu doldurmaktan üşenme" sürtünmesini azaltıyor.
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    const qrPhone = searchParams.get('phone')
+    if (qrPhone) setPhone(qrPhone)
+  }, [searchParams])
+
   const [birthYear, setBirthYear] = useState('')
   const [birthMonthDay, setBirthMonthDay] = useState('')
   const [profession, setProfession] = useState('')

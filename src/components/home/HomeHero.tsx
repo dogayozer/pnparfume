@@ -9,7 +9,8 @@ const subMessages = [
   "Girdiğiniz odada bırakacağınız iz, sadece bir koku değil; karakterinizin, otoritenizin ve çekiciliğinizin sessiz bir manifestosudur.",
   "Bir koku, bir cümle söylemeden konuşur. Siz odadan çıktıktan sonra bile geride kalan şey; adınız değil, bıraktığınız duygudur.",
   "Parfüm bir aksesuar değildir, bir duruştur. Her sıkışta, kim olduğunuzu değil, kim olmaya karar verdiğinizi ilan edersiniz.",
-  "Bazı şeyler görünmeden fark edilir. Kokunuz, sizi tanımadan önce insanların sizinle ilgili hissettiği ilk şeydir — sessiz ama unutulmaz."
+  "Bazı şeyler görünmeden fark edilir. Kokunuz, sizi tanımadan önce insanların sizinle ilgili hissettiği ilk şeydir — sessiz ama unutulmaz.",
+  "Sen farklısın. Neden parfümün aynı olsun?"
 ]
 
 export default function HomeHero() {
