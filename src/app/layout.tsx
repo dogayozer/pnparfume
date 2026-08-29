@@ -14,7 +14,14 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://pnparfume.com'),
   title: 'PN Parfüm | Özel ve Niş Koku Deneyimi',
   description: 'Yapay zeka analiz ilkeleriyle teninize en uygun imza kokuyu keşfedin. Açık parfümde lüks ve kalıcılığın yeni adresi PN Parfüm.',
-  keywords: ['açık parfüm', 'niş parfüm', 'kişiye özel parfüm', 'kalıcı parfüm', 'erkek parfüm', 'kadın parfüm', 'Pien parfüm'],
+  keywords: [
+    'açık parfüm', 'niş parfüm', 'kişiye özel parfüm', 'kalıcı parfüm',
+    'erkek parfüm', 'parfüm erkek', 'kadın parfüm', 'unisex parfüm',
+    'en iyi erkek parfümleri', 'kendi parfümünü yap', 'imza parfüm', 'imza koku',
+    'Pien parfüm', 'indirimli parfüm', 'öğrenci parfüm', 'gece parfümü',
+    'date parfümü', 'spor parfüm', 'günlük parfüm', 'ofis parfümü',
+    'yaz parfümü', 'kış parfümü', 'odunsu parfüm', 'çiçeksi parfüm', 'tatlı parfüm'
+  ],
   openGraph: {
     title: 'PN Parfüm | Özel ve Niş Koku Deneyimi',
     description: 'Yapay zeka analiz ilkeleriyle teninize en uygun imza kokuyu keşfedin.',

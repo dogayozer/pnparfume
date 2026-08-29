@@ -2,10 +2,21 @@
 
 import Link from 'next/link'
 import { ArrowLeft, Eye, EyeOff, Copy, Check } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 
+// useSearchParams() bir Suspense sınırı içinde olmadan build'i kırıyordu ("Error
+// occurred prerendering page /hesap") — Next.js bunu statik olarak önceden
+// oluşturamıyor. Asıl sayfayı ayrı bir bileşene taşıyıp dışarıdan Suspense'e sarıyoruz.
 export default function AccountPage() {
+  return (
+    <Suspense fallback={null}>
+      <AccountPageInner />
+    </Suspense>
+  )
+}
+
+function AccountPageInner() {
   // Login State
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')

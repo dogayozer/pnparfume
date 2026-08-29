@@ -4,6 +4,30 @@ import FilterSidebar from '@/components/catalog/FilterSidebar'
 import MobileFilterSort from '@/components/catalog/MobileFilterSort'
 import Pagination from '@/components/catalog/Pagination'
 
+// SEO: aktif filtreye göre başlık/açıklama üretiyoruz — önceden ?gender=Erkek olsun
+// olmasın katalog hep aynı "Tüm Parfümler" başlığını taşıyordu.
+export async function generateMetadata({
+  searchParams
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const sp = await searchParams
+  const gender = typeof sp.gender === 'string' ? sp.gender : undefined
+  const family = typeof sp.family === 'string' ? sp.family : undefined
+
+  if (!gender && !family) {
+    return {
+      title: 'Tüm Parfümler | Erkek, Kadın ve Unisex Koleksiyon | PN Parfüm',
+      description: 'Yapay zeka destekli koku analiziyle sana en uygun parfümü bul. Erkek, kadın ve unisex parfüm koleksiyonunun tamamı tek sayfada.'
+    }
+  }
+  const parts = [family, gender].filter(Boolean).join(' ')
+  return {
+    title: `${parts} Parfüm Koleksiyonu | Filtrelenmiş Katalog | PN Parfüm`,
+    description: `${parts} parfüm seçeneklerini incele, teninize uygun olanı filtrele. PN Parfüm koleksiyonundan ${parts.toLowerCase()} kokular.`
+  }
+}
+
 export default async function KatalogPage({
   searchParams,
 }: {

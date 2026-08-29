@@ -9,6 +9,30 @@ import ProductReviews from '@/components/ProductReviews'
 
 export const revalidate = 86400 // Cache for 24 hours (super fast loading)
 
+// SEO: her ürün sayfası artık kendi başlığını/açıklamasını taşıyor — önceden 339
+// ürünün TAMAMI ana layout'un tek, genel başlığını paylaşıyordu, bu da Google'ın
+// hiçbir ürünü diğerinden ayırt edememesi anlamına geliyordu.
+export async function generateMetadata({ params }: { params: Promise<{ sku: string }> }) {
+  const { sku } = await params
+  const product = await prisma.product.findUnique({
+    where: { sku: decodeURIComponent(sku) },
+    select: { sku: true, seo_name: true, gender: true, fragrance_family: true, mood_tag: true, top_notes: true }
+  })
+  if (!product) return {}
+
+  const displayTitle = product.seo_name || `PN ${product.sku}`
+  const familyText = product.fragrance_family?.[0] || ''
+  const title = `${displayTitle} | ${product.gender} ${familyText} Parfüm | PN Parfüm`
+  const description = `${displayTitle} — ${product.mood_tag || 'karakterli bir koku'}. Üst notalar: ${product.top_notes}. Kalıcı, ${familyText.toLowerCase()} bir ${product.gender?.toLowerCase()} parfümü.`.slice(0, 160)
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `https://pnparfume.com/urun/${product.sku}` },
+    openGraph: { title, description, url: `https://pnparfume.com/urun/${product.sku}`, siteName: 'PN Parfüm', locale: 'tr_TR', type: 'website' }
+  }
+}
+
 function parseDescription(desc: string) {
   if (!desc) return '';
   if (desc.includes('<p>') || desc.includes('<div>') || desc.includes('<br>')) return desc;
