@@ -92,17 +92,31 @@ export default function MobileFilterSort() {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="relative w-[85vw] max-w-sm h-full bg-background border-r border-foreground/10 shadow-2xl flex flex-col pt-20 px-6 pb-6 overflow-y-auto"
+              className="relative w-[85vw] max-w-sm h-full bg-background border-r border-foreground/10 shadow-2xl flex flex-col pt-20 pb-6"
             >
-              <button 
+              <button
                 onClick={() => setIsFilterOpen(false)}
                 className="absolute top-6 right-6 p-2 text-foreground/50 hover:text-foreground transition-colors"
               >
                 <X size={28} />
               </button>
-              
-              <div className="mt-4">
-                <FilterSidebar />
+
+              {/* Seçim yapınca panel önceden hiç kapanmıyordu — filtreler URL'e doğru
+                  uygulanıyordu ama sonuç listesi bu panelin altında tamamen gizli
+                  kalıyordu, kullanıcıya "sonuç getirmiyor" gibi görünüyordu. */}
+              <div className="flex-1 overflow-y-auto px-6">
+                <div className="mt-4">
+                  <FilterSidebar />
+                </div>
+              </div>
+
+              <div className="px-6 pt-4 mt-2 border-t border-foreground/10">
+                <button
+                  onClick={() => setIsFilterOpen(false)}
+                  className="w-full bg-foreground text-background py-3 rounded-full text-sm font-bold hover:bg-accent-gold transition-colors"
+                >
+                  Sonuçları Göster
+                </button>
               </div>
             </motion.div>
           </div>

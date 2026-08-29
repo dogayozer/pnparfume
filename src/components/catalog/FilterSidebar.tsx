@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 const FILTERS = {
   seasons: ['Yaz', 'Kış / Sonbahar', 'Dört Mevsim'],
@@ -15,23 +15,41 @@ export default function FilterSidebar() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
+  // Bu sayfa server component olduğu için her filtre değişimi gerçek bir sunucu
+  // round-trip'i gerektiriyor (Prisma sorgusu). O round-trip tamamlanana kadar hem
+  // `searchParams` hook'u hem `window.location.search` ESKİ değeri gösteriyor. İki
+  // filtre art arda hızlıca tıklanırsa (örn. mobilde "Erkek" + "Odunsu"), ikinci
+  // tıklama bu eski/bayat kaynaktan yeni URL kurup ilk seçilen filtreyi tamamen
+  // siliyordu (63 sonuç yerine sadece tek filtreyle sınırlı bir sonuç, ya da hiç
+  // filtre uygulanmamış hali kalıyordu). Bunun yerine, en son GÖNDERİLEN (henüz
+  // sunucudan dönmemiş olsa bile) parametre durumunu senkron bir ref'te tutup bir
+  // sonraki tıklamayı onun üzerine inşa ediyoruz. Gerçek navigasyon sonunda
+  // `searchParams` güncellenince ref de onunla yeniden senkronlanıyor.
+  const pendingParamsRef = useRef(searchParams.toString())
+  useEffect(() => {
+    pendingParamsRef.current = searchParams.toString()
+  }, [searchParams])
+
   const createQueryString = useCallback(
     (name: string, value: string) => {
-      const params = new URLSearchParams(searchParams.toString())
+      const params = new URLSearchParams(pendingParamsRef.current)
       const current = params.get(name)
-      
+
       if (current === value) {
         params.delete(name) // Toggle off if already selected
       } else {
         params.set(name, value)
       }
-      
-      return params.toString()
+
+      const next = params.toString()
+      pendingParamsRef.current = next
+      return next
     },
-    [searchParams]
+    []
   )
 
   const clearFilters = () => {
+    pendingParamsRef.current = ''
     router.push('?')
   }
 
