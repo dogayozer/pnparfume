@@ -7,7 +7,7 @@ interface SendNotificationOptions {
   customerId?: string | null
   orderNumber?: string | null
   type?: 'sms' | 'whatsapp' | 'email'
-  triggerReason: 'order_created' | 'order_shipped' | 'order_delivered' | 'cart_abandonment' | 'affiliate_commission' | 'custom'
+  triggerReason: 'order_created' | 'order_shipped' | 'order_delivered' | 'cart_abandonment' | 'affiliate_commission' | 'refill_reminder' | 'custom'
   message: string
 }
 

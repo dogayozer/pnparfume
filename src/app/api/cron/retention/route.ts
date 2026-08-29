@@ -1,9 +1,20 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { sendBirthdayNotification } from '@/lib/notifications/notificationEngine'
+import { sendNotification, sendBirthdayNotification } from '@/lib/notifications/notificationEngine'
 
 // Vercel Cron / Nightly Retention, Birthday Automation & DB Log Archiving Route
 export async function GET(request: Request) {
+  // Vercel Cron istekleri otomatik olarak "Authorization: Bearer <CRON_SECRET>" gönderir.
+  // CRON_SECRET tanımlıysa doğrulanır; tanımlı değilse (henüz kurulmadıysa) eskisi gibi
+  // açık kalır — CRON_SECRET eklenene kadar bu route'u herkes tetikleyebilir, bilerek.
+  const cronSecret = process.env.CRON_SECRET
+  if (cronSecret) {
+    const authHeader = request.headers.get('authorization')
+    if (authHeader !== `Bearer ${cronSecret}`) {
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
+    }
+  }
+
   try {
     const today = new Date();
     const currentMonth = today.getMonth() + 1; // 1-12
@@ -58,17 +69,22 @@ export async function GET(request: Request) {
             }
           });
 
-          await prisma.notification.create({
-            data: {
-              customerId: order.customerId,
+          // ÖNCEDEN burada doğrudan prisma.notification.create({ status: 'sent' })
+          // yazılıyordu — NETGSM'e hiç istek atmadan veritabanına "gönderildi" diye
+          // YALAN kayıt düşülüyordu. sendNotification() hem gerçek gönderimi dener
+          // hem de gerçek sonuca göre (sent/failed/simulated) doğru logu yazıyor.
+          try {
+            await sendNotification({
               phone: order.customerPhone || order.customer?.phone,
+              customerId: order.customerId,
+              orderNumber: order.orderNumber,
               type: 'sms',
-              message_content: `Merhaba ${order.customer?.name || 'Değerli Müşterimiz'}, imza parfümünüz bitmek üzere olmalı. Sizin için tanımladığımız ${newCoupon.code} koduyla %10 indirimli olarak hemen yenileyebilirsiniz: https://pnparfume.com`,
-              trigger_reason: 'refill_reminder',
-              status: 'sent',
-              scheduledFor: today
-            }
-          });
+              triggerReason: 'refill_reminder',
+              message: `Merhaba ${order.customer?.name || 'Değerli Müşterimiz'}, imza parfümünüz bitmek üzere olmalı. Sizin için tanımladığımız ${newCoupon.code} koduyla %10 indirimli olarak hemen yenileyebilirsiniz: https://pnparfume.com`
+            })
+          } catch (smsErr) {
+            console.error(`Refill reminder SMS dispatch error for customer ${order.customerId}:`, smsErr)
+          }
 
           refillNotifsCreated++;
         }
