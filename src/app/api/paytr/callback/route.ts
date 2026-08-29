@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { sendOrderCreatedNotification } from '@/lib/notifications/notificationEngine'
+import { sendOrderCreatedNotification, sendAdminOrderEmail } from '@/lib/notifications/notificationEngine'
 
 export async function POST(req: Request) {
   try {
@@ -90,6 +90,48 @@ export async function POST(req: Request) {
         })
       } catch (notifErr) {
         console.error('Notification dispatch error in PayTR callback:', notifErr)
+      }
+
+      // "Al Kazan" — kayıtlı bir müşteriyse, tamamlanan her siparişte sonraki
+      // alışverişi için otomatik bir ödül kuponu tanımlanır (mevcut kupon
+      // sistemiyle aynı desen: tek kullanımlık, süreli). Misafir siparişlerinde
+      // (customerId yok) kupon oluşturulmuyor — ulaşabilecekleri bir hesap yok.
+      // NOT: %10 / 30 gün varsayılan bir değerdir, işletme kararınıza göre
+      // src/app/api/paytr/callback/route.ts içinde kolayca değiştirilebilir.
+      if (existingOrder.customerId) {
+        try {
+          const rewardCode = 'PNAL' + Math.random().toString(36).substring(2, 7).toUpperCase()
+          await prisma.coupon.create({
+            data: {
+              code: rewardCode,
+              discount_type: 'percentage',
+              value: 10,
+              ownerId: existingOrder.customerId,
+              source: 'purchase_reward',
+              is_active: true,
+              usage_limit: 1,
+              expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+            }
+          })
+        } catch (rewardErr) {
+          console.error('Purchase reward coupon error in PayTR callback:', rewardErr)
+        }
+      }
+
+      // Muhasebeye "yeni siparişiniz var" e-postası — ayrı bir try/catch'te, bu
+      // başarısız olsa bile siparişin kendisi ve müşteri SMS'i asla etkilenmesin.
+      try {
+        await sendAdminOrderEmail({
+          orderNumber: merchant_oid,
+          totalAmount: existingOrder.totalAmount,
+          customerName: existingOrder.customerName,
+          customerEmail: existingOrder.customerEmail,
+          customerPhone: existingOrder.customerPhone,
+          customerAddress: existingOrder.customerAddress,
+          items: existingOrder.items
+        })
+      } catch (emailErr) {
+        console.error('Admin order email dispatch error in PayTR callback:', emailErr)
       }
 
     } else {

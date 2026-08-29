@@ -4,6 +4,7 @@ import { useCart } from '@/contexts/CartContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Minus, Plus, ShoppingBag, Sparkles } from 'lucide-react'
 import { useState } from 'react'
+import PerksBanner from '@/components/PerksBanner'
 
 export default function CartModal() {
   const { isCartOpen, setIsCartOpen, items, removeFromCart, addToCart, totalAmount, clearCart } = useCart()
@@ -138,6 +139,10 @@ export default function CartModal() {
                     </button>
                   </div>
                   {error && <p className="text-accent-rose text-xs mt-[-16px] mb-4">{error}</p>}
+
+                  <div className="mb-4">
+                    <PerksBanner compact />
+                  </div>
 
                   <div className="space-y-2 mb-6">
                     <div className="flex justify-between text-foreground/60">

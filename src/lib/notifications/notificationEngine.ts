@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import nodemailer from 'nodemailer'
 
 interface SendNotificationOptions {
   phone?: string | null
@@ -85,6 +86,70 @@ export async function sendNotification(options: SendNotificationOptions) {
   } catch (dbErr) {
     console.error('Failed to log notification to database:', dbErr)
     return { success: true, status, message }
+  }
+}
+
+// Muhasebe/işletme bildirimi: her ödemesi onaylanan siparişte muhasebe@pienparfume.com.tr
+// adresine "yeni siparişiniz var" maili gider. SMTP_HOST/USER/PASS ortam değişkenleri
+// tanımlı değilse (henüz kurulmadıysa) sessizce loglar, sipariş akışını ASLA bozmaz —
+// diğer bildirim fonksiyonlarındaki "credential yoksa simüle et" deseniyle aynı mantık.
+export async function sendAdminOrderEmail(order: {
+  orderNumber: string
+  totalAmount: number
+  customerName?: string | null
+  customerEmail?: string | null
+  customerPhone?: string | null
+  customerAddress?: string | null
+  items?: any
+}) {
+  const smtpHost = process.env.SMTP_HOST
+  const smtpUser = process.env.SMTP_USER
+  const smtpPass = process.env.SMTP_PASS
+  const smtpPort = Number(process.env.SMTP_PORT) || 587
+  const adminEmail = 'muhasebe@pienparfume.com.tr'
+
+  if (!smtpHost || !smtpUser || !smtpPass) {
+    console.log(`[ADMIN ORDER EMAIL] SMTP yapılandırılmamış — ${order.orderNumber} için e-posta gönderilmedi (simülasyon).`)
+    return { success: false, simulated: true }
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: { user: smtpUser, pass: smtpPass }
+    })
+
+    const itemsList = Array.isArray(order.items)
+      ? order.items.map((i: any) => `- ${i.name || i.sku || 'Ürün'} x${i.quantity || 1}`).join('\n')
+      : '(ürün detayı bulunamadı)'
+
+    await transporter.sendMail({
+      from: `"PN Parfüm Sipariş Sistemi" <${smtpUser}>`,
+      to: adminEmail,
+      subject: `Yeni Siparişiniz Var — ${order.orderNumber} (${order.totalAmount} TL)`,
+      text: [
+        'Yeni bir sipariş ödemesi onaylandı.',
+        '',
+        `Sipariş No: ${order.orderNumber}`,
+        `Tutar: ${order.totalAmount} TL`,
+        `Müşteri: ${order.customerName || '-'}`,
+        `Telefon: ${order.customerPhone || '-'}`,
+        `E-posta: ${order.customerEmail || '-'}`,
+        `Adres: ${order.customerAddress || '-'}`,
+        '',
+        'Ürünler:',
+        itemsList,
+        '',
+        'Sipariş detayları için: https://pnparfume.com/admin'
+      ].join('\n')
+    })
+
+    return { success: true }
+  } catch (err: any) {
+    console.error('[ADMIN ORDER EMAIL] Gönderim hatası:', err)
+    return { success: false, error: err.message }
   }
 }
 

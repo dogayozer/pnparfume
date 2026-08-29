@@ -4,6 +4,7 @@ import HomeHighlights from '@/components/home/HomeHighlights'
 import ProductCard from '@/components/ProductCard'
 import Link from 'next/link'
 import MobileFilterSort from '@/components/catalog/MobileFilterSort'
+import PerksBanner from '@/components/PerksBanner'
 
 export default async function Home({
   searchParams,
@@ -93,6 +94,10 @@ export default async function Home({
            </Link>
         </div>
       </section>
+
+      <div className="pb-16">
+        <PerksBanner />
+      </div>
 
       <HomeHighlights />
 
