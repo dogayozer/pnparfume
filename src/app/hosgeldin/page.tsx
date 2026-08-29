@@ -3,7 +3,10 @@ import QrWelcomeClaim from '@/components/QrWelcomeClaim'
 import { ShieldCheck, Sparkles, Leaf } from 'lucide-react'
 
 export const metadata = {
-  title: 'Hoş Geldin | PN Parfüm'
+  title: 'Hoş Geldin | PN Parfüm',
+  // Bu sayfa sadece kutudaki QR kodu okutanlar için — Google'da aratılıp
+  // bulunmasın, arama sonuçlarında çıkmasın diye indexlenmeyi kapatıyoruz.
+  robots: { index: false, follow: false }
 }
 
 // Kutu üzerindeki QR kod buraya düşer. Arkaplan ve şişe videoları web için özel
