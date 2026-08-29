@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next'
 import { prisma } from '@/lib/prisma'
 import { SEO_LANDING_PAGES } from '@/lib/seoLandingPages'
+import { articles } from '@/data/articles'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const products = await prisma.product.findMany({
@@ -24,6 +25,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
+  // "Koku Rehberi" (/kesfet) blog makaleleri — src/data/articles.ts'te tanımlı,
+  // generateStaticParams ile statik üretiliyor ama sitemap'te hiç yer almıyordu.
+  const articleUrls = articles.map((a) => ({
+    url: `https://pnparfume.com/kesfet/${a.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly' as const,
+    priority: 0.6,
+  }))
+
   const staticRoutes = [
     '',
     '/katalog',
@@ -45,5 +55,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: route === '' ? 1 : route === '/katalog' ? 0.9 : 0.7,
   }))
 
-  return [...staticRoutes, ...keywordUrls, ...productUrls]
+  return [...staticRoutes, ...keywordUrls, ...articleUrls, ...productUrls]
 }
