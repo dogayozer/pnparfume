@@ -331,6 +331,11 @@ export default function AdminDashboard() {
   // New store form state
   const [newStore, setNewStore] = useState({ name: '', platform: 'trendyol', sellerId: '', apiKey: '', apiSecret: '' })
 
+  // Coupon Management States
+  const [coupons, setCoupons] = useState<any[]>([])
+  const [showCouponModal, setShowCouponModal] = useState(false)
+  const [newCoupon, setNewCoupon] = useState({ code: '', discount_type: 'percentage', value: 10, usage_limit: '', expiresInDays: '' })
+
   // Product Management States
   const [products, setProducts] = useState<any[]>([])
   const [productSearch, setProductSearch] = useState('')
@@ -424,6 +429,7 @@ export default function AdminDashboard() {
     else if (activeTab === 'notifications') fetchData('/api/admin/notifications', setNotifications)
     else if (activeTab === 'products') fetchData('/api/admin/products', setProducts)
     else if (activeTab === 'reports') fetchData('/api/admin/reports', setReports)
+    else if (activeTab === 'coupons') fetchData('/api/admin/coupons', setCoupons)
     else if (activeTab === 'api') {
       fetchData('/api/admin/marketplace/stores', setStores)
       fetchData('/api/admin/marketplace/orders', setMarketOrders)
@@ -911,6 +917,74 @@ export default function AdminDashboard() {
     }
   }
 
+  // --- Coupon Management ---
+  const handleCreateCoupon = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newCoupon.code.trim()) {
+      showMsg('error', 'Kupon kodu gereklidir')
+      return
+    }
+    setSavingId('create_coupon')
+    try {
+      const res = await adminFetch('/api/admin/coupons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: newCoupon.code,
+          discount_type: newCoupon.discount_type,
+          value: newCoupon.value,
+          usage_limit: newCoupon.usage_limit || null,
+          expiresInDays: newCoupon.expiresInDays || null
+        })
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        showMsg('success', `${data.coupon.code} kuponu oluşturuldu.`)
+        setShowCouponModal(false)
+        setNewCoupon({ code: '', discount_type: 'percentage', value: 10, usage_limit: '', expiresInDays: '' })
+        fetchData('/api/admin/coupons', setCoupons)
+      } else {
+        showMsg('error', data.error || 'Kupon oluşturulamadı')
+      }
+    } catch {
+      showMsg('error', 'Bağlantı hatası oluştu')
+    } finally {
+      setSavingId(null)
+    }
+  }
+
+  const handleToggleCoupon = async (coupon: any) => {
+    try {
+      const res = await adminFetch('/api/admin/coupons', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: coupon.id, is_active: !coupon.is_active })
+      })
+      if (res.ok) {
+        showMsg('success', `${coupon.code} ${!coupon.is_active ? 'aktif' : 'pasif'} yapıldı.`)
+        setCoupons(prev => prev.map(c => c.id === coupon.id ? { ...c, is_active: !coupon.is_active } : c))
+      }
+    } catch {
+      showMsg('error', 'Kupon güncellenemedi')
+    }
+  }
+
+  const handleDeleteCoupon = async (coupon: any) => {
+    if (!confirm(`"${coupon.code}" kuponunu kalıcı olarak silmek istediğinize emin misiniz?`)) return
+    try {
+      const res = await adminFetch(`/api/admin/coupons?id=${coupon.id}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (res.ok) {
+        showMsg('success', 'Kupon silindi.')
+        setCoupons(prev => prev.filter(c => c.id !== coupon.id))
+      } else {
+        showMsg('error', data.error || 'Kupon silinemedi')
+      }
+    } catch {
+      showMsg('error', 'Bağlantı hatası oluştu')
+    }
+  }
+
   // Filtered Products Calculation
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
@@ -1247,8 +1321,15 @@ export default function AdminDashboard() {
               <Settings size={18} /> Senaryo Kuralları
             </button>
 
-            <button 
-              onClick={() => setActiveTab('products')} 
+            <button
+              onClick={() => setActiveTab('coupons')}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors ${activeTab === 'coupons' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
+            >
+              <Tag size={18} /> Kuponlar
+            </button>
+
+            <button
+              onClick={() => setActiveTab('products')}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors ${activeTab === 'products' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
             >
               <UploadCloud size={18} /> Toplu Fiyat & Ürün
@@ -1320,6 +1401,7 @@ export default function AdminDashboard() {
               {activeTab === 'customers' && 'Müşteriler, Elçiler & Cüzdan Yönetimi'}
               {activeTab === 'notifications' && 'Bildirim & SMS Merkezi'}
               {activeTab === 'scenarios' && 'Senaryo Kuralları'}
+              {activeTab === 'coupons' && 'Kupon Yönetimi'}
               {activeTab === 'products' && 'Toplu Fiyat & Excel Ürün Yönetimi'}
               {activeTab === 'reviews' && 'Müşteri Yorumları & UGC Değerlendirmeleri'}
               {activeTab === 'ai' && 'Nöropazarlama & Yapay Zeka'}
@@ -1353,7 +1435,8 @@ export default function AdminDashboard() {
                 else if (activeTab === 'scenarios') fetchData('/api/admin/scenarios', setRules)
                 else if (activeTab === 'reports') fetchData('/api/admin/reports', setReports)
                 else if (activeTab === 'reviews') fetchData('/api/admin/reviews', setReviews)
-              }} 
+                else if (activeTab === 'coupons') fetchData('/api/admin/coupons', setCoupons)
+              }}
               disabled={loading} 
               className="p-2 text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
               title="Yenile"
@@ -2029,6 +2112,88 @@ export default function AdminDashboard() {
                 </div>
               )}
 
+              {/* ===================== KUPONLAR ===================== */}
+              {activeTab === 'coupons' && (
+                <div className="space-y-6">
+                  <div className="bg-white rounded-2xl border border-gray-200 p-5 flex items-center justify-between gap-4 shadow-sm">
+                    <span className="text-sm text-gray-500">{coupons.length} kupon</span>
+                    <button
+                      onClick={() => setShowCouponModal(true)}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold flex items-center gap-2"
+                    >
+                      <Tag size={14} /> Yeni Kupon Oluştur
+                    </button>
+                  </div>
+
+                  {coupons.length === 0 ? (
+                    <div className="p-16 bg-white rounded-2xl border border-gray-200 text-center text-gray-400 text-sm">
+                      <Tag className="mx-auto mb-2 text-gray-300" size={32} />
+                      Henüz kupon bulunmuyor.
+                    </div>
+                  ) : (
+                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-gray-200 text-left text-xs text-gray-500 uppercase tracking-wider">
+                            <th className="px-5 py-3">Kod</th>
+                            <th className="px-5 py-3">Değer</th>
+                            <th className="px-5 py-3">Kaynak</th>
+                            <th className="px-5 py-3">Sahibi</th>
+                            <th className="px-5 py-3">Kullanım</th>
+                            <th className="px-5 py-3">Son Kullanma</th>
+                            <th className="px-5 py-3">Durum</th>
+                            <th className="px-5 py-3"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {coupons.map((c: any) => {
+                            const isExpired = c.expiresAt && new Date(c.expiresAt) < new Date()
+                            return (
+                              <tr key={c.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50">
+                                <td className="px-5 py-3 font-mono font-bold text-gray-800">{c.code}</td>
+                                <td className="px-5 py-3 text-gray-700">
+                                  {c.value == null ? <span className="text-rose-500 text-xs">Değer yok (bozuk kayıt)</span> : c.discount_type === 'percentage' ? `%${c.value}` : `${c.value} TL`}
+                                </td>
+                                <td className="px-5 py-3">
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-600 uppercase tracking-wide">{c.source}</span>
+                                </td>
+                                <td className="px-5 py-3 text-xs text-gray-500">{c.customer?.name || c.customer?.email || '—'}</td>
+                                <td className="px-5 py-3 text-xs text-gray-500">{c.usage_count}{c.usage_limit ? ` / ${c.usage_limit}` : ' / ∞'}</td>
+                                <td className="px-5 py-3 text-xs text-gray-500">
+                                  {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('tr-TR') : 'Süresiz'}
+                                  {isExpired && <span className="ml-1.5 text-[10px] font-bold text-rose-600">SÜRESİ DOLDU</span>}
+                                </td>
+                                <td className="px-5 py-3">
+                                  <button
+                                    onClick={() => handleToggleCoupon(c)}
+                                    className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide transition-colors ${
+                                      c.is_active && !isExpired
+                                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200'
+                                        : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-200'
+                                    }`}
+                                  >
+                                    {c.is_active ? 'Aktif' : 'Pasif'}
+                                  </button>
+                                </td>
+                                <td className="px-5 py-3 text-right">
+                                  <button
+                                    onClick={() => handleDeleteCoupon(c)}
+                                    className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                    title="Sil"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* ===================== YAPAY ZEKA ===================== */}
               {activeTab === 'ai' && aiConfig && (
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
@@ -2585,6 +2750,106 @@ export default function AdminDashboard() {
                   className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl text-xs font-medium transition-colors shadow-sm disabled:opacity-50"
                 >
                   {savingId === 'change_pass' ? 'Kaydediliyor...' : 'Bilgileri Güncelle'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ===================== YENİ KUPON MODALI ===================== */}
+      {showCouponModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
+                  <Tag size={20} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">Yeni Kupon Oluştur</h3>
+                  <p className="text-xs text-gray-500">Elle, özel bir kampanya kodu tanımlayın</p>
+                </div>
+              </div>
+              <button onClick={() => setShowCouponModal(false)} className="p-2 text-gray-400 hover:text-gray-600">
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateCoupon} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Kupon Kodu *</label>
+                <input
+                  type="text"
+                  value={newCoupon.code}
+                  onChange={e => setNewCoupon({ ...newCoupon, code: e.target.value.toUpperCase() })}
+                  placeholder="ÖRN: YILBASI2026"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Tür</label>
+                  <select
+                    value={newCoupon.discount_type}
+                    onChange={e => setNewCoupon({ ...newCoupon, discount_type: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="percentage">Yüzde (%)</option>
+                    <option value="fixed">Sabit Tutar (TL)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Değer *</label>
+                  <input
+                    type="number"
+                    value={newCoupon.value}
+                    onChange={e => setNewCoupon({ ...newCoupon, value: Number(e.target.value) })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Kullanım Limiti</label>
+                  <input
+                    type="number"
+                    value={newCoupon.usage_limit}
+                    onChange={e => setNewCoupon({ ...newCoupon, usage_limit: e.target.value })}
+                    placeholder="Boş = sınırsız"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Geçerlilik (Gün)</label>
+                  <input
+                    type="number"
+                    value={newCoupon.expiresInDays}
+                    onChange={e => setNewCoupon({ ...newCoupon, expiresInDays: e.target.value })}
+                    placeholder="Boş = süresiz"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowCouponModal(false)}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl text-xs font-medium transition-colors"
+                >
+                  Vazgeç
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingId === 'create_coupon'}
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl text-xs font-medium transition-colors shadow-sm disabled:opacity-50"
+                >
+                  {savingId === 'create_coupon' ? 'Oluşturuluyor...' : 'Kuponu Oluştur'}
                 </button>
               </div>
             </form>
