@@ -14,11 +14,24 @@ export default async function Home({
   const params = await searchParams
   const sort = typeof params.sort === 'string' ? params.sort : 'best_sellers'
 
+  // MobileFilterSort + FilterSidebar bileşenleri /katalog ile birebir aynı — bu
+  // filtreler seçildiğinde URL'e gender/season/occasion/persona/family yazılıyor.
+  // Önceden burada hiç okunmuyordu, kullanıcı filtre seçip "Sonuçları Göster"
+  // dediğinde vitrin hiç değişmiyordu (seçim uygulanmıyormuş gibi görünüyordu).
+  const season = typeof params.season === 'string' ? params.season : undefined
+  const occasion = typeof params.occasion === 'string' ? params.occasion : undefined
+  const gender = typeof params.gender === 'string' ? params.gender : undefined
+  const persona = typeof params.persona === 'string' ? params.persona : undefined
+  const family = typeof params.family === 'string' ? params.family : undefined
+  const hasFilters = Boolean(season || occasion || gender || persona || family)
+
   // Admin panelinde "Vitrin Seçimi"nden elle işaretlenen ürünler varsa ("Çok Satanlar"
-  // filtresi seçiliyken) önce onlar gösterilir — hiç seçim yapılmamışsa eskisi gibi
-  // otomatik (ilk 12, gerçek fotoğrafı olan) davranışa düşülür.
+  // filtresi seçiliyken, hiçbir başka filtre aktif değilken) önce onlar gösterilir —
+  // hiç seçim yapılmamışsa eskisi gibi otomatik (ilk 12, gerçek fotoğrafı olan)
+  // davranışa düşülür. Herhangi bir filtre aktifse (gender/family/vb.) küratörlü
+  // vitrin anlamsız kalır, /katalog'la aynı where koşuluyla gerçek filtreli sonuç çekilir.
   let allProducts
-  if (sort === 'best_sellers') {
+  if (sort === 'best_sellers' && !hasFilters) {
     const featured = await prisma.product.findMany({
       where: { publish_status: { not: 'DRAFT' }, is_featured: true },
       orderBy: { sku: 'asc' },
@@ -27,13 +40,18 @@ export default async function Home({
     allProducts = featured.length > 0 ? featured : null
   }
   if (!allProducts) {
+    const whereClause: any = { publish_status: { not: 'DRAFT' } }
+    if (season) whereClause.season_tag = season
+    if (occasion) whereClause.occasion_tag = occasion
+    if (gender) {
+      whereClause.gender = gender === 'Unisex' ? { in: ['Unisex', 'UNISEX', 'unisex'] } : gender
+    }
+    if (persona) whereClause.persona_tag = persona
+    if (family) whereClause.fragrance_family = { has: family }
+
     allProducts = await prisma.product.findMany({
       take: 48,
-      where: {
-        publish_status: {
-          not: 'DRAFT'
-        }
-      },
+      where: whereClause,
       orderBy: { sku: 'asc' },
       include: { marketplaceListings: true }
     })
@@ -84,23 +102,32 @@ export default async function Home({
 
         <MobileFilterSort />
         
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-6">
-          {productsWithImages.map(product => (
-            <ProductCard 
-              key={product.sku} 
-              product={{
-                sku: product.sku,
-                families: product.fragrance_family,
-                gender: product.gender,
-                price: product.trendyolListing?.price || product.base_cost,
-                longevity: String(product.longevity_score),
-                imageUrl: product.finalImageUrl,
-                seoName: product.seo_name,
-                publishStatus: product.publish_status
-              }} 
-            />
-          ))}
-        </div>
+        {productsWithImages.length > 0 ? (
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-6">
+            {productsWithImages.map(product => (
+              <ProductCard
+                key={product.sku}
+                product={{
+                  sku: product.sku,
+                  families: product.fragrance_family,
+                  gender: product.gender,
+                  price: product.trendyolListing?.price || product.base_cost,
+                  longevity: String(product.longevity_score),
+                  imageUrl: product.finalImageUrl,
+                  seoName: product.seo_name,
+                  publishStatus: product.publish_status
+                }}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 bg-foreground/[0.02] rounded-2xl border border-foreground/5">
+            <p className="text-foreground/50 mb-3">Seçtiğin filtrelerle eşleşen ürün bulunamadı.</p>
+            <Link href="/katalog" className="text-sm font-medium underline underline-offset-4 hover:text-accent-rose">
+              Tüm koleksiyonu incele
+            </Link>
+          </div>
+        )}
 
         <div className="mt-12 text-center md:hidden">
            <Link href="/katalog" className="inline-block border border-foreground text-foreground px-8 py-3 rounded-full text-sm font-medium hover:bg-foreground hover:text-background transition-colors">
