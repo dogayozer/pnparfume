@@ -171,7 +171,9 @@ export async function PUT(req: Request) {
       base_cost,
       price,
       stock,
-      image
+      image,
+      is_featured,
+      is_on_sale
     } = body
 
     if (!sku) {
@@ -180,7 +182,24 @@ export async function PUT(req: Request) {
 
     const cleanSku = sku.trim().replace(/^PN\s*/i, '').toUpperCase()
 
+    // "Çok Satanlar" / "İndirimde" vitrinleri en fazla 10 ürünle sınırlı — sunucu
+    // tarafında da doğrulanıyor (frontend'deki sayaç tek başına yeterli değil).
+    if (is_featured === true) {
+      const count = await prisma.product.count({ where: { is_featured: true, sku: { not: cleanSku } } })
+      if (count >= 10) {
+        return NextResponse.json({ error: '"Çok Satanlar" vitrini zaten 10 ürünle dolu. Önce birini çıkarın.' }, { status: 400 })
+      }
+    }
+    if (is_on_sale === true) {
+      const count = await prisma.product.count({ where: { is_on_sale: true, sku: { not: cleanSku } } })
+      if (count >= 10) {
+        return NextResponse.json({ error: '"İndirimde" vitrini zaten 10 ürünle dolu. Önce birini çıkarın.' }, { status: 400 })
+      }
+    }
+
     const updateData: any = {}
+    if (is_featured !== undefined) updateData.is_featured = is_featured
+    if (is_on_sale !== undefined) updateData.is_on_sale = is_on_sale
     if (original_name !== undefined) updateData.original_name = original_name.trim()
     if (gender !== undefined) updateData.gender = gender
     if (fragrance_family !== undefined) updateData.fragrance_family = Array.isArray(fragrance_family) ? fragrance_family : [fragrance_family]

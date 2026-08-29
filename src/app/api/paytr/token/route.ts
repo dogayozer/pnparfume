@@ -16,6 +16,38 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Ödeme altyapısı yapılandırma hatası" }, { status: 500 })
     }
 
+    // 🔴 KUPON SONRASI MİNİMUM MALİYET SINIRI: sepetteki ürünlerin gerçek toplam
+    // maliyetinin (base_cost) altına düşen bir totalAmount ile sipariş oluşturulamaz.
+    // totalAmount client'tan (sepet sayfası) geliyor — kupon her ne kadar mantıklı
+    // görünse de, sunucu tarafında bağımsızca doğrulanmadan asla güvenilmemeli.
+    if (Array.isArray(cart) && cart.length > 0) {
+      try {
+        const skus = cart.map((item: any) => (item.sku || item.id || '').toString()).filter(Boolean)
+        const dbProducts = await prisma.product.findMany({
+          where: { sku: { in: skus } },
+          select: { sku: true, base_cost: true }
+        })
+        const costBySku = Object.fromEntries(dbProducts.map(p => [p.sku, p.base_cost]))
+        const totalCost = cart.reduce((sum: number, item: any) => {
+          const sku = (item.sku || item.id || '').toString()
+          const qty = Number(item.quantity) || 1
+          return sum + (costBySku[sku] || 0) * qty
+        }, 0)
+
+        const marginRule = await prisma.scenarioRule.findUnique({ where: { rule_key: 'MIN_PROFIT_MARGIN_PERCENT' } })
+        const marginPercent = marginRule && marginRule.is_active ? marginRule.rule_value : 0
+        const minAllowedTotal = totalCost * (1 + marginPercent / 100)
+
+        if (totalCost > 0 && (totalAmount || 0) < minAllowedTotal) {
+          return NextResponse.json({
+            error: 'Bu kupon/indirim kombinasyonu bu sepette uygulanamıyor. Lütfen farklı bir kupon deneyin veya sepetinizi güncelleyin.'
+          }, { status: 400 })
+        }
+      } catch (costCheckErr) {
+        console.error('Min cost floor check error (allowing order to proceed):', costCheckErr)
+      }
+    }
+
     // 🔴 Dynamic Affiliate Commission Rate from ScenarioRule
     let commissionRate = 0.15
     try {

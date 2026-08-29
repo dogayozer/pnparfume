@@ -20,6 +20,21 @@ export default function CartPage() {
   const [timeLeft, setTimeLeft] = useState(600) // 10:00
   const [selectedTester, setSelectedTester] = useState<string | null>(null)
 
+  // Kargo ücreti / ücretsiz kargo barajı — önceden burada sabit kodlanmıştı (100 TL /
+  // 2000 TL), admin panelindeki "Senaryo Kuralları"nda ayarlanan gerçek değerler hiç
+  // okunmuyordu. Artık gerçek zamanlı çekiliyor, hata/gecikme durumunda aynı eski
+  // sabit değerlere düşülüyor ki sepet asla kırılmasın.
+  const [shippingRules, setShippingRules] = useState({ shippingCost: 100, freeShippingLimit: 2000 })
+  useEffect(() => {
+    fetch('/api/shipping-rules')
+      .then(res => res.json())
+      .then(data => setShippingRules({
+        shippingCost: data.shippingCost ?? 100,
+        freeShippingLimit: data.freeShippingLimit ?? 2000
+      }))
+      .catch(() => {})
+  }, [])
+
   // Auth & Checkout State
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false)
@@ -122,18 +137,17 @@ export default function CartPage() {
   }
 
   // Kurallar (Senaryolardan Gelen)
-  const SHIPPING_COST = 100
   const SECOND_ITEM_DISCOUNT = 250
 
   // Hesaplamalar
   const subtotal = totalAmount
-  
+
   // 2. Ürün İndirimi
   const multiItemDiscount = items.length >= 2 ? SECOND_ITEM_DISCOUNT : 0
-  
-  // Kargo Ücreti
-  let shippingFee = SHIPPING_COST
-  if (subtotal >= 2000) shippingFee = 0 // Bedava Kargo Barajı (Örn: 2000 TL)
+
+  // Kargo Ücreti — admin panelinden ayarlanan gerçek değerler
+  let shippingFee = shippingRules.shippingCost
+  if (subtotal >= shippingRules.freeShippingLimit) shippingFee = 0
   if (shippingDiscountApplied) shippingFee = 0 // Arkadaş kargosu
 
   // Kupon İndirimi

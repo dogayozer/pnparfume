@@ -12,6 +12,8 @@ model Product {
   seo_name             String?
   publish_status       String   @default("ACTIVE")
   barcode              String?  @unique
+  is_featured          Boolean  @default(false) // Admin panelinden elle seçilen "Çok Satanlar" vitrini
+  is_on_sale           Boolean  @default(false) // Admin panelinden elle seçilen "İndirimde" vitrini
   gender               String
   fragrance_family     String[]
   top_notes            String   @default("Gizli Formül")

@@ -4,9 +4,11 @@ import { requireAdmin } from '@/lib/adminAuth'
 
 const DEFAULT_RULES = [
   { rule_key: 'FREE_SHIPPING_LIMIT', rule_value: 500, description: 'Ücretsiz Kargo Barajı (TL)' },
+  { rule_key: 'SHIPPING_COST', rule_value: 100, description: 'Standart Kargo Ücreti (TL)' },
   { rule_key: 'AFFILIATE_COMMISSION_RATE', rule_value: 15, description: 'Marka Elçisi Komisyon Oranı (%)' },
   { rule_key: 'SECOND_ITEM_DISCOUNT', rule_value: 250, description: '2. Ürün Sepet İndirimi (TL)' },
-  { rule_key: 'VIP_COUPON_PERCENT', rule_value: 15, description: 'Sipariş Teslimat VIP İndirim Kuponu (%)' }
+  { rule_key: 'VIP_COUPON_PERCENT', rule_value: 15, description: 'Sipariş Teslimat VIP İndirim Kuponu (%)' },
+  { rule_key: 'MIN_PROFIT_MARGIN_PERCENT', rule_value: 0, description: 'Kupon Sonrası Minimum Kâr Marjı (%) — 0 = sepet toplamı maliyetin altına düşemez' }
 ]
 
 // Bütün senaryo kurallarını getirir
@@ -19,9 +21,17 @@ export async function GET(req: Request) {
       orderBy: { rule_key: 'asc' }
     })
 
-    // Seed defaults if empty
-    if (scenarios.length === 0) {
-      for (const r of DEFAULT_RULES) {
+    // Eksik varsayılan kuralları tamamla. NOT: tablodaki toplam satır sayısını
+    // DEFAULT_RULES.length ile karşılaştırmak yanlıştı — tabloda bu projede daha
+    // önce (Antigravity tarafından) eklenmiş, DEFAULT_RULES'ta hiç yer almayan
+    // başka anahtarlar da var (AFFILIATE_COMMISSION_PCT, REFERRAL_REWARD_* vb.),
+    // o yüzden sayılar tesadüfen eşitse eksik anahtar hiç fark edilmiyordu. Bunun
+    // yerine mevcut anahtarları tek tek kontrol edip sadece GERÇEKTEN eksik olanı
+    // oluşturuyoruz — var olan hiçbir kaydın değerine dokunulmuyor.
+    const existingKeys = new Set(scenarios.map(r => r.rule_key))
+    const missingRules = DEFAULT_RULES.filter(r => !existingKeys.has(r.rule_key))
+    if (missingRules.length > 0) {
+      for (const r of missingRules) {
         await prisma.scenarioRule.upsert({
           where: { rule_key: r.rule_key },
           update: {},

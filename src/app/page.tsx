@@ -13,17 +13,31 @@ export default async function Home({
 }) {
   const params = await searchParams
   const sort = typeof params.sort === 'string' ? params.sort : 'best_sellers'
-  // Fetch products for best sellers
-  const allProducts = await prisma.product.findMany({
-    take: 48,
-    where: {
-      publish_status: {
-        not: 'DRAFT'
-      }
-    },
-    orderBy: { sku: 'asc' },
-    include: { marketplaceListings: true }
-  })
+
+  // Admin panelinde "Vitrin Seçimi"nden elle işaretlenen ürünler varsa ("Çok Satanlar"
+  // filtresi seçiliyken) önce onlar gösterilir — hiç seçim yapılmamışsa eskisi gibi
+  // otomatik (ilk 12, gerçek fotoğrafı olan) davranışa düşülür.
+  let allProducts
+  if (sort === 'best_sellers') {
+    const featured = await prisma.product.findMany({
+      where: { publish_status: { not: 'DRAFT' }, is_featured: true },
+      orderBy: { sku: 'asc' },
+      include: { marketplaceListings: true }
+    })
+    allProducts = featured.length > 0 ? featured : null
+  }
+  if (!allProducts) {
+    allProducts = await prisma.product.findMany({
+      take: 48,
+      where: {
+        publish_status: {
+          not: 'DRAFT'
+        }
+      },
+      orderBy: { sku: 'asc' },
+      include: { marketplaceListings: true }
+    })
+  }
 
   let processedProducts = allProducts
     .map((product: any) => {

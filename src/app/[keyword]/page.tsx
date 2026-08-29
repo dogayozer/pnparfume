@@ -62,6 +62,10 @@ export default async function SeoKeywordPage({
   if (filters.occasion) whereClause.occasion_tag = filters.occasion
   if (filters.season) whereClause.season_tag = filters.season
   if (filters.persona) whereClause.persona_tag = filters.persona
+  // "İndirimli" artık gerçek "üstü çizili fiyat" verisine değil (bu veri neredeyse
+  // hiç yoktu, sayfa boş kalıyordu), admin panelinde "Vitrin Seçimi"nden elle
+  // işaretlenen ürünlere bağlı — böylece her zaman gerçek, kontrollü bir liste olur.
+  if (filters.discountOnly) whereClause.is_on_sale = true
 
   const allProducts = await prisma.product.findMany({
     where: whereClause,
@@ -77,11 +81,6 @@ export default async function SeoKeywordPage({
       finalImageUrl: trendyolListing?.images?.[0] || null
     }
   })
-
-  // "İndirimli" — gerçek piyasa fiyatının (marketPrice) altında satılan ürünler.
-  if (filters.discountOnly) {
-    processed = processed.filter(p => p.trendyolListing?.marketPrice && p.trendyolListing.marketPrice > p.trendyolListing.price)
-  }
 
   if (filters.sortBy === 'price_asc') {
     processed.sort((a: any, b: any) => (a.trendyolListing?.price || a.base_cost) - (b.trendyolListing?.price || b.base_cost))

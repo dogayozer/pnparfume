@@ -349,7 +349,8 @@ export default function AdminDashboard() {
   const [productSearch, setProductSearch] = useState('')
   const [productGenderFilter, setProductGenderFilter] = useState('all')
   const [productStatusFilter, setProductStatusFilter] = useState('all')
-  const [productSubTab, setProductSubTab] = useState<'catalog' | 'bulk_price' | 'excel'>('catalog')
+  const [productSubTab, setProductSubTab] = useState<'catalog' | 'bulk_price' | 'excel' | 'showcase'>('catalog')
+  const [showcaseSearch, setShowcaseSearch] = useState('')
   const [showProductModal, setShowProductModal] = useState(false)
   const [productModalMode, setProductModalMode] = useState<'create' | 'edit'>('create')
   const [productForm, setProductForm] = useState({
@@ -375,7 +376,7 @@ export default function AdminDashboard() {
 
   // Product Bulk update states
   const [importProgress, setImportProgress] = useState<{current: number, total: number} | null>(null)
-  const [bulkPriceData, setBulkPriceData] = useState({ platform: 'all', type: 'zam', percentage: '' })
+  const [bulkPriceData, setBulkPriceData] = useState({ platform: 'all', type: 'zam', percentage: '', family: 'all' })
 
   // UGC & Reviews state
   const [reviews, setReviews] = useState<any[]>([])
@@ -841,7 +842,7 @@ export default function AdminDashboard() {
       const data = await res.json()
       if (res.ok) {
         showMsg('success', data.message || 'Fiyatlar başarıyla güncellendi.')
-        setBulkPriceData({ platform: 'all', type: 'zam', percentage: '' })
+        setBulkPriceData({ platform: 'all', type: 'zam', percentage: '', family: 'all' })
       } else {
         throw new Error(data.error || 'İşlem başarısız')
       }
@@ -970,6 +971,26 @@ export default function AdminDashboard() {
       }
     } catch {
       showMsg('error', 'Durum güncellenemedi')
+    }
+  }
+
+  // "Çok Satanlar" / "İndirimde" vitrinleri — her biri en fazla 10 ürünle sınırlı
+  // (sunucu tarafında da doğrulanıyor, bkz. api/admin/products PUT).
+  const handleToggleShowcase = async (prod: any, field: 'is_featured' | 'is_on_sale') => {
+    try {
+      const res = await adminFetch('/api/admin/products', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sku: prod.sku, [field]: !prod[field] })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setProducts(prev => prev.map(p => p.sku === prod.sku ? { ...p, [field]: !prod[field] } : p))
+      } else {
+        showMsg('error', data.error || 'Güncellenemedi')
+      }
+    } catch {
+      showMsg('error', 'Bağlantı hatası oluştu')
     }
   }
 
@@ -2450,6 +2471,17 @@ export default function AdminDashboard() {
                     </button>
 
                     <button
+                      onClick={() => setProductSubTab('showcase')}
+                      className={`flex-1 min-w-[160px] py-2.5 px-4 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-2 ${
+                        productSubTab === 'showcase'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Award size={16} /> Vitrin Seçimi
+                    </button>
+
+                    <button
                       onClick={() => setProductSubTab('bulk_price')}
                       className={`flex-1 min-w-[160px] py-2.5 px-4 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-2 ${
                         productSubTab === 'bulk_price'
@@ -2637,18 +2669,112 @@ export default function AdminDashboard() {
                     </div>
                   )}
 
+                  {/* SUBTAB: VITRIN SECIMI (COK SATANLAR / INDIRIMDE) */}
+                  {productSubTab === 'showcase' && (
+                    <div className="space-y-4">
+                      <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+                        <p className="text-sm text-gray-500 mb-1">
+                          Ana sayfadaki "Çok Satanlar" vitrini ve <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">/indirimli-parfum</code> sayfası burada işaretlediğiniz ürünleri gösterir. Her vitrin en fazla <strong>10 ürünle</strong> sınırlıdır; hiç seçim yapılmazsa "Çok Satanlar" otomatik seçime döner.
+                        </p>
+                        <div className="flex items-center gap-4 mt-3 text-xs font-semibold">
+                          <span className={`px-2.5 py-1 rounded-full ${products.filter((p: any) => p.is_featured).length >= 10 ? 'bg-rose-100 text-rose-700' : 'bg-indigo-50 text-indigo-700'}`}>
+                            Çok Satanlar: {products.filter((p: any) => p.is_featured).length} / 10
+                          </span>
+                          <span className={`px-2.5 py-1 rounded-full ${products.filter((p: any) => p.is_on_sale).length >= 10 ? 'bg-rose-100 text-rose-700' : 'bg-amber-50 text-amber-700'}`}>
+                            İndirimde: {products.filter((p: any) => p.is_on_sale).length} / 10
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
+                        <div className="relative mb-4">
+                          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                          <input
+                            type="text"
+                            placeholder="SKU veya ürün adıyla ara..."
+                            value={showcaseSearch}
+                            onChange={e => setShowcaseSearch(e.target.value)}
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm"
+                          />
+                        </div>
+
+                        <div className="overflow-x-auto max-h-[560px] overflow-y-auto">
+                          <table className="w-full text-sm">
+                            <thead className="sticky top-0 bg-white">
+                              <tr className="border-b border-gray-200 text-left text-xs text-gray-500 uppercase tracking-wider">
+                                <th className="px-3 py-2">SKU</th>
+                                <th className="px-3 py-2">Ürün</th>
+                                <th className="px-3 py-2 text-center">Çok Satanlar</th>
+                                <th className="px-3 py-2 text-center">İndirimde</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {products
+                                .filter((p: any) => {
+                                  if (!showcaseSearch) return true
+                                  const q = showcaseSearch.toLowerCase()
+                                  return p.sku.toLowerCase().includes(q) || (p.original_name || '').toLowerCase().includes(q)
+                                })
+                                .map((p: any) => (
+                                  <tr key={p.sku} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50">
+                                    <td className="px-3 py-2 font-mono font-bold text-gray-800">{p.sku}</td>
+                                    <td className="px-3 py-2 text-gray-600 truncate max-w-[240px]">{p.seo_name || p.original_name}</td>
+                                    <td className="px-3 py-2 text-center">
+                                      <button
+                                        onClick={() => handleToggleShowcase(p, 'is_featured')}
+                                        disabled={!p.is_featured && products.filter((x: any) => x.is_featured).length >= 10}
+                                        className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                                          p.is_featured ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                        }`}
+                                      >
+                                        {p.is_featured ? 'Seçili' : 'Seç'}
+                                      </button>
+                                    </td>
+                                    <td className="px-3 py-2 text-center">
+                                      <button
+                                        onClick={() => handleToggleShowcase(p, 'is_on_sale')}
+                                        disabled={!p.is_on_sale && products.filter((x: any) => x.is_on_sale).length >= 10}
+                                        className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                                          p.is_on_sale ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                        }`}
+                                      >
+                                        {p.is_on_sale ? 'Seçili' : 'Seç'}
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* SUBTAB 2: TOPLU FIYAT GUNCELLEME */}
                   {productSubTab === 'bulk_price' && (
                     <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                       <h3 className="font-semibold text-gray-900 mb-2">Toplu Fiyat Değişikliği (% Zam / % İndirim)</h3>
                       <p className="text-sm text-gray-500 mb-6">Seçilen platformdaki tüm parfümlerin fiyatlarını tek tıkla toplu olarak artırın veya azaltın.</p>
-                      <form onSubmit={handleBulkPriceUpdate} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <form onSubmit={handleBulkPriceUpdate} className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                         <div>
                           <label className="block text-xs font-semibold mb-1 text-gray-700">Hedef Platform</label>
                           <select value={bulkPriceData.platform} onChange={e => setBulkPriceData({...bulkPriceData, platform: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm">
                             <option value="all">Tüm Platformlar & Kendi Sitemiz</option>
                             <option value="trendyol">Yalnızca Trendyol</option>
                             <option value="hepsiburada">Yalnızca Hepsiburada</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold mb-1 text-gray-700">Ürün Grubu (Koku Ailesi)</label>
+                          <select value={bulkPriceData.family} onChange={e => setBulkPriceData({...bulkPriceData, family: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm">
+                            <option value="all">Tüm Ürünler</option>
+                            <option value="Odunsu">Odunsu</option>
+                            <option value="Çiçeksi">Çiçeksi</option>
+                            <option value="Baharatlı">Baharatlı</option>
+                            <option value="Ferah">Ferah</option>
+                            <option value="Oryantal">Oryantal</option>
+                            <option value="Tatlı">Tatlı</option>
+                            <option value="Meyveli">Meyveli</option>
                           </select>
                         </div>
                         <div>
@@ -2662,7 +2788,7 @@ export default function AdminDashboard() {
                           <label className="block text-xs font-semibold mb-1 text-gray-700">Yüzde (%)</label>
                           <input type="number" step="0.01" placeholder="Örn: 15" value={bulkPriceData.percentage} onChange={e => setBulkPriceData({...bulkPriceData, percentage: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm" required />
                         </div>
-                        <div className="sm:col-span-3">
+                        <div className="sm:col-span-4">
                           <button type="submit" disabled={savingId === 'bulk_price'} className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-xl text-xs transition-colors shadow-sm">
                             {savingId === 'bulk_price' ? 'Güncelleniyor...' : 'Fiyatları Toplu Güncelle'}
                           </button>
