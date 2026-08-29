@@ -520,16 +520,67 @@ function BlendEngineContent() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-                <div className="md:col-span-2 flex items-center justify-center p-8 bg-white/50 rounded-3xl border border-[#4A3527]/10 min-h-[400px]">
-                  <motion.img 
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.8 }}
-                    src="/images/products/pnunisexsise.png"
-                    alt="Harman Şişesi" 
-                    className="max-w-full max-h-[400px] object-contain drop-shadow-2xl mix-blend-multiply" 
-                  />
-                </div>
+                {!baseSku ? (
+                  // Sıfırdan başlayan akış: buradan önce esans seçilmiş bir şey yok
+                  // (baseSku akışının aksine), o yüzden gerçek bir seçim ızgarası
+                  // şart — daha önce burada sadece dekoratif bir şişe görseli vardı
+                  // ve "Oranları Belirle" butonu hiçbir zaman etkinleşemiyordu.
+                  <div className="md:col-span-2 p-6 md:p-8 bg-white/50 rounded-3xl border border-[#4A3527]/10">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="font-serif text-xl">
+                        {selectedFamily && selectedFamily !== 'Tümü' ? `${selectedFamily} Esansları` : 'Tüm Esanslar'}
+                      </h3>
+                      <span className="text-xs text-[#4A3527]/50">{selectedEssences.length}/3 seçildi</span>
+                    </div>
+                    {loadingProducts ? (
+                      <div className="py-16 text-center text-[#4A3527]/50">
+                        <RefreshCw className="animate-spin mx-auto mb-3" size={24} />
+                        Esans kütüphanesi yükleniyor...
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[460px] overflow-y-auto pr-1">
+                        {filteredEssences.map(p => {
+                          const isSelected = selectedEssences.some(e => e.sku === p.sku)
+                          const disabled = !isSelected && selectedEssences.length >= 3
+                          return (
+                            <button
+                              key={p.sku}
+                              onClick={() => toggleEssence(p)}
+                              disabled={disabled}
+                              className={`text-left p-4 rounded-2xl border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed
+                                ${isSelected ? 'border-[#B48A3F] bg-[#B48A3F]/10' : 'border-[#4A3527]/10 bg-white hover:border-[#B48A3F]/50'}
+                              `}
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-serif font-medium text-sm">PN {p.sku}</span>
+                                {isSelected && <Check size={14} className="text-[#B48A3F]" />}
+                              </div>
+                              {p.mood_tag && (
+                                <span className="text-[11px] text-[#4A3527]/50 line-clamp-1">{p.mood_tag}</span>
+                              )}
+                            </button>
+                          )
+                        })}
+                        {filteredEssences.length === 0 && (
+                          <p className="col-span-full text-center text-sm text-[#4A3527]/50 py-8">
+                            Bu ailede esans bulunamadı.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="md:col-span-2 flex items-center justify-center p-8 bg-white/50 rounded-3xl border border-[#4A3527]/10 min-h-[400px]">
+                    <motion.img
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.8 }}
+                      src="/images/products/pnunisexsise.png"
+                      alt="Harman Şişesi"
+                      className="max-w-full max-h-[400px] object-contain drop-shadow-2xl mix-blend-multiply"
+                    />
+                  </div>
+                )}
 
                 {/* Selection Sidebar */}
                 <div className="bg-white rounded-3xl p-8 border border-[#4A3527]/10 h-fit sticky top-24">
