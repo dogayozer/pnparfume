@@ -16,7 +16,7 @@ import { BOTTLE_OPTIONS, DEFAULT_BOTTLE_CODE, toSecureImageUrl } from '@/lib/bot
 const activities = [
   { id: 'davet', label: 'Özel Davet', families: ['Odunsu', 'Amberli'] },
   { id: 'is', label: 'İş / Toplantı', families: ['Ferah', 'Narenciye'] },
-  { id: 'romantik', label: 'Romantik Buluşma', families: ['Gourmand', 'Çiçeksi'] },
+  { id: 'romantik', label: 'Romantik Buluşma', families: ['Gurme', 'Çiçeksi'] },
   { id: 'gunluk', label: 'Günlük / Rahat', families: ['Çiçeksi', 'Ferah'] },
   { id: 'spor', label: 'Spor / Aktivite', families: ['Narenciye', 'Aromatik'] },
   { id: 'ozgur', label: 'Tüm Aileleri Göster', families: ['Tümü'] },
@@ -489,7 +489,7 @@ function BlendEngineContent() {
               <p className="text-[#4A3527]/60 mb-12 text-lg">Seçtiğin an'a en uygun koku profillerini listeledik.</p>
 
               <div className="flex flex-wrap justify-center gap-6">
-                {['Odunsu', 'Narenciye', 'Gourmand', 'Çiçeksi', 'Ferah', 'Baharatlı'].map(fam => (
+                {['Odunsu', 'Narenciye', 'Gurme', 'Çiçeksi', 'Ferah', 'Baharatlı'].map(fam => (
                   <button
                     key={fam}
                     onClick={() => handleSelectFamily(fam)}
