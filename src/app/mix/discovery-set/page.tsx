@@ -219,12 +219,13 @@ export default function DiscoverySetPage() {
               const scent = selectedScents[slotIdx]
 
               return (
-                <div 
+                <div
                   key={slotIdx}
+                  onClick={scent ? undefined : () => document.getElementById('pn-discovery-catalog')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                   className={`relative rounded-2xl p-3 flex flex-col justify-between min-h-[110px] transition-all border ${
-                    scent 
-                      ? 'bg-zinc-800/90 border-amber-500/40 shadow-sm' 
-                      : 'bg-zinc-950/60 border-dashed border-zinc-700/80 items-center justify-center text-center'
+                    scent
+                      ? 'bg-zinc-800/90 border-amber-500/40 shadow-sm'
+                      : 'bg-zinc-950/60 border-dashed border-zinc-700/80 items-center justify-center text-center cursor-pointer hover:border-amber-500/50 hover:bg-zinc-900/60'
                   }`}
                 >
                   {scent ? (
@@ -343,7 +344,7 @@ export default function DiscoverySetPage() {
         </div>
 
         {/* ===================== PERFUME CATALOG BROWSER ===================== */}
-        <div>
+        <div id="pn-discovery-catalog">
           {/* Search & Filter Controls */}
           <div className="flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center mb-8 bg-zinc-900/80 p-4 rounded-2xl border border-zinc-800">
             <div className="relative flex-1 max-w-md">

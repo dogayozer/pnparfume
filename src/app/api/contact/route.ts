@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
+import { getIntegrationSettings } from '@/lib/integrationSettings'
 
 export async function POST(req: Request) {
   try {
@@ -13,12 +14,11 @@ export async function POST(req: Request) {
       )
     }
 
-    const smtpUser = process.env.SMTP_USER
-    const smtpPass = process.env.SMTP_PASS
-    const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com'
-    const smtpPort = Number(process.env.SMTP_PORT) || 465
-
-    const recipientEmails = 'siparis@pienparfume.com, dogayozer@gmail.com'
+    // Admin panelinden (Entegrasyonlar) yönetilen SMTP kimlik bilgileri ve bildirim
+    // e-postası — önceden burada sabit "siparis@..." yazıyordu, muhasebe@pienparfume.com.tr
+    // hiç bilgilendirilmiyordu.
+    const { smtpUser, smtpPass, smtpHost, smtpPort, adminOrderEmail } = await getIntegrationSettings()
+    const recipientEmails = adminOrderEmail || 'muhasebe@pienparfume.com.tr'
 
     // Form içeriği HTML
     const emailHtml = `

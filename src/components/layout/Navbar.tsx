@@ -174,7 +174,7 @@ export default function Navbar() {
               <span className="text-xs bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">Özel Set</span>
             </Link>
             <Link href="/mix" className="border-b border-foreground/10 pb-4">
-              Mix Parfüm Tasarımı <span className="text-xs ml-2 text-accent-gold uppercase tracking-widest">(Yakında)</span>
+              Mix Parfüm Tasarımı
             </Link>
             <Link href="/kesfet" className="border-b border-foreground/10 pb-4 flex items-center gap-3">
               <Sparkles size={24} className="text-accent-gold" />

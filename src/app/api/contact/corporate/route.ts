@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import { getIntegrationSettings } from '@/lib/integrationSettings';
 
 export async function POST(req: Request) {
   try {
@@ -11,19 +12,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Lütfen zorunlu alanları doldurun.' }, { status: 400 });
     }
 
+    // Admin panelinden (Entegrasyonlar) yönetilen SMTP kimlik bilgileri — önceden
+    // sabit process.env.SMTP_* okunuyordu, admin panelinden girilen bilgiler hiç
+    // devreye girmiyordu.
+    const { smtpHost, smtpUser, smtpPass, smtpPort, adminOrderEmail } = await getIntegrationSettings();
+
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: Number(process.env.SMTP_PORT) || 465,
-      secure: true, // port 465 için true, 587 için false
+      host: smtpHost || 'smtp.gmail.com',
+      port: smtpPort,
+      secure: smtpPort === 465,
       auth: {
-        user: process.env.SMTP_USER, // e-posta adresiniz
-        pass: process.env.SMTP_PASS, // şifreniz veya uygulama şifresi
+        user: smtpUser,
+        pass: smtpPass,
       },
     });
 
     const mailOptions = {
-      from: `"PN Parfüm Kurumsal Form" <${process.env.SMTP_USER}>`,
-      to: 'siparis@pienparfume.com, muhasebe@pienparfume.com.tr, dogayozer@gmail.com',
+      from: `"PN Parfüm Kurumsal Form" <${smtpUser}>`,
+      to: adminOrderEmail || 'muhasebe@pienparfume.com.tr',
       subject: 'Yeni Kurumsal Ön Başvuru Formu',
       html: `
         <h2>Yeni Bir Kurumsal Ön Başvuru Alındı</h2>
