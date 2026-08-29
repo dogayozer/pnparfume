@@ -153,11 +153,13 @@ export default function MixparfumHome() {
               Kendi tasarımından emin olmak mı istiyorsun? 4'lü veya 8'li Keşif Seti sipariş ver. 
               Keşif setine ödediğin tutarın tamamı, tam boy siparişinde <span className="text-[#B48A3F] font-medium">%100 Cashback</span> olarak sana iade edilsin.
             </p>
-            <div 
-              className="inline-flex items-center gap-4 px-8 py-4 bg-[#B48A3F]/50 text-white/50 rounded-full cursor-not-allowed font-medium tracking-wide text-sm uppercase"
+            <Link
+              href="/mix/discovery-set"
+              className="group inline-flex items-center gap-4 px-8 py-4 bg-[#B48A3F] text-white rounded-full hover:bg-[#a17c38] transition-colors font-medium tracking-wide text-sm uppercase"
             >
-              Keşif Seti Oluştur (Yakında)
-            </div>
+              Keşif Seti Oluştur
+              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
           </div>
           <div className="flex-1 w-full relative">
             <div className="aspect-[4/3] w-full rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center p-8 overflow-hidden relative">
