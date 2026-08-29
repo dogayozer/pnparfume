@@ -5,6 +5,11 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Copy, Check, ArrowRight, ShieldCheck } from 'lucide-react'
 
+// Bu bileşen sadece /hosgeldin sayfasında, koyu sinematik video arkaplanının
+// üzerinde kullanılıyor — bu yüzden site genelindeki (açık/koyu tema değişebilen)
+// foreground/background renk değişkenleri yerine kasıtlı olarak sabit beyaz/koyu
+// tonlar kullanıyoruz; aksi halde açık temada arkaplan videosunun üzerinde
+// okunaksız/kontrastsız bir form ortaya çıkardı.
 export default function QrWelcomeClaim({ spotsLeft }: { spotsLeft: number | null }) {
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
@@ -62,18 +67,18 @@ export default function QrWelcomeClaim({ spotsLeft }: { spotsLeft: number | null
               onChange={(e) => setPhone(e.target.value)}
               placeholder="05XX XXX XX XX"
               autoComplete="tel"
-              className="w-full bg-background/80 backdrop-blur-sm border border-foreground/20 rounded-full px-6 py-4 text-center text-lg tracking-wide focus:outline-none focus:border-accent-gold transition-colors"
+              className="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-6 py-4 text-center text-lg tracking-wide text-white placeholder:text-white/30 focus:outline-none focus:border-accent-gold transition-colors"
             />
             {error && <p className="text-accent-rose text-xs text-center">{error}</p>}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-foreground text-background py-4 rounded-full text-sm font-bold uppercase tracking-widest hover:bg-accent-gold transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+              className="w-full bg-white text-black py-4 rounded-full text-sm font-bold uppercase tracking-widest hover:bg-accent-gold transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {loading ? 'Hazırlanıyor...' : 'Sürprizimi Gör'}
               {!loading && <ArrowRight size={16} />}
             </button>
-            <p className="text-[11px] text-foreground/40 text-center leading-relaxed">
+            <p className="text-[11px] text-white/40 text-center leading-relaxed">
               Numaranı sadece bu kodu göndermek için kullanırız, spam yapmayız.
             </p>
           </motion.form>
@@ -83,35 +88,35 @@ export default function QrWelcomeClaim({ spotsLeft }: { spotsLeft: number | null
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ type: 'spring', damping: 15 }}
-            className="text-center space-y-4 p-6 rounded-3xl border border-accent-gold/30 bg-gradient-to-br from-amber-500/10 to-accent-rose/10 backdrop-blur-sm"
+            className="text-center space-y-4 p-6 rounded-3xl border border-accent-gold/30 bg-gradient-to-br from-amber-500/15 to-accent-rose/15 backdrop-blur-md"
           >
             <p className="text-xs uppercase tracking-widest text-accent-gold font-bold">
               İlk Siparişine Özel
             </p>
-            <p className="text-4xl font-light">
-              %{result.discountPercentage} <span className="text-lg font-normal text-foreground/60">İndirim</span>
+            <p className="text-4xl font-light text-white">
+              %{result.discountPercentage} <span className="text-lg font-normal text-white/60">İndirim</span>
             </p>
             <button
               onClick={handleCopy}
-              className="w-full flex items-center justify-between gap-3 bg-background border border-foreground/10 rounded-2xl px-5 py-4 hover:border-accent-gold transition-colors"
+              className="w-full flex items-center justify-between gap-3 bg-black/40 border border-white/15 rounded-2xl px-5 py-4 hover:border-accent-gold transition-colors"
             >
-              <span className="font-mono font-bold text-lg tracking-wider">{result.code}</span>
-              {copied ? <Check size={20} className="text-emerald-600" /> : <Copy size={20} className="text-foreground/40" />}
+              <span className="font-mono font-bold text-lg tracking-wider text-white">{result.code}</span>
+              {copied ? <Check size={20} className="text-emerald-400" /> : <Copy size={20} className="text-white/40" />}
             </button>
-            <p className="text-[11px] text-foreground/50">
+            <p className="text-[11px] text-white/50">
               Bu kod telefonuna da gönderildi · 48 saat geçerli
             </p>
 
             <div className="pt-2 space-y-2">
               <Link
                 href="/katalog"
-                className="block w-full bg-foreground text-background py-3.5 rounded-full text-sm font-bold hover:bg-accent-gold transition-colors"
+                className="block w-full bg-white text-black py-3.5 rounded-full text-sm font-bold hover:bg-accent-gold transition-colors"
               >
                 Şimdi Alışverişe Başla
               </Link>
               <Link
                 href={`/hesap?phone=${encodeURIComponent(phone)}`}
-                className="block w-full py-3.5 text-sm font-medium text-foreground/70 hover:text-accent-gold transition-colors underline underline-offset-4"
+                className="block w-full py-3.5 text-sm font-medium text-white/70 hover:text-accent-gold transition-colors underline underline-offset-4"
               >
                 Kurucu Üyeliğimi Tamamla
               </Link>
@@ -121,9 +126,9 @@ export default function QrWelcomeClaim({ spotsLeft }: { spotsLeft: number | null
       </AnimatePresence>
 
       {!result && spotsLeft !== null && spotsLeft > 0 && (
-        <div className="flex items-center justify-center gap-2 mt-5 text-xs text-foreground/50">
+        <div className="flex items-center justify-center gap-2 mt-5 text-xs text-white/50">
           <ShieldCheck size={14} className="text-accent-gold" />
-          <span>Kurucu Üyelik için sadece <strong className="text-foreground">{spotsLeft}</strong> yer kaldı</span>
+          <span>Kurucu Üyelik için sadece <strong className="text-white">{spotsLeft}</strong> yer kaldı</span>
         </div>
       )}
     </div>
