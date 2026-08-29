@@ -11,6 +11,28 @@ interface SendNotificationOptions {
   message: string
 }
 
+// Admin panelinden (Ayarlar > Entegrasyonlar) girilen kimlik bilgilerini okur; DB'de
+// bir alan boşsa aynı isimdeki ortam değişkenine düşer. Böylece hem panelden hem
+// Vercel ortam değişkenlerinden ayarlamak çalışır, panel her zaman önceliklidir.
+async function getIntegrationSettings() {
+  let db: Awaited<ReturnType<typeof prisma.integrationSettings.findFirst>> = null
+  try {
+    db = await prisma.integrationSettings.findFirst()
+  } catch (e) {
+    console.error('IntegrationSettings okunamadı, ortam değişkenlerine düşülüyor:', e)
+  }
+  return {
+    netgsmUser: db?.netgsm_usercode || process.env.NETGSM_USERCODE,
+    netgsmPass: db?.netgsm_password || process.env.NETGSM_PASSWORD,
+    netgsmHeader: db?.netgsm_header || process.env.NETGSM_HEADER || 'PN PARFUM',
+    smtpHost: db?.smtp_host || process.env.SMTP_HOST,
+    smtpUser: db?.smtp_user || process.env.SMTP_USER,
+    smtpPass: db?.smtp_pass || process.env.SMTP_PASS,
+    smtpPort: db?.smtp_port || Number(process.env.SMTP_PORT) || 587,
+    adminOrderEmail: db?.admin_order_email || 'muhasebe@pienparfume.com.tr'
+  }
+}
+
 // Clean and normalize Turkish mobile numbers for Netgsm / WhatsApp
 export function formatTurkishPhone(phone: string): string {
   let cleaned = phone.replace(/[^0-9]/g, '')
@@ -26,9 +48,7 @@ export function formatTurkishPhone(phone: string): string {
 export async function sendNotification(options: SendNotificationOptions) {
   const { phone, customerId, orderNumber, type = 'sms', triggerReason, message } = options
 
-  const netgsmUser = process.env.NETGSM_USERCODE
-  const netgsmPass = process.env.NETGSM_PASSWORD
-  const netgsmHeader = process.env.NETGSM_HEADER || 'PN PARFUM'
+  const { netgsmUser, netgsmPass, netgsmHeader } = await getIntegrationSettings()
 
   let status = 'simulated'
   let providerResponse = 'Simülasyon Modu (Canlı API anahtarı girildiğinde otomatik iletilir)'
@@ -102,11 +122,7 @@ export async function sendAdminOrderEmail(order: {
   customerAddress?: string | null
   items?: any
 }) {
-  const smtpHost = process.env.SMTP_HOST
-  const smtpUser = process.env.SMTP_USER
-  const smtpPass = process.env.SMTP_PASS
-  const smtpPort = Number(process.env.SMTP_PORT) || 587
-  const adminEmail = 'muhasebe@pienparfume.com.tr'
+  const { smtpHost, smtpUser, smtpPass, smtpPort, adminOrderEmail: adminEmail } = await getIntegrationSettings()
 
   if (!smtpHost || !smtpUser || !smtpPass) {
     console.log(`[ADMIN ORDER EMAIL] SMTP yapılandırılmamış — ${order.orderNumber} için e-posta gönderilmedi (simülasyon).`)

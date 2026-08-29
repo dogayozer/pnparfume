@@ -336,6 +336,14 @@ export default function AdminDashboard() {
   const [showCouponModal, setShowCouponModal] = useState(false)
   const [newCoupon, setNewCoupon] = useState({ code: '', discount_type: 'percentage', value: 10, usage_limit: '', expiresInDays: '' })
 
+  // Integration Settings States (NETGSM SMS / SMTP e-posta)
+  const [integrationSettings, setIntegrationSettings] = useState<any>(null)
+  const [integrationForm, setIntegrationForm] = useState({
+    netgsm_usercode: '', netgsm_password: '', netgsm_header: '',
+    smtp_host: '', smtp_port: '', smtp_user: '', smtp_pass: '',
+    admin_order_email: ''
+  })
+
   // Product Management States
   const [products, setProducts] = useState<any[]>([])
   const [productSearch, setProductSearch] = useState('')
@@ -420,6 +428,53 @@ export default function AdminDashboard() {
     finally { setLoading(false) }
   }
 
+  const fetchIntegrationSettings = async () => {
+    setLoading(true)
+    try {
+      const res = await adminFetch('/api/admin/settings')
+      if (res.ok) {
+        const data = await res.json()
+        setIntegrationSettings(data)
+        // Şifre alanları API'den asla düz metin gelmez (hasNetgsmPassword/hasSmtpPass
+        // olarak boolean gelir) — formda boş bırakılır, doldurulursa değiştirilir.
+        setIntegrationForm({
+          netgsm_usercode: data.netgsm_usercode || '',
+          netgsm_password: '',
+          netgsm_header: data.netgsm_header || '',
+          smtp_host: data.smtp_host || '',
+          smtp_port: data.smtp_port ? String(data.smtp_port) : '',
+          smtp_user: data.smtp_user || '',
+          smtp_pass: '',
+          admin_order_email: data.admin_order_email || ''
+        })
+      }
+    } catch (err) { console.error(err) }
+    finally { setLoading(false) }
+  }
+
+  const handleSaveIntegrationSettings = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSavingId('integrations')
+    try {
+      const res = await adminFetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(integrationForm)
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        showMsg('success', 'Entegrasyon ayarları kaydedildi.')
+        fetchIntegrationSettings()
+      } else {
+        showMsg('error', data.error || 'Kaydedilemedi')
+      }
+    } catch {
+      showMsg('error', 'Bağlantı hatası oluştu')
+    } finally {
+      setSavingId(null)
+    }
+  }
+
   useEffect(() => {
     if (!isAuthenticated) return;
     if (activeTab === 'scenarios') fetchData('/api/admin/scenarios', setRules)
@@ -430,6 +485,7 @@ export default function AdminDashboard() {
     else if (activeTab === 'products') fetchData('/api/admin/products', setProducts)
     else if (activeTab === 'reports') fetchData('/api/admin/reports', setReports)
     else if (activeTab === 'coupons') fetchData('/api/admin/coupons', setCoupons)
+    else if (activeTab === 'integrations') fetchIntegrationSettings()
     else if (activeTab === 'api') {
       fetchData('/api/admin/marketplace/stores', setStores)
       fetchData('/api/admin/marketplace/orders', setMarketOrders)
@@ -1329,6 +1385,13 @@ export default function AdminDashboard() {
             </button>
 
             <button
+              onClick={() => setActiveTab('integrations')}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors ${activeTab === 'integrations' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
+            >
+              <Server size={18} /> Entegrasyonlar
+            </button>
+
+            <button
               onClick={() => setActiveTab('products')}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors ${activeTab === 'products' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
             >
@@ -1402,6 +1465,7 @@ export default function AdminDashboard() {
               {activeTab === 'notifications' && 'Bildirim & SMS Merkezi'}
               {activeTab === 'scenarios' && 'Senaryo Kuralları'}
               {activeTab === 'coupons' && 'Kupon Yönetimi'}
+              {activeTab === 'integrations' && 'SMS & E-posta Entegrasyonları'}
               {activeTab === 'products' && 'Toplu Fiyat & Excel Ürün Yönetimi'}
               {activeTab === 'reviews' && 'Müşteri Yorumları & UGC Değerlendirmeleri'}
               {activeTab === 'ai' && 'Nöropazarlama & Yapay Zeka'}
@@ -1436,6 +1500,7 @@ export default function AdminDashboard() {
                 else if (activeTab === 'reports') fetchData('/api/admin/reports', setReports)
                 else if (activeTab === 'reviews') fetchData('/api/admin/reviews', setReviews)
                 else if (activeTab === 'coupons') fetchData('/api/admin/coupons', setCoupons)
+                else if (activeTab === 'integrations') fetchIntegrationSettings()
               }}
               disabled={loading} 
               className="p-2 text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
@@ -2192,6 +2257,113 @@ export default function AdminDashboard() {
                     </div>
                   )}
                 </div>
+              )}
+
+              {/* ===================== ENTEGRASYONLAR (SMS / E-POSTA) ===================== */}
+              {activeTab === 'integrations' && (
+                <form onSubmit={handleSaveIntegrationSettings} className="space-y-6 max-w-2xl">
+                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                    <h3 className="font-bold text-gray-900 mb-1">SMS (NETGSM)</h3>
+                    <p className="text-xs text-gray-500 mb-5">Sipariş, kargo, teslimat ve indirim kodu SMS'leri buradan gönderilir. Boş bırakılırsa (henüz hiç girilmediyse) SMS'ler simülasyon modunda kalır, hiçbir şey bozulmaz.</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Kullanıcı Kodu</label>
+                        <input
+                          type="text"
+                          value={integrationForm.netgsm_usercode}
+                          onChange={e => setIntegrationForm({ ...integrationForm, netgsm_usercode: e.target.value })}
+                          placeholder="NETGSM kullanıcı kodunuz"
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Şifre</label>
+                        <input
+                          type="password"
+                          value={integrationForm.netgsm_password}
+                          onChange={e => setIntegrationForm({ ...integrationForm, netgsm_password: e.target.value })}
+                          placeholder={integrationSettings?.hasNetgsmPassword ? '•••••••• (değiştirmek için doldurun)' : 'NETGSM şifreniz'}
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Mesaj Başlığı (Gönderen Adı)</label>
+                        <input
+                          type="text"
+                          value={integrationForm.netgsm_header}
+                          onChange={e => setIntegrationForm({ ...integrationForm, netgsm_header: e.target.value })}
+                          placeholder="PN PARFUM"
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                    <h3 className="font-bold text-gray-900 mb-1">E-posta (SMTP)</h3>
+                    <p className="text-xs text-gray-500 mb-5">Her ödemesi onaylanan siparişte aşağıdaki adrese otomatik "Yeni Siparişiniz Var" e-postası gider.</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">SMTP Sunucu</label>
+                        <input
+                          type="text"
+                          value={integrationForm.smtp_host}
+                          onChange={e => setIntegrationForm({ ...integrationForm, smtp_host: e.target.value })}
+                          placeholder="mail.kurumsaleposta.com"
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Port</label>
+                        <input
+                          type="number"
+                          value={integrationForm.smtp_port}
+                          onChange={e => setIntegrationForm({ ...integrationForm, smtp_port: e.target.value })}
+                          placeholder="465"
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Gönderici E-posta / Kullanıcı Adı</label>
+                        <input
+                          type="text"
+                          value={integrationForm.smtp_user}
+                          onChange={e => setIntegrationForm({ ...integrationForm, smtp_user: e.target.value })}
+                          placeholder="siparis@pienparfume.com.tr"
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Şifre</label>
+                        <input
+                          type="password"
+                          value={integrationForm.smtp_pass}
+                          onChange={e => setIntegrationForm({ ...integrationForm, smtp_pass: e.target.value })}
+                          placeholder={integrationSettings?.hasSmtpPass ? '•••••••• (değiştirmek için doldurun)' : 'E-posta şifreniz'}
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Sipariş Bildirimi Gidecek Adres</label>
+                        <input
+                          type="email"
+                          value={integrationForm.admin_order_email}
+                          onChange={e => setIntegrationForm({ ...integrationForm, admin_order_email: e.target.value })}
+                          placeholder="muhasebe@pienparfume.com.tr"
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={savingId === 'integrations'}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-medium text-sm disabled:opacity-50"
+                  >
+                    {savingId === 'integrations' ? 'Kaydediliyor...' : 'Entegrasyon Ayarlarını Kaydet'}
+                  </button>
+                </form>
               )}
 
               {/* ===================== YAPAY ZEKA ===================== */}

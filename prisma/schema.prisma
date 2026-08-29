@@ -361,7 +361,28 @@ model AiConfig {
   active_campaign   String?  @db.Text
   can_give_discount Boolean  @default(true)
   discount_limit    Float    @default(20)
-  
+
+  updatedAt         DateTime @updatedAt
+}
+
+// Admin panelinden düzenlenebilir SMS/e-posta entegrasyon ayarları — önceden bunlar
+// sadece Vercel ortam değişkenleriyle (deploy gerektiren, sadece kod tarafından
+// erişilebilen) ayarlanabiliyordu. Tek satırlık bir config kaydı (AiConfig ile aynı
+// desen). notificationEngine.ts önce bu tabloyu okur, boşsa ortam değişkenine düşer —
+// yani mevcut .env / Vercel ayarları hâlâ çalışır, bu sadece bir üst katman.
+model IntegrationSettings {
+  id                String   @id @default(cuid())
+
+  netgsm_usercode   String?
+  netgsm_password   String?
+  netgsm_header     String?
+
+  smtp_host         String?
+  smtp_port         Int?
+  smtp_user         String?
+  smtp_pass         String?
+  admin_order_email String?  // Sipariş bildirimi gidecek adres (örn. muhasebe@...)
+
   updatedAt         DateTime @updatedAt
 }
 
