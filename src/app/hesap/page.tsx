@@ -42,6 +42,17 @@ function AccountPageInner() {
   const [birthYear, setBirthYear] = useState('')
   const [birthMonthDay, setBirthMonthDay] = useState('')
   const [profession, setProfession] = useState('')
+  const [referralCodeInput, setReferralCodeInput] = useState('')
+
+  // Navbar zaten ?ref= veya ?elci= linkiyle gelenlerin kodunu localStorage'a
+  // yazıyor (pn_referral_code) — üyelik formunda varsa otomatik dolduruyoruz,
+  // kullanıcı isterse elle de değiştirebilir/silebilir.
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('pn_referral_code')
+      if (saved) setReferralCodeInput(saved)
+    } catch {}
+  }, [])
   
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
@@ -56,6 +67,8 @@ function AccountPageInner() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [couponCode, setCouponCode] = useState('')
+  const [ownReferralCode, setOwnReferralCode] = useState('')
+  const [referralBonusApplied, setReferralBonusApplied] = useState(false)
   const [copied, setCopied] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -127,21 +140,27 @@ function AccountPageInner() {
           birthYear: parseInt(birthYear),
           birthDate: birthMonthDay || null,
           profession: profession || null,
-          password, emailConsent, smsConsent
+          password, emailConsent, smsConsent,
+          referralCode: referralCodeInput.trim() || null
         })
       })
-      
+
       const data = await res.json()
-      
+
       if (!res.ok) {
         throw new Error(data.error || 'Kayıt sırasında bir hata oluştu.')
       }
-      
+
       // Auto login after register
       localStorage.setItem('user', JSON.stringify(data.user))
       if (data.token) localStorage.setItem('pn_session', data.token)
+      // Referans kodu kullanıldıysa artık gereksiz — bir sonraki siparişte tekrar
+      // uygulanıp mükerrer bonusa yol açmasın diye temizliyoruz.
+      if (data.referralBonusApplied) localStorage.removeItem('pn_referral_code')
       setSuccess(true)
       setCouponCode(data.coupon)
+      setOwnReferralCode(data.user?.referral_code || '')
+      setReferralBonusApplied(Boolean(data.referralBonusApplied))
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -250,6 +269,21 @@ function AccountPageInner() {
                   </div>
                   {copied && <p className="text-xs text-accent-gold mt-2">Kopyalandı!</p>}
                 </div>
+
+                {referralBonusApplied && (
+                  <div className="bg-accent-gold/10 border border-accent-gold/20 p-4 rounded-2xl w-full text-sm text-foreground/80">
+                    🎁 Referans kodu kullanıldı — sizi davet eden üye de bir indirim kuponu kazandı, size özel ek bir kupon da hesabınıza tanımlandı. İkisini de <Link href="/profil" className="underline underline-offset-4 text-accent-gold">Profilim</Link> sayfasından görebilirsiniz.
+                  </div>
+                )}
+
+                {ownReferralCode && (
+                  <div className="bg-foreground/5 p-5 rounded-2xl border border-foreground/10 w-full">
+                    <p className="text-xs uppercase tracking-widest text-foreground/60 mb-1">Kendi Referans Kodunuz</p>
+                    <p className="text-lg font-medium tracking-wider text-accent-gold font-mono">{ownReferralCode}</p>
+                    <p className="text-[11px] text-foreground/50 mt-1">Arkadaşlarınıza bu kodu verin, ikiniz de kazanın.</p>
+                  </div>
+                )}
+
                 <Link href="/profil" className="mt-8 border border-foreground text-foreground px-8 py-3 uppercase tracking-widest text-sm font-medium hover:bg-foreground hover:text-background transition-colors inline-block">
                   Profilime Git
                 </Link>
@@ -313,6 +347,22 @@ function AccountPageInner() {
                   className="w-full bg-transparent border-b border-foreground/20 py-2 focus:outline-none focus:border-accent-gold transition-colors"
                   placeholder="0 (5XX) XXX XX XX"
                 />
+              </div>
+
+              <div className="flex flex-col">
+                <label htmlFor="referralCode" className="text-xs uppercase tracking-widest text-foreground/60 mb-2 flex items-center justify-between">
+                  Referans / Üye Kodu <span className="text-[10px] text-foreground/40 normal-case tracking-normal">Opsiyonel</span>
+                </label>
+                <input
+                  id="referralCode"
+                  name="referralCode"
+                  type="text"
+                  value={referralCodeInput}
+                  onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
+                  className="w-full bg-transparent border-b border-foreground/20 py-2 focus:outline-none focus:border-accent-gold transition-colors font-mono tracking-wider"
+                  placeholder="Örn: PN-AYSE123"
+                />
+                <p className="text-[10px] text-foreground/50 mt-1 leading-tight">Sizi tavsiye eden bir üyenin kodu varsa girin — ikiniz de hediye kazanır.</p>
               </div>
 
               <div className="grid grid-cols-2 gap-6">

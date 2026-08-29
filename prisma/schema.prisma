@@ -137,6 +137,8 @@ model Customer {
   
   // Affiliate, B2B Sampler, Referans (Tavsiye Et Kazan) Sistemi
   referral_code     String?  @unique
+  referredByCode    String?  // Üye olurken GİRDİĞİ referans kodu (kim tarafından davet edildiği,
+                              // kayıt anında kalıcı olarak tutulur — sipariş/checkout'a bağlı değil)
   partner_type      String   @default("retail") // "retail", "influencer", "b2b_sampler"
   wallet_balance    Float    @default(0)        // Influencer/Öğrenci komisyon birikim cüzdanı
   earned_samples    Int      @default(0)        // B2B Satıcılarının hak ettiği tester (eşantiyon) kotası

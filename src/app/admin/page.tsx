@@ -49,6 +49,7 @@ type Customer = {
   email_opt_in?: boolean
   sms_opt_in?: boolean
   referral_code?: string | null
+  referredByCode?: string | null
   partner_type: string
   wallet_balance: number
   earned_samples: number
@@ -3576,6 +3577,13 @@ export default function AdminDashboard() {
                       <label className="block text-xs font-bold text-gray-700 mb-1.5">Özel Davet / Elçi Kodu</label>
                       <div className="w-full bg-gray-100 border border-gray-200 rounded-xl p-3 text-sm font-mono text-gray-700">
                         {selectedCustomer.referral_code || 'Sistem tarafından henüz kod üretilmedi'}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Kimin Referansıyla Üye Oldu</label>
+                      <div className="w-full bg-gray-100 border border-gray-200 rounded-xl p-3 text-sm font-mono text-gray-700">
+                        {selectedCustomer.referredByCode || '— Doğrudan üye oldu —'}
                       </div>
                     </div>
 
