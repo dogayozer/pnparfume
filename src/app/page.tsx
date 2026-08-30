@@ -6,6 +6,7 @@ import Link from 'next/link'
 import MobileFilterSort from '@/components/catalog/MobileFilterSort'
 import PerksBanner from '@/components/PerksBanner'
 import QrHashRedirect from '@/components/QrHashRedirect'
+import SpecialDayBanner from '@/components/SpecialDayBanner'
 
 export default async function Home({
   searchParams,
@@ -85,6 +86,7 @@ export default async function Home({
   return (
     <div className="flex flex-col min-h-screen">
       <QrHashRedirect />
+      <SpecialDayBanner />
 
       <HomeHero />
 
