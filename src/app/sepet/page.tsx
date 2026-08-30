@@ -20,20 +20,13 @@ export default function CartPage() {
   const [timeLeft, setTimeLeft] = useState(600) // 10:00
   const [selectedTester, setSelectedTester] = useState<string | null>(null)
 
-  // Kargo ücreti / ücretsiz kargo barajı — önceden burada sabit kodlanmıştı (100 TL /
-  // 2000 TL), admin panelindeki "Senaryo Kuralları"nda ayarlanan gerçek değerler hiç
-  // okunmuyordu. Artık gerçek zamanlı çekiliyor, hata/gecikme durumunda aynı eski
-  // sabit değerlere düşülüyor ki sepet asla kırılmasın.
-  const [shippingRules, setShippingRules] = useState({ shippingCost: 100, freeShippingLimit: 2000 })
-  useEffect(() => {
-    fetch('/api/shipping-rules')
-      .then(res => res.json())
-      .then(data => setShippingRules({
-        shippingCost: data.shippingCost ?? 100,
-        freeShippingLimit: data.freeShippingLimit ?? 2000
-      }))
-      .catch(() => {})
-  }, [])
+  // Kargo ücreti — önceden sabit bir TL barajına (2000 TL) göre belirleniyordu.
+  // Artık sepetin GERÇEK ürün maliyetine ve hedef kâr marjına göre canlı hesaplanıyor
+  // (bkz. /api/shipping-rules POST, src/lib/dynamicShipping.ts) — kargoyu işletme
+  // üstlense bile marj korunuyorsa ücretsiz, korunmuyorsa normal ücret alınır. Hem
+  // birikmiş kupon kullanan hem sıradan alışverişler için aynı kural işler.
+  const [dynamicShipping, setDynamicShipping] = useState({ freeShippingEligible: false, shippingFee: 100 })
+  const [shippingLoading, setShippingLoading] = useState(false)
 
   // Auth & Checkout State
   const [currentUser, setCurrentUser] = useState<any>(null)
@@ -145,13 +138,34 @@ export default function CartPage() {
   // 2. Ürün İndirimi
   const multiItemDiscount = items.length >= 2 ? SECOND_ITEM_DISCOUNT : 0
 
-  // Kargo Ücreti — admin panelinden ayarlanan gerçek değerler
-  let shippingFee = shippingRules.shippingCost
-  if (subtotal >= shippingRules.freeShippingLimit) shippingFee = 0
-  if (shippingDiscountApplied) shippingFee = 0 // Arkadaş kargosu
-
   // Kupon İndirimi
   const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0
+
+  // Kargo indirimleri/kuponlar sonrası kalan tutara göre yeniden hesaplanmalı —
+  // sepet, indirim veya kupon her değiştiğinde sunucudan güncel karar isteniyor.
+  const discountedSubtotal = subtotal - multiItemDiscount - couponDiscount
+  useEffect(() => {
+    if (items.length === 0) return
+    setShippingLoading(true)
+    fetch('/api/shipping-rules', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cart: items, discountedSubtotal })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (typeof data.shippingFee === 'number') {
+          setDynamicShipping({ freeShippingEligible: !!data.freeShippingEligible, shippingFee: data.shippingFee })
+        }
+      })
+      .catch(() => {})
+      .finally(() => setShippingLoading(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, discountedSubtotal])
+
+  // Kargo Ücreti — kâr marjı bazlı dinamik karar, "Paydaş Ekonomisi" (arkadaş
+  // kargosu) her zaman öncelikli olarak ücretsiz yapar.
+  let shippingFee = shippingDiscountApplied ? 0 : dynamicShipping.shippingFee
 
   const total = subtotal - multiItemDiscount - couponDiscount + shippingFee
 
@@ -356,14 +370,21 @@ export default function CartPage() {
                   </div>
                 )}
 
-                <div className="flex justify-between items-center">
-                  <span>Kargo Ücreti</span>
-                  {shippingFee === 0 ? (
-                    <span className="text-accent-gold font-medium flex items-center gap-1">
-                      <Truck size={14} /> ÜCRETSİZ
-                    </span>
-                  ) : (
-                    <span>{shippingFee} TL</span>
+                <div>
+                  <div className="flex justify-between items-center">
+                    <span>Kargo Ücreti</span>
+                    {shippingLoading ? (
+                      <span className="text-foreground/40 text-xs">hesaplanıyor...</span>
+                    ) : shippingFee === 0 ? (
+                      <span className="text-accent-gold font-medium flex items-center gap-1">
+                        <Truck size={14} /> ÜCRETSİZ
+                      </span>
+                    ) : (
+                      <span>{shippingFee} TL</span>
+                    )}
+                  </div>
+                  {shippingFee === 0 && dynamicShipping.freeShippingEligible && !shippingDiscountApplied && (
+                    <p className="text-[11px] text-foreground/40 mt-1">Sepet tutarınız kargo dahil kâr eşiğini karşıladığı için kargo bizden. 🎁</p>
                   )}
                 </div>
               </div>

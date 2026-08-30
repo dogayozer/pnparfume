@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getCartCostTotal } from '@/lib/cartCost'
 
 export async function POST(req: Request) {
   try {
@@ -22,17 +23,7 @@ export async function POST(req: Request) {
     // görünse de, sunucu tarafında bağımsızca doğrulanmadan asla güvenilmemeli.
     if (Array.isArray(cart) && cart.length > 0) {
       try {
-        const skus = cart.map((item: any) => (item.sku || item.id || '').toString()).filter(Boolean)
-        const dbProducts = await prisma.product.findMany({
-          where: { sku: { in: skus } },
-          select: { sku: true, base_cost: true }
-        })
-        const costBySku = Object.fromEntries(dbProducts.map(p => [p.sku, p.base_cost]))
-        const totalCost = cart.reduce((sum: number, item: any) => {
-          const sku = (item.sku || item.id || '').toString()
-          const qty = Number(item.quantity) || 1
-          return sum + (costBySku[sku] || 0) * qty
-        }, 0)
+        const totalCost = await getCartCostTotal(cart)
 
         const marginRule = await prisma.scenarioRule.findUnique({ where: { rule_key: 'MIN_PROFIT_MARGIN_PERCENT' } })
         const marginPercent = marginRule && marginRule.is_active ? marginRule.rule_value : 0
