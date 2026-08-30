@@ -400,9 +400,12 @@ export default function ProfilePage() {
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
                       <span className="text-xs uppercase tracking-widest text-accent-gold font-bold block mb-1">Tavsiye Et & Kazan</span>
-                      <h3 className="text-xl font-light text-foreground mb-2">Arkadaşlarına %10 İndirim Kazandır, Sen %15 Nakit Kazan!</h3>
-                      <p className="text-xs text-foreground/70 font-light max-w-lg">
+                      <h3 className="text-xl font-light text-foreground mb-1.5">Satın Al &rarr; Memnun Ol &rarr; Tavsiye Et &rarr; Kazan</h3>
+                      <p className="text-xs text-foreground/70 font-light max-w-lg mb-2">
                         Sana özel referans kodunla alışveriş yapan her arkadaşın için sipariş tutarının %15'i anında cüzdanına yansır.
+                      </p>
+                      <p className="text-xs text-foreground/70 font-light max-w-lg">
+                        Kazandığın kuponları ürüne dönüştürebilir, yeni gelen kokularımızı satışa çıkmadan önce test etme şansını yakalayabilirsin.
                       </p>
                     </div>
 

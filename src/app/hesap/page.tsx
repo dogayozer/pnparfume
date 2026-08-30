@@ -62,6 +62,7 @@ function AccountPageInner() {
   const [termsConsent, setTermsConsent] = useState(false)
   const [emailConsent, setEmailConsent] = useState(false)
   const [smsConsent, setSmsConsent] = useState(false)
+  const [wantsSalesRep, setWantsSalesRep] = useState(false)
   
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -141,7 +142,8 @@ function AccountPageInner() {
           birthDate: birthMonthDay || null,
           profession: profession || null,
           password, emailConsent, smsConsent,
-          referralCode: referralCodeInput.trim() || null
+          referralCode: referralCodeInput.trim() || null,
+          wantsSalesRep
         })
       })
 
@@ -349,6 +351,15 @@ function AccountPageInner() {
                 />
               </div>
 
+              <div className="bg-accent-gold/5 border border-accent-gold/15 rounded-2xl px-4 py-3.5">
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-accent-gold mb-1.5">
+                  Satın Al &rarr; Memnun Ol &rarr; Tavsiye Et &rarr; Kazan
+                </p>
+                <p className="text-[11px] text-foreground/60 leading-relaxed">
+                  Kazandığınız kuponları ürüne dönüştürebilir, yeni gelen kokularımızı satışa çıkmadan önce test etme şansını yakalayabilirsiniz.
+                </p>
+              </div>
+
               <div className="flex flex-col">
                 <label htmlFor="referralCode" className="text-xs uppercase tracking-widest text-foreground/60 mb-2 flex items-center justify-between">
                   Referans Kodu veya Telefon Numarası <span className="text-[10px] text-foreground/40 normal-case tracking-normal">Opsiyonel</span>
@@ -466,6 +477,12 @@ function AccountPageInner() {
                   <input type="checkbox" checked={smsConsent} onChange={(e) => setSmsConsent(e.target.checked)} className="mt-0.5 w-4 h-4 rounded border-foreground/30 text-accent-gold focus:ring-accent-gold bg-transparent cursor-pointer" />
                   <span className="text-xs text-foreground/80 group-hover:text-foreground transition-colors leading-relaxed">
                     Kampanya, duyuru, bilgilendirmelerden <strong>sms</strong> ile haberdar olmak istiyorum.
+                  </span>
+                </label>
+                <label className="flex items-start gap-3 cursor-pointer group bg-accent-gold/5 border border-accent-gold/15 rounded-xl px-3 py-2.5 -mx-3">
+                  <input type="checkbox" checked={wantsSalesRep} onChange={(e) => setWantsSalesRep(e.target.checked)} className="mt-0.5 w-4 h-4 rounded border-foreground/30 text-accent-gold focus:ring-accent-gold bg-transparent cursor-pointer" />
+                  <span className="text-xs text-foreground/80 group-hover:text-foreground transition-colors leading-relaxed">
+                    <strong>Satış Temsilcisi olmak istiyorum</strong> — sizinle iletişime geçelim.
                   </span>
                 </label>
               </div>

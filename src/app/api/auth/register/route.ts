@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import nodemailer from 'nodemailer'
 import { signCustomerToken } from '@/lib/customerAuth'
+import { getIntegrationSettings } from '@/lib/integrationSettings'
 
 // Yeni üyenin paylaşacağı KENDİ referans kodunu üretir — benzersizliği garanti
 // etmek için birkaç deneme yapar (çok düşük ihtimalli çakışma durumunda).
@@ -22,7 +24,7 @@ export async function POST(request: Request) {
     const data = await request.json()
     const {
       firstName, lastName, email, phone, password, emailConsent, smsConsent,
-      birthYear, birthDate, profession, referralCode
+      birthYear, birthDate, profession, referralCode, wantsSalesRep
     } = data
 
     // Validate inputs
@@ -178,6 +180,40 @@ export async function POST(request: Request) {
         referralBonusApplied = true
       } catch (bonusErr) {
         console.error('Referans bonus kuponu oluşturulamadı (kayıt yine de tamamlandı):', bonusErr)
+      }
+    }
+
+    // Üye olurken "Satış Temsilcisi olmak istiyorum" kutusunu işaretlediyse admin'e
+    // haber verilir — kayıt işleminin kendisini asla bozmasın diye ayrı try/catch'te.
+    if (wantsSalesRep) {
+      try {
+        const { smtpHost, smtpUser, smtpPass, smtpPort, adminOrderEmail } = await getIntegrationSettings()
+        if (smtpUser && smtpPass) {
+          const transporter = nodemailer.createTransport({
+            host: smtpHost,
+            port: smtpPort,
+            secure: smtpPort === 465,
+            auth: { user: smtpUser, pass: smtpPass },
+          })
+          await transporter.sendMail({
+            from: `"PN Parfüm Üyelik" <${smtpUser}>`,
+            to: adminOrderEmail || 'muhasebe@pienparfume.com.tr',
+            subject: 'Yeni Üyemiz Satış Temsilcisi Olmak İstiyor',
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+                <h2 style="color: #A3833E; border-bottom: 2px solid #A3833E; padding-bottom: 10px;">Yeni Üyemiz Satış Temsilcisi Olmak İstiyor</h2>
+                <p><strong>Ad Soyad:</strong> ${fullName}</p>
+                <p><strong>E-posta:</strong> <a href="mailto:${email}">${email}</a></p>
+                <p><strong>Telefon:</strong> ${phone || 'Belirtilmedi'}</p>
+                <p style="font-size: 12px; color: #888; margin-top: 20px;">Üyelik formundaki "Satış Temsilcisi olmak istiyorum" kutusu işaretlenerek gönderildi.</p>
+              </div>
+            `,
+          })
+        } else {
+          console.log('[SATIŞ TEMSİLCİSİ TALEBİ] SMTP tanımlı değil, simülasyon:', fullName, email, phone)
+        }
+      } catch (mailErr) {
+        console.error('Satış temsilcisi bildirim e-postası gönderilemedi (kayıt yine de tamamlandı):', mailErr)
       }
     }
 
