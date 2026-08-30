@@ -176,7 +176,7 @@ function BlendEngineContent() {
     const match = nearestCatalogMatch(combinedProfile, familyCandidates, selectedEssences.map(e => e.sku))
     if (!match) return null
     const product = products.find(p => p.sku === match.sku)
-    return product ? { name: `PN ${product.sku}`, mood: product.mood_tag, similarity: match.similarity } : null
+    return product ? { name: 'Esans', mood: product.mood_tag, similarity: match.similarity } : null
   }, [baseSku, familyCandidates, combinedProfile, selectedEssences, products])
 
   // Essences available for Step 3, filtered by the family chosen in Step 2
@@ -539,7 +539,7 @@ function BlendEngineContent() {
                       </div>
                     ) : (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[460px] overflow-y-auto pr-1">
-                        {filteredEssences.map(p => {
+                        {filteredEssences.map((p, idx) => {
                           const isSelected = selectedEssences.some(e => e.sku === p.sku)
                           const disabled = !isSelected && selectedEssences.length >= 3
                           return (
@@ -552,7 +552,7 @@ function BlendEngineContent() {
                               `}
                             >
                               <div className="flex items-center justify-between mb-1">
-                                <span className="font-serif font-medium text-sm">PN {p.sku}</span>
+                                <span className="font-serif font-medium text-sm">Esans {idx + 1}</span>
                                 {isSelected && <Check size={14} className="text-[#B48A3F]" />}
                               </div>
                               {p.mood_tag && (
