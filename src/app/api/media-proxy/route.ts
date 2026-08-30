@@ -29,6 +29,22 @@ export async function GET(request: Request) {
     }
 
     const contentType = response.headers.get('content-type') || 'application/octet-stream'
+
+    // Barındırma sağlayıcısının bot/DDoS koruması bazen gerçek görsel yerine
+    // "One moment, please..." bekleme sayfasını HTTP 200 ile döndürüyor — bu kod
+    // önceden her 200'ü "başarılı" sayıp 30 güne kadar (s-maxage) CDN'e önbelleğe
+    // alıyordu. Bir kez bu sahte 200'e yakalanan bir ürün, upstream'de gerçek görsel
+    // düzelse bile bizim önbelleğimizde bozuk (HTML) kalıyordu — gerçek bir olayda
+    // (M 140, M 106) tam bunu gördük. Artık content-type gerçekten image/video
+    // değilse (örn. text/html) başarısız sayılıyor ve HİÇ önbelleğe alınmıyor,
+    // bir sonraki istek upstream'i tekrar dener.
+    if (!contentType.startsWith('image/') && !contentType.startsWith('video/')) {
+      return new NextResponse('Upstream did not return media (possibly a bot-check page)', {
+        status: 502,
+        headers: { 'Cache-Control': 'no-store' },
+      })
+    }
+
     const arrayBuffer = await response.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
