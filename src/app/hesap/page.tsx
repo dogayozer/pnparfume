@@ -183,10 +183,10 @@ function AccountPageInner() {
           <ArrowLeft size={16} className="mr-2" /> Ana Sayfaya Dön
         </Link>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24 relative">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24 relative items-start">
           
           {/* Giriş Yap */}
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col">
             <h1 className="text-3xl font-light tracking-wide mb-10">Giriş Yap</h1>
             
             <form onSubmit={handleLogin} className="space-y-8 flex-1 flex flex-col">
