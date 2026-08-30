@@ -2245,30 +2245,46 @@ export default function AdminDashboard() {
                 // kalan siparişlerde bile taşıyıcıya ödeme yapılır).
                 const kargoMaliyetTL = getVal('SIM_SHIPPING_COST_TRY', 130)
                 const satisFiyati = getVal('AVG_SALE_PRICE_TRY', 600)
-                const gunlukYeniUye = getVal('DAILY_NEW_MEMBERS', 10)
-                const tavsiyeOrani = getVal('REFERRAL_RATE_PERCENT', 15)
-                const kisiBasiTavsiye = getVal('AVG_REFERRALS_PER_MEMBER', 1.5)
+                const hedefKarYuzdesi = getVal('TARGET_PROFIT_MARGIN_PERCENT', 20)
+                const gunlukSatis = getVal('GUNLUK_SATIS_SAYISI', 20)
+                const tavsiyeSatisOrani = getVal('REFERRAL_PER_SALE_PERCENT', 5)
                 const donusumOrani = getVal('REFERRAL_CONVERSION_PERCENT', 35)
+                const simPeriyot = getVal('SIM_PERIOD_DAYS', 30)
                 const elciSiparis = getVal('ELCI_DAILY_ORDERS', 3)
                 const davetEdenOdulu = getVal('REFERRAL_REWARD_EXISTING', 200)
                 const yeniUyeOdulu = getVal('REFERRAL_REWARD_NEW', 90)
                 const elciKomisyon = getVal('AFFILIATE_COMMISSION_RATE', 15)
 
                 // ---- Hesaplama (günlük) ----
-                const birimMaliyet = (siseUSD + kutuUSD) * usdKuru + digerTL + kargoMaliyetTL
+                // Ürün maliyeti (kargosuz) — "en az %20 kâr, kargo hariç" kuralının
+                // dayandığı taban budur, kargo ayrı bir gerçek nakit gideri.
+                const urunMaliyetiKargosuz = (siseUSD + kutuUSD) * usdKuru + digerTL
+                const birimMaliyet = urunMaliyetiKargosuz + kargoMaliyetTL
+
+                // KÂR PAYI GARANTİSİ (kargo hariç): satış fiyatından ürün maliyeti ve
+                // hedeflenen minimum kârı (%X × ürün maliyeti) düştükten sonra kalan,
+                // referans ödülü + elçi komisyonu için kullanılabilecek azami bütçe.
+                const hedefKarTutari = urunMaliyetiKargosuz * (hedefKarYuzdesi / 100)
+                const maksOdulButcesi = satisFiyati - urunMaliyetiKargosuz - hedefKarTutari
+                const mevcutOdulToplami = davetEdenOdulu + yeniUyeOdulu
+                const butceUygun = mevcutOdulToplami <= maksOdulButcesi
+                const butceTamponu = maksOdulButcesi - mevcutOdulToplami
 
                 // KANAL A — Müşteri Tavsiyesi: kayıt anında SADECE sabit ödül (200+90 TL)
                 // tetiklenir. Sistemde bilerek kurulan bir mekanizma (register API'de
                 // referans kullanılınca localStorage'daki kod anında temizleniyor) sayesinde
                 // bu ödül, aynı siparişte elçi komisyonuyla ÇAKIŞMAZ — o yüzden burada
-                // komisyon YOK, sadece sabit ödül düşülüyor.
-                const tavsiyeEdenUye = gunlukYeniUye * (tavsiyeOrani / 100)
-                const uretilenTavsiye = tavsiyeEdenUye * kisiBasiTavsiye
+                // komisyon YOK, sadece sabit ödül düşülüyor. Tavsiye üretimi artık "yeni
+                // üye" üzerinden değil, doğrudan SATIŞ üzerinden: "her 100 satıştan X
+                // tavsiye" (satış başına tavsiye oranı).
+                const uretilenTavsiye = gunlukSatis * (tavsiyeSatisOrani / 100)
                 const donusenTavsiye = uretilenTavsiye * (donusumOrani / 100)
                 const ciroA = donusenTavsiye * satisFiyati
-                const cogsA = donusenTavsiye * birimMaliyet
-                const oduluA = donusenTavsiye * (davetEdenOdulu + yeniUyeOdulu)
-                const netKarA = ciroA - cogsA - oduluA
+                const urunMaliyetA = donusenTavsiye * urunMaliyetiKargosuz
+                const kargoA = donusenTavsiye * kargoMaliyetTL
+                const oduluA = donusenTavsiye * mevcutOdulToplami
+                const netKarA = ciroA - urunMaliyetA - kargoA - oduluA
+                const netKarAKargosuz = ciroA - urunMaliyetA - oduluA // "%20 kâr" kuralının fiilen sağlanıp sağlanmadığını göstermek için
 
                 // KANAL B — Elçi / Influencer: kayıttan bağımsız, süregelen paylaşım
                 // linkiyle (?ref=) gelen SÜREKLİ sipariş akışı. Burada sabit ödül YOK,
@@ -2279,7 +2295,7 @@ export default function AdminDashboard() {
                 const netKarB = ciroB - cogsB - komisyonB
 
                 const ciro = ciroA + ciroB
-                const cogs = cogsA + cogsB
+                const cogs = (urunMaliyetA + kargoA) + cogsB
                 const netKar = netKarA + netKarB
                 const karMarji = ciro > 0 ? (netKar / ciro) * 100 : 0
                 const oduluSuzKar = ciro - cogs
@@ -2294,7 +2310,7 @@ export default function AdminDashboard() {
                   <div className="space-y-6">
                     <div className="bg-blue-50 border border-blue-100 text-blue-800 rounded-xl p-4 text-sm">
                       <h3 className="font-semibold mb-1">Kârlılık Simülatörü Hakkında</h3>
-                      <p>"Kendi Kendine Büyüyen Sistem"in (tavsiye/referans döngüsü) pratikte ne kadar kârlı olduğunu, iki ayrı kanalı ayırarak hesaplar: <b>Müşteri Tavsiyesi</b> (kayıt anında tek seferlik sabit ödül) ve <b>Elçi/Influencer</b> (süregelen paylaşım linkinden yüzdelik komisyon). Bu ikisi gerçek sistemde aynı siparişte çakışmaz, o yüzden ayrı hesaplanır. Tüm rakamlar birer <b>varsayım</b> — kendi gerçek maliyet ve büyüme tahminlerinizle güncelleyin, değişiklikler kalıcı olarak kaydedilir.</p>
+                      <p>"Kendi Kendine Büyüyen Sistem"in (tavsiye/referans döngüsü) pratikte ne kadar kârlı olduğunu, iki ayrı kanalı ayırarak hesaplar: <b>Müşteri Tavsiyesi</b> (kayıt anında tek seferlik sabit ödül) ve <b>Elçi/Influencer</b> (süregelen paylaşım linkinden yüzdelik komisyon). Bu ikisi gerçek sistemde aynı siparişte çakışmaz, o yüzden ayrı hesaplanır. Ürün maliyetinin (kargo hariç) en az %<span className="font-semibold">{fmt1(hedefKarYuzdesi)}</span>'i işletmede kâr olarak kalacak şekilde ödül bütçesi otomatik kontrol ediliyor. Tüm rakamlar birer <b>varsayım</b> — kendi gerçek maliyet ve büyüme tahminlerinizle güncelleyin, değişiklikler kalıcı olarak kaydedilir.</p>
                     </div>
 
                     {/* MALİYET GİRDİLERİ */}
@@ -2327,24 +2343,77 @@ export default function AdminDashboard() {
                           <input type="number" step="1" value={kargoMaliyetTL} onChange={e => setVal('SIM_SHIPPING_COST_TRY', parseFloat(e.target.value) || 0)} className={inputCls} />
                         </div>
                       </div>
-                      <p className="text-xs text-gray-400 mt-3">Kargo Maliyeti burada işletmenin taşıyıcıya ödediği gerçek maliyet — müşteriden alınan kargo ÜCRETİNDEN (Senaryo Kuralları → SHIPPING_COST) bilerek ayrı tutuldu, ikisi farklı olabilir.</p>
+                      <p className="text-xs text-gray-400 mt-3">Kargo Maliyeti burada işletmenin taşıyıcıya ödediği gerçek maliyet — müşteriden alınan kargo ÜCRETİNDEN (Senaryo Kuralları → SHIPPING_COST) bilerek ayrı tutuldu, ikisi farklı olabilir; aşağıdaki %{fmt1(hedefKarYuzdesi)} kâr kuralının dışında tutulur.</p>
                       <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2 flex-wrap">
-                        <span className="text-xs text-gray-500">Hesaplanan birim maliyet:</span>
-                        <span className="font-mono font-bold text-gray-900">({fmt1(siseUSD)} + {fmt1(kutuUSD)}) × {fmt1(usdKuru)} + {fmt(digerTL)} + {fmt(kargoMaliyetTL)} =</span>
-                        <span className="font-mono font-bold text-rose-600 text-base">{fmt(birimMaliyet)} TL</span>
-                        <span className="text-xs text-gray-400 ml-2">(satış {fmt(satisFiyati)} TL üzerinden brüt marj: %{fmt1(satisFiyati > 0 ? ((satisFiyati - birimMaliyet) / satisFiyati) * 100 : 0)})</span>
+                        <span className="text-xs text-gray-500">Ürün maliyeti (kargo hariç):</span>
+                        <span className="font-mono font-bold text-gray-900">({fmt1(siseUSD)} + {fmt1(kutuUSD)}) × {fmt1(usdKuru)} + {fmt(digerTL)} =</span>
+                        <span className="font-mono font-bold text-gray-900 text-base">{fmt(urunMaliyetiKargosuz)} TL</span>
+                        <span className="text-xs text-gray-300">·</span>
+                        <span className="text-xs text-gray-500">+ kargo {fmt(kargoMaliyetTL)} TL =</span>
+                        <span className="font-mono font-bold text-rose-600 text-base">{fmt(birimMaliyet)} TL toplam birim maliyet</span>
                       </div>
+                    </div>
+
+                    {/* KÂR PAYI GARANTİSİ */}
+                    <div className={`rounded-2xl border shadow-sm p-6 ${butceUygun ? 'bg-emerald-50/50 border-emerald-200' : 'bg-rose-50/50 border-rose-200'}`}>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-gray-900">2. Kâr Payı Garantisi (Kargo Hariç)</h3>
+                        <div className="flex items-center gap-2">
+                          <label className="text-xs text-gray-500">Hedef Kâr Marjı</label>
+                          <input type="number" step="1" value={hedefKarYuzdesi} onChange={e => setVal('TARGET_PROFIT_MARGIN_PERCENT', parseFloat(e.target.value) || 0)} className="w-16 border rounded-lg px-2 py-1.5 text-sm text-right focus:ring-2 focus:ring-indigo-500" />
+                          <span className="text-xs text-gray-500">%</span>
+                          <button onClick={() => saveKeys(['TARGET_PROFIT_MARGIN_PERCENT'])} disabled={savingId !== null} className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5">
+                            <Save size={12} /> Kaydet
+                          </button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                        <div>
+                          <div className="text-xs text-gray-500 mb-0.5">Satış Fiyatı</div>
+                          <div className="font-mono font-semibold">{fmt(satisFiyati)} TL</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500 mb-0.5">− Ürün Maliyeti</div>
+                          <div className="font-mono font-semibold text-rose-600">−{fmt(urunMaliyetiKargosuz)} TL</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500 mb-0.5">− Garanti Min. Kâr (%{fmt1(hedefKarYuzdesi)})</div>
+                          <div className="font-mono font-semibold text-rose-600">−{fmt(hedefKarTutari)} TL</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500 mb-0.5">= Azami Ödül Bütçesi</div>
+                          <div className="font-mono font-bold text-indigo-700">{fmt(maksOdulButcesi)} TL</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500 mb-0.5">Mevcut Ödül (200+90)</div>
+                          <div className="font-mono font-bold text-gray-900">{fmt(mevcutOdulToplami)} TL</div>
+                        </div>
+                      </div>
+                      <div className="mt-4 pt-4 border-t border-gray-200/70 flex items-center gap-2 text-sm">
+                        {butceUygun ? (
+                          <>
+                            <CheckCircle size={16} className="text-emerald-600 flex-shrink-0" />
+                            <span className="text-emerald-800">Mevcut ödül tutarları bütçenin içinde — <b>{fmt(butceTamponu)} TL</b> tampon payı var. {fmt(urunMaliyetiKargosuz)} TL'ye mâl olup {fmt(satisFiyati)} TL'ye satılan üründe, kargo hariç en az %{fmt1(hedefKarYuzdesi)} (yaklaşık <b>{fmt(hedefKarTutari)} TL</b>) işletmede kalıyor.</span>
+                          </>
+                        ) : (
+                          <>
+                            <AlertCircle size={16} className="text-rose-600 flex-shrink-0" />
+                            <span className="text-rose-800">Mevcut ödül tutarları bütçeyi <b>{fmt(-butceTamponu)} TL</b> aşıyor — %{fmt1(hedefKarYuzdesi)} kâr hedefini tutturmak için Senaryo Kuralları'ndan REFERRAL_REWARD_EXISTING/NEW toplamını düşürün.</span>
+                          </>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-3">Not: bu, kargo dahil GERÇEK NAKİT kârı garanti etmez — kargo (Kanal A'da sipariş başına {fmt(kargoMaliyetTL)} TL) ayrıca gerçek bir nakit gideridir, aşağıdaki sonuç tablosunda ayrıca düşülür.</p>
                     </div>
 
                     {/* SATIŞ + BÜYÜME SENARYOSU */}
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-semibold text-gray-900">2. Satış Fiyatı &amp; Büyüme Senaryosu (Varsayımlar)</h3>
-                        <button onClick={() => saveKeys(['AVG_SALE_PRICE_TRY', 'DAILY_NEW_MEMBERS', 'REFERRAL_RATE_PERCENT', 'AVG_REFERRALS_PER_MEMBER', 'REFERRAL_CONVERSION_PERCENT', 'ELCI_DAILY_ORDERS'])} disabled={savingId !== null} className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5">
+                        <h3 className="font-semibold text-gray-900">3. Satış Fiyatı &amp; Büyüme Senaryosu (Varsayımlar)</h3>
+                        <button onClick={() => saveKeys(['AVG_SALE_PRICE_TRY', 'GUNLUK_SATIS_SAYISI', 'REFERRAL_PER_SALE_PERCENT', 'REFERRAL_CONVERSION_PERCENT', 'ELCI_DAILY_ORDERS', 'SIM_PERIOD_DAYS'])} disabled={savingId !== null} className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5">
                           <Save size={13} /> Senaryoyu Kaydet
                         </button>
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                         <div>
                           <label className={labelCls}>Ort. Satış Fiyatı (TL)</label>
                           <input type="number" step="1" value={satisFiyati} onChange={e => setVal('AVG_SALE_PRICE_TRY', parseFloat(e.target.value) || 0)} className={inputCls} />
@@ -2353,20 +2422,20 @@ export default function AdminDashboard() {
                           <label className={labelCls}>Elçi Kaynaklı Günlük Sipariş</label>
                           <input type="number" step="1" value={elciSiparis} onChange={e => setVal('ELCI_DAILY_ORDERS', parseFloat(e.target.value) || 0)} className={inputCls} />
                         </div>
+                        <div>
+                          <label className={labelCls}>Simülasyon Periyodu (gün)</label>
+                          <input type="number" step="1" value={simPeriyot} onChange={e => setVal('SIM_PERIOD_DAYS', parseFloat(e.target.value) || 0)} className={inputCls} />
+                        </div>
                       </div>
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2">Müşteri Tavsiyesi Hunisi (Kanal A)</p>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2">Müşteri Tavsiyesi Hunisi (Kanal A) — satış başına tavsiye oranı</p>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         <div>
-                          <label className={labelCls}>Günlük Yeni Üye</label>
-                          <input type="number" step="1" value={gunlukYeniUye} onChange={e => setVal('DAILY_NEW_MEMBERS', parseFloat(e.target.value) || 0)} className={inputCls} />
+                          <label className={labelCls}>Günlük Satış Sayısı</label>
+                          <input type="number" step="1" value={gunlukSatis} onChange={e => setVal('GUNLUK_SATIS_SAYISI', parseFloat(e.target.value) || 0)} className={inputCls} />
                         </div>
                         <div>
-                          <label className={labelCls}>Tavsiye Eden Oranı (%)</label>
-                          <input type="number" step="1" value={tavsiyeOrani} onChange={e => setVal('REFERRAL_RATE_PERCENT', parseFloat(e.target.value) || 0)} className={inputCls} />
-                        </div>
-                        <div>
-                          <label className={labelCls}>Kişi Başı Ort. Tavsiye</label>
-                          <input type="number" step="0.1" value={kisiBasiTavsiye} onChange={e => setVal('AVG_REFERRALS_PER_MEMBER', parseFloat(e.target.value) || 0)} className={inputCls} />
+                          <label className={labelCls}>Satış Başına Tavsiye (%)</label>
+                          <input type="number" step="0.5" value={tavsiyeSatisOrani} onChange={e => setVal('REFERRAL_PER_SALE_PERCENT', parseFloat(e.target.value) || 0)} className={inputCls} />
                         </div>
                         <div>
                           <label className={labelCls}>Siparişe Dönüşüm (%)</label>
@@ -2374,19 +2443,18 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       <p className="text-xs text-gray-400 mt-3">
-                        Sabit ödüller (davet eden {fmt(davetEdenOdulu)} TL, yeni üye {fmt(yeniUyeOdulu)} TL — Kanal A'da) ve elçi komisyonu (%{fmt1(elciKomisyon)} — Kanal B'de) Senaryo Kuralları sekmesinden yönetiliyor, burada otomatik kullanılıyor.
+                        Örn: %{fmt1(tavsiyeSatisOrani)} = her 100 satıştan {fmt1(tavsiyeSatisOrani)} tavsiye üretiliyor. Sabit ödüller (davet eden {fmt(davetEdenOdulu)} TL, yeni üye {fmt(yeniUyeOdulu)} TL — Kanal A'da) ve elçi komisyonu (%{fmt1(elciKomisyon)} — Kanal B'de) Senaryo Kuralları sekmesinden yönetiliyor, burada otomatik kullanılıyor.
                       </p>
                     </div>
 
                     {/* HUNİ (FUNNEL) */}
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-                      <h3 className="font-semibold text-gray-900 mb-4">3. Kanal A — Günlük Tavsiye Hunisi</h3>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <h3 className="font-semibold text-gray-900 mb-4">4. Kanal A — Günlük Tavsiye Hunisi</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         {[
-                          { label: 'Yeni Üye', value: gunlukYeniUye, color: 'bg-gray-100 text-gray-700' },
-                          { label: 'Tavsiye Eden Üye', value: tavsiyeEdenUye, color: 'bg-indigo-50 text-indigo-700' },
-                          { label: 'Üretilen Tavsiye', value: uretilenTavsiye, color: 'bg-amber-50 text-amber-700' },
-                          { label: 'Siparişe Dönüşen', value: donusenTavsiye, color: 'bg-emerald-50 text-emerald-700' },
+                          { label: 'Günlük Satış', value: gunlukSatis, color: 'bg-gray-100 text-gray-700' },
+                          { label: `Üretilen Tavsiye (%${fmt1(tavsiyeSatisOrani)})`, value: uretilenTavsiye, color: 'bg-amber-50 text-amber-700' },
+                          { label: `Siparişe Dönüşen (%${fmt1(donusumOrani)})`, value: donusenTavsiye, color: 'bg-emerald-50 text-emerald-700' },
                         ].map((s, i) => (
                           <div key={i} className={`rounded-xl p-4 ${s.color}`}>
                             <div className="text-2xl font-bold font-mono">{fmt1(s.value)}</div>
@@ -2397,14 +2465,18 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* KANAL KIYASLAMASI */}
+                    <h3 className="font-semibold text-gray-900 -mb-2">5. Kanal Karşılaştırması</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
                         <h4 className="font-semibold text-gray-900 mb-1 flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-indigo-500"></span> Kanal A — Müşteri Tavsiyesi</h4>
-                        <p className="text-xs text-gray-400 mb-4">{fmt1(donusenTavsiye)} sipariş/gün × sabit {fmt(davetEdenOdulu + yeniUyeOdulu)} TL ödül</p>
+                        <p className="text-xs text-gray-400 mb-4">{fmt1(donusenTavsiye)} sipariş/gün × sabit {fmt(mevcutOdulToplami)} TL ödül</p>
                         <div className="space-y-1.5 text-sm">
                           <div className="flex justify-between"><span className="text-gray-500">Ciro</span><span className="font-mono">{fmt(ciroA)} TL</span></div>
-                          <div className="flex justify-between"><span className="text-gray-500">Maliyet + Ödül</span><span className="font-mono text-rose-500">−{fmt(cogsA + oduluA)} TL</span></div>
-                          <div className="flex justify-between pt-1.5 border-t border-gray-100"><span className="font-semibold text-gray-900">Net Kâr</span><span className={`font-mono font-bold ${netKarA >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>{fmt(netKarA)} TL</span></div>
+                          <div className="flex justify-between"><span className="text-gray-500">Ürün Maliyeti</span><span className="font-mono text-rose-500">−{fmt(urunMaliyetA)} TL</span></div>
+                          <div className="flex justify-between"><span className="text-gray-500">Kargo</span><span className="font-mono text-rose-500">−{fmt(kargoA)} TL</span></div>
+                          <div className="flex justify-between"><span className="text-gray-500">Sabit Ödül</span><span className="font-mono text-rose-500">−{fmt(oduluA)} TL</span></div>
+                          <div className="flex justify-between pt-1.5 border-t border-gray-100"><span className="font-semibold text-gray-900">Net Kâr (kargo dahil)</span><span className={`font-mono font-bold ${netKarA >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>{fmt(netKarA)} TL</span></div>
+                          <div className="flex justify-between text-xs"><span className="text-gray-400">Net Kâr (kargo hariç, %{fmt1(hedefKarYuzdesi)} kuralına göre)</span><span className="font-mono text-gray-500">{fmt(netKarAKargosuz)} TL</span></div>
                         </div>
                       </div>
                       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
@@ -2418,51 +2490,45 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    {/* SONUÇ: GÜNLÜK / HAFTALIK / AYLIK */}
+                    {/* SONUÇ: GÜNLÜK / SİMÜLASYON PERİYODU */}
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                       <div className="p-6 pb-0">
-                        <h3 className="font-semibold text-gray-900 mb-1">4. Sonuç: Toplam Kâr/Zarar Tablosu (Kanal A + B)</h3>
-                        <p className="text-xs text-gray-400 mb-4">İki kanalın toplamı — kanal bazında kırılım yukarıda.</p>
+                        <h3 className="font-semibold text-gray-900 mb-1">6. Sonuç: Toplam Kâr/Zarar Tablosu (Kanal A + B)</h3>
+                        <p className="text-xs text-gray-400 mb-4">İki kanalın toplamı, kargo dahil gerçek nakit kâr — kanal bazında kırılım yukarıda. Periyot uzunluğunu "3. Satış Fiyatı & Büyüme Senaryosu" bölümünden değiştirebilirsiniz.</p>
                       </div>
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-y border-gray-200 bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wider">
                             <th className="px-6 py-3 font-medium"></th>
                             <th className="px-6 py-3 font-medium text-right">Günlük</th>
-                            <th className="px-6 py-3 font-medium text-right">Haftalık (×7)</th>
-                            <th className="px-6 py-3 font-medium text-right">Aylık (×30)</th>
+                            <th className="px-6 py-3 font-medium text-right">{fmt(simPeriyot)} Günlük Toplam</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                           <tr>
                             <td className="px-6 py-3 text-gray-500">Toplam Ciro (A+B)</td>
                             <td className="px-6 py-3 text-right font-mono">{fmt(ciro)} TL</td>
-                            <td className="px-6 py-3 text-right font-mono">{fmt(ciro * 7)} TL</td>
-                            <td className="px-6 py-3 text-right font-mono">{fmt(ciro * 30)} TL</td>
+                            <td className="px-6 py-3 text-right font-mono">{fmt(ciro * simPeriyot)} TL</td>
                           </tr>
                           <tr>
-                            <td className="px-6 py-3 text-gray-500">Ürün Maliyeti (COGS)</td>
+                            <td className="px-6 py-3 text-gray-500">Ürün Maliyeti + Kargo (COGS)</td>
                             <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(cogs)} TL</td>
-                            <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(cogs * 7)} TL</td>
-                            <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(cogs * 30)} TL</td>
+                            <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(cogs * simPeriyot)} TL</td>
                           </tr>
                           <tr>
                             <td className="px-6 py-3 text-gray-500">Sabit Referans Ödülleri (Kanal A)</td>
                             <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(oduluA)} TL</td>
-                            <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(oduluA * 7)} TL</td>
-                            <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(oduluA * 30)} TL</td>
+                            <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(oduluA * simPeriyot)} TL</td>
                           </tr>
                           <tr>
                             <td className="px-6 py-3 text-gray-500">Elçi Komisyonu (Kanal B, %{fmt1(elciKomisyon)})</td>
                             <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(komisyonB)} TL</td>
-                            <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(komisyonB * 7)} TL</td>
-                            <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(komisyonB * 30)} TL</td>
+                            <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(komisyonB * simPeriyot)} TL</td>
                           </tr>
                           <tr className="bg-emerald-50/60">
                             <td className="px-6 py-4 font-semibold text-gray-900">Net Kâr</td>
                             <td className="px-6 py-4 text-right font-mono font-bold text-emerald-700 text-base">{fmt(netKar)} TL</td>
-                            <td className="px-6 py-4 text-right font-mono font-bold text-emerald-700 text-base">{fmt(netKar * 7)} TL</td>
-                            <td className="px-6 py-4 text-right font-mono font-bold text-emerald-700 text-base">{fmt(netKar * 30)} TL</td>
+                            <td className="px-6 py-4 text-right font-mono font-bold text-emerald-700 text-base">{fmt(netKar * simPeriyot)} TL</td>
                           </tr>
                         </tbody>
                       </table>

@@ -19,11 +19,12 @@ const DEFAULT_RULES = [
   { rule_key: 'OTHER_PRODUCT_COST_TRY', rule_value: 20, description: 'Kârlılık Simülatörü: Esans/Diğer Ürün Maliyeti (TL, örnek değer)' },
   { rule_key: 'SIM_SHIPPING_COST_TRY', rule_value: 130, description: 'Kârlılık Simülatörü: İşletmenin Taşıyıcıya Ödediği Gerçek Kargo Maliyeti (TL) — müşteriden alınan SHIPPING_COST ücretinden bilerek ayrı' },
   { rule_key: 'AVG_SALE_PRICE_TRY', rule_value: 600, description: 'Kârlılık Simülatörü: Ortalama Satış Fiyatı (TL)' },
-  { rule_key: 'DAILY_NEW_MEMBERS', rule_value: 10, description: 'Kârlılık Simülatörü: Günlük Yeni Üye Sayısı (varsayım)' },
-  { rule_key: 'REFERRAL_RATE_PERCENT', rule_value: 15, description: 'Kârlılık Simülatörü: Tavsiye Eden Üye Oranı (%, varsayım)' },
+  { rule_key: 'TARGET_PROFIT_MARGIN_PERCENT', rule_value: 20, description: 'Kârlılık Simülatörü: Hedef Minimum Kâr Marjı (%, kargo hariç ürün maliyeti üzerinden)' },
+  { rule_key: 'GUNLUK_SATIS_SAYISI', rule_value: 20, description: 'Kârlılık Simülatörü: Günlük Toplam Satış/Sipariş Sayısı (varsayım)' },
+  { rule_key: 'REFERRAL_PER_SALE_PERCENT', rule_value: 5, description: 'Kârlılık Simülatörü: Satış Başına Tavsiye Oranı (%, örn. her 100 satıştan 5 tavsiye)' },
   { rule_key: 'ELCI_DAILY_ORDERS', rule_value: 3, description: 'Kârlılık Simülatörü: Elçi/Influencer Kaynaklı Günlük Sipariş Sayısı (varsayım, süregelen komisyonlu kanal)' },
-  { rule_key: 'AVG_REFERRALS_PER_MEMBER', rule_value: 1.5, description: 'Kârlılık Simülatörü: Üye Başına Ortalama Tavsiye Sayısı (varsayım)' },
-  { rule_key: 'REFERRAL_CONVERSION_PERCENT', rule_value: 35, description: 'Kârlılık Simülatörü: Tavsiyenin Siparişe Dönüşme Oranı (%, varsayım)' }
+  { rule_key: 'REFERRAL_CONVERSION_PERCENT', rule_value: 35, description: 'Kârlılık Simülatörü: Tavsiyenin Siparişe Dönüşme Oranı (%, varsayım)' },
+  { rule_key: 'SIM_PERIOD_DAYS', rule_value: 30, description: 'Kârlılık Simülatörü: Simülasyon Periyodu (gün) — sonuç tablosunda günlüğe ek olarak bu kadar günlük toplam gösterilir' }
 ]
 
 // Bütün senaryo kurallarını getirir
