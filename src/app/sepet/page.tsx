@@ -384,7 +384,7 @@ export default function CartPage() {
                     )}
                   </div>
                   {shippingFee === 0 && dynamicShipping.freeShippingEligible && !shippingDiscountApplied && (
-                    <p className="text-[11px] text-foreground/40 mt-1">Sepet tutarınız kargo dahil kâr eşiğini karşıladığı için kargo bizden. 🎁</p>
+                    <p className="text-[11px] text-accent-gold/80 font-medium mt-1">Size Özel: Kargonuz Bizden! 🎁</p>
                   )}
                 </div>
               </div>
