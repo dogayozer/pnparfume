@@ -351,7 +351,7 @@ function AccountPageInner() {
 
               <div className="flex flex-col">
                 <label htmlFor="referralCode" className="text-xs uppercase tracking-widest text-foreground/60 mb-2 flex items-center justify-between">
-                  Referans / Üye Kodu <span className="text-[10px] text-foreground/40 normal-case tracking-normal">Opsiyonel</span>
+                  Referans Kodu veya Telefon Numarası <span className="text-[10px] text-foreground/40 normal-case tracking-normal">Opsiyonel</span>
                 </label>
                 <input
                   id="referralCode"
@@ -360,9 +360,9 @@ function AccountPageInner() {
                   value={referralCodeInput}
                   onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
                   className="w-full bg-transparent border-b border-foreground/20 py-2 focus:outline-none focus:border-accent-gold transition-colors font-mono tracking-wider"
-                  placeholder="Örn: PN-AYSE123"
+                  placeholder="Örn: 0532 123 45 67 veya PN-AYSE123"
                 />
-                <p className="text-[10px] text-foreground/50 mt-1 leading-tight">Sizi tavsiye eden bir üyenin kodu varsa girin — ikiniz de hediye kazanır.</p>
+                <p className="text-[10px] text-foreground/50 mt-1 leading-tight">Sizi tavsiye eden bir arkadaşınızın telefon numarasını ya da bir elçimizin kodunu girin — ikiniz de hediye kazanır.</p>
               </div>
 
               <div className="grid grid-cols-2 gap-6">

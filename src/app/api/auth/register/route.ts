@@ -51,15 +51,45 @@ export async function POST(request: Request) {
     // Combine name
     const fullName = lastName ? `${firstName} ${lastName}` : firstName
 
-    // Girilen referans kodu geçerli bir üyeye (davet edene) ait mi? Kendi kendine
-    // referans mümkün değil çünkü yeni üyenin kodu henüz üretilmedi.
+    // Referans alanı hem bir KOD (influencer/elçilerin sosyal medyada paylaştığı,
+    // ör. "PN-AYSE123") hem de bir TELEFON NUMARASI (arkadaş-arkadaşa tavsiyede kod
+    // ezberlemek yerine "arkadaşının telefonunu gir" demek daha doğal) kabul eder.
+    // Kendi kendine referans mümkün değil çünkü yeni üyenin kodu henüz üretilmedi.
     let referrer: { id: string; referral_code: string | null } | null = null
     if (referralCode && typeof referralCode === 'string' && referralCode.trim()) {
-      const cleanRef = referralCode.trim().toUpperCase()
-      referrer = await prisma.customer.findFirst({
-        where: { referral_code: cleanRef },
-        select: { id: true, referral_code: true }
-      })
+      const rawInput = referralCode.trim()
+      const digitsOnly = rawInput.replace(/[^0-9]/g, '')
+
+      // Girilen değer çoğunlukla rakamsa (en az 9 hane) bir telefon numarasıdır —
+      // olası tüm saklama biçimlerini (başında 0'lı/0'sız, 90'lı/90'sız) tek
+      // sorguda dener.
+      if (digitsOnly.length >= 9) {
+        const last10 = digitsOnly.slice(-10)
+        const phoneCandidates = [last10, `0${last10}`, `90${last10}`, `+90${last10}`]
+        referrer = await prisma.customer.findFirst({
+          where: { phone: { in: phoneCandidates } },
+          select: { id: true, referral_code: true }
+        })
+      }
+
+      // Telefonla bulunamadıysa (ya da girilen değer zaten bir kodsa) kodla dene.
+      if (!referrer) {
+        referrer = await prisma.customer.findFirst({
+          where: { referral_code: rawInput.toUpperCase() },
+          select: { id: true, referral_code: true }
+        })
+      }
+
+      // Telefonuyla bulunan davet eden, bu özellikten önce üye olmuş ve henüz hiç
+      // referans kodu üretilmemiş biri olabilir (ör. elçi başvurusu yapmamış eski
+      // bir müşteri) — bu durumda onun için de burada, anında bir kod üretip
+      // kaydediyoruz, hem referans takibi kopmasın hem de bundan sonra kendi kodunu
+      // da paylaşabilsin.
+      if (referrer && !referrer.referral_code) {
+        const newCode = await generateUniqueReferralCode('PN')
+        await prisma.customer.update({ where: { id: referrer.id }, data: { referral_code: newCode } })
+        referrer = { ...referrer, referral_code: newCode }
+      }
     }
 
     // Her yeni üye artık kayıt anında KENDİ referans kodunu alır — önceden bu
