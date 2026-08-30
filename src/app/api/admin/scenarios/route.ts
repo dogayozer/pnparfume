@@ -13,15 +13,17 @@ const DEFAULT_RULES = [
   // --- Kârlılık Simülatörü girdileri (admin panelinde ayrı bir sekmede,
   // hesap makinesi arayüzüyle düzenleniyor — aşağıdaki değerler sadece
   // örnek/placeholder, gerçek maliyetler girilene kadar kullanılmamalı) ---
-  { rule_key: 'USD_TRY_KURU', rule_value: 34, description: 'Kârlılık Simülatörü: USD/TRY Kuru (örnek değer, güncelleyin)' },
-  { rule_key: 'BOTTLE_COST_USD', rule_value: 1.5, description: 'Kârlılık Simülatörü: Şişe Maliyeti (USD, örnek değer)' },
-  { rule_key: 'BOX_COST_USD', rule_value: 0.8, description: 'Kârlılık Simülatörü: Kutu Maliyeti (USD, örnek değer)' },
-  { rule_key: 'OTHER_PRODUCT_COST_TRY', rule_value: 40, description: 'Kârlılık Simülatörü: Esans/Diğer Ürün Maliyeti (TL, örnek değer)' },
-  { rule_key: 'AVG_SALE_PRICE_TRY', rule_value: 599, description: 'Kârlılık Simülatörü: Ortalama Satış Fiyatı (TL)' },
+  { rule_key: 'USD_TRY_KURU', rule_value: 40, description: 'Kârlılık Simülatörü: USD/TRY Kuru (örnek değer, güncelleyin)' },
+  { rule_key: 'BOTTLE_COST_USD', rule_value: 3, description: 'Kârlılık Simülatörü: Şişe Maliyeti (USD, örnek değer)' },
+  { rule_key: 'BOX_COST_USD', rule_value: 1, description: 'Kârlılık Simülatörü: Kutu Maliyeti (USD, örnek değer)' },
+  { rule_key: 'OTHER_PRODUCT_COST_TRY', rule_value: 20, description: 'Kârlılık Simülatörü: Esans/Diğer Ürün Maliyeti (TL, örnek değer)' },
+  { rule_key: 'SIM_SHIPPING_COST_TRY', rule_value: 130, description: 'Kârlılık Simülatörü: İşletmenin Taşıyıcıya Ödediği Gerçek Kargo Maliyeti (TL) — müşteriden alınan SHIPPING_COST ücretinden bilerek ayrı' },
+  { rule_key: 'AVG_SALE_PRICE_TRY', rule_value: 600, description: 'Kârlılık Simülatörü: Ortalama Satış Fiyatı (TL)' },
   { rule_key: 'DAILY_NEW_MEMBERS', rule_value: 10, description: 'Kârlılık Simülatörü: Günlük Yeni Üye Sayısı (varsayım)' },
   { rule_key: 'REFERRAL_RATE_PERCENT', rule_value: 15, description: 'Kârlılık Simülatörü: Tavsiye Eden Üye Oranı (%, varsayım)' },
+  { rule_key: 'ELCI_DAILY_ORDERS', rule_value: 3, description: 'Kârlılık Simülatörü: Elçi/Influencer Kaynaklı Günlük Sipariş Sayısı (varsayım, süregelen komisyonlu kanal)' },
   { rule_key: 'AVG_REFERRALS_PER_MEMBER', rule_value: 1.5, description: 'Kârlılık Simülatörü: Üye Başına Ortalama Tavsiye Sayısı (varsayım)' },
-  { rule_key: 'REFERRAL_CONVERSION_PERCENT', rule_value: 50, description: 'Kârlılık Simülatörü: Tavsiyenin Siparişe Dönüşme Oranı (%, varsayım)' }
+  { rule_key: 'REFERRAL_CONVERSION_PERCENT', rule_value: 35, description: 'Kârlılık Simülatörü: Tavsiyenin Siparişe Dönüşme Oranı (%, varsayım)' }
 ]
 
 // Bütün senaryo kurallarını getirir

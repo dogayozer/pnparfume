@@ -2234,33 +2234,54 @@ export default function AdminDashboard() {
                 }
 
                 // ---- Girdiler (kalıcı, Senaryo Kuralları tablosuyla aynı kaynak) ----
-                const usdKuru = getVal('USD_TRY_KURU', 34)
-                const siseUSD = getVal('BOTTLE_COST_USD', 1.5)
-                const kutuUSD = getVal('BOX_COST_USD', 0.8)
-                const digerTL = getVal('OTHER_PRODUCT_COST_TRY', 40)
-                const kargoTL = getVal('SHIPPING_COST', 100)
-                const satisFiyati = getVal('AVG_SALE_PRICE_TRY', 599)
+                const usdKuru = getVal('USD_TRY_KURU', 40)
+                const siseUSD = getVal('BOTTLE_COST_USD', 3)
+                const kutuUSD = getVal('BOX_COST_USD', 1)
+                const digerTL = getVal('OTHER_PRODUCT_COST_TRY', 20)
+                // NOT: bu, sepetteki müşteriye YANSITILAN kargo ÜCRETİYLE (Senaryo
+                // Kuralları → SHIPPING_COST) kasıtlı olarak AYRI bir kayıt — burada
+                // sorulan işletmenin kargo firmasına ödediği gerçek MALİYET, müşteriden
+                // alınan ücretten farklı olabilir (ör. ücretsiz kargo eşiğinin altında
+                // kalan siparişlerde bile taşıyıcıya ödeme yapılır).
+                const kargoMaliyetTL = getVal('SIM_SHIPPING_COST_TRY', 130)
+                const satisFiyati = getVal('AVG_SALE_PRICE_TRY', 600)
                 const gunlukYeniUye = getVal('DAILY_NEW_MEMBERS', 10)
                 const tavsiyeOrani = getVal('REFERRAL_RATE_PERCENT', 15)
                 const kisiBasiTavsiye = getVal('AVG_REFERRALS_PER_MEMBER', 1.5)
-                const donusumOrani = getVal('REFERRAL_CONVERSION_PERCENT', 50)
+                const donusumOrani = getVal('REFERRAL_CONVERSION_PERCENT', 35)
+                const elciSiparis = getVal('ELCI_DAILY_ORDERS', 3)
                 const davetEdenOdulu = getVal('REFERRAL_REWARD_EXISTING', 200)
                 const yeniUyeOdulu = getVal('REFERRAL_REWARD_NEW', 90)
                 const elciKomisyon = getVal('AFFILIATE_COMMISSION_RATE', 15)
 
                 // ---- Hesaplama (günlük) ----
-                const birimMaliyet = (siseUSD + kutuUSD) * usdKuru + digerTL + kargoTL
+                const birimMaliyet = (siseUSD + kutuUSD) * usdKuru + digerTL + kargoMaliyetTL
+
+                // KANAL A — Müşteri Tavsiyesi: kayıt anında SADECE sabit ödül (200+90 TL)
+                // tetiklenir. Sistemde bilerek kurulan bir mekanizma (register API'de
+                // referans kullanılınca localStorage'daki kod anında temizleniyor) sayesinde
+                // bu ödül, aynı siparişte elçi komisyonuyla ÇAKIŞMAZ — o yüzden burada
+                // komisyon YOK, sadece sabit ödül düşülüyor.
                 const tavsiyeEdenUye = gunlukYeniUye * (tavsiyeOrani / 100)
                 const uretilenTavsiye = tavsiyeEdenUye * kisiBasiTavsiye
                 const donusenTavsiye = uretilenTavsiye * (donusumOrani / 100)
-                const ciro = donusenTavsiye * satisFiyati
-                const cogs = donusenTavsiye * birimMaliyet
-                const sabitOduller = donusenTavsiye * (davetEdenOdulu + yeniUyeOdulu)
-                const elciKomisyonuTutar = ciro * (elciKomisyon / 100)
-                const netKar = ciro - cogs - sabitOduller - elciKomisyonuTutar
+                const ciroA = donusenTavsiye * satisFiyati
+                const cogsA = donusenTavsiye * birimMaliyet
+                const oduluA = donusenTavsiye * (davetEdenOdulu + yeniUyeOdulu)
+                const netKarA = ciroA - cogsA - oduluA
+
+                // KANAL B — Elçi / Influencer: kayıttan bağımsız, süregelen paylaşım
+                // linkiyle (?ref=) gelen SÜREKLİ sipariş akışı. Burada sabit ödül YOK,
+                // sadece her siparişten %komisyon düşülüyor.
+                const ciroB = elciSiparis * satisFiyati
+                const cogsB = elciSiparis * birimMaliyet
+                const komisyonB = ciroB * (elciKomisyon / 100)
+                const netKarB = ciroB - cogsB - komisyonB
+
+                const ciro = ciroA + ciroB
+                const cogs = cogsA + cogsB
+                const netKar = netKarA + netKarB
                 const karMarji = ciro > 0 ? (netKar / ciro) * 100 : 0
-                // Referans ödülü/komisyon hiç olmasaydı (varsayım: aynı hacim yine de
-                // organik gelseydi) elde edilecek brüt kâr — büyüme için "harcanan" payı görmek için.
                 const oduluSuzKar = ciro - cogs
 
                 const fmt = (n: number) => Math.round(n).toLocaleString('tr-TR')
@@ -2273,14 +2294,14 @@ export default function AdminDashboard() {
                   <div className="space-y-6">
                     <div className="bg-blue-50 border border-blue-100 text-blue-800 rounded-xl p-4 text-sm">
                       <h3 className="font-semibold mb-1">Kârlılık Simülatörü Hakkında</h3>
-                      <p>"Kendi Kendine Büyüyen Sistem"in (tavsiye/referans döngüsü) pratikte ne kadar kârlı olduğunu hesaplar. Aşağıdaki tüm rakamlar birer <b>varsayım/örnek</b> — kendi gerçek maliyet ve büyüme tahminlerinizle güncelleyin, değişiklikler kalıcı olarak kaydedilir.</p>
+                      <p>"Kendi Kendine Büyüyen Sistem"in (tavsiye/referans döngüsü) pratikte ne kadar kârlı olduğunu, iki ayrı kanalı ayırarak hesaplar: <b>Müşteri Tavsiyesi</b> (kayıt anında tek seferlik sabit ödül) ve <b>Elçi/Influencer</b> (süregelen paylaşım linkinden yüzdelik komisyon). Bu ikisi gerçek sistemde aynı siparişte çakışmaz, o yüzden ayrı hesaplanır. Tüm rakamlar birer <b>varsayım</b> — kendi gerçek maliyet ve büyüme tahminlerinizle güncelleyin, değişiklikler kalıcı olarak kaydedilir.</p>
                     </div>
 
                     {/* MALİYET GİRDİLERİ */}
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="font-semibold text-gray-900">1. Birim Ürün Maliyeti</h3>
-                        <button onClick={() => saveKeys(['USD_TRY_KURU', 'BOTTLE_COST_USD', 'BOX_COST_USD', 'OTHER_PRODUCT_COST_TRY', 'SHIPPING_COST'])} disabled={savingId !== null} className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5">
+                        <button onClick={() => saveKeys(['USD_TRY_KURU', 'BOTTLE_COST_USD', 'BOX_COST_USD', 'OTHER_PRODUCT_COST_TRY', 'SIM_SHIPPING_COST_TRY'])} disabled={savingId !== null} className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5">
                           <Save size={13} /> Maliyetleri Kaydet
                         </button>
                       </div>
@@ -2302,15 +2323,16 @@ export default function AdminDashboard() {
                           <input type="number" step="1" value={digerTL} onChange={e => setVal('OTHER_PRODUCT_COST_TRY', parseFloat(e.target.value) || 0)} className={inputCls} />
                         </div>
                         <div>
-                          <label className={labelCls}>Kargo (TL)</label>
-                          <input type="number" step="1" value={kargoTL} onChange={e => setVal('SHIPPING_COST', parseFloat(e.target.value) || 0)} className={inputCls} />
+                          <label className={labelCls}>Kargo Maliyeti (TL)</label>
+                          <input type="number" step="1" value={kargoMaliyetTL} onChange={e => setVal('SIM_SHIPPING_COST_TRY', parseFloat(e.target.value) || 0)} className={inputCls} />
                         </div>
                       </div>
-                      <p className="text-xs text-gray-400 mt-3">Kargo alanı, sepet sayfasındaki gerçek kargo ücretiyle (Senaryo Kuralları → SHIPPING_COST) aynı kayıt — orada değiştirirseniz burada da yansır.</p>
-                      <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2">
+                      <p className="text-xs text-gray-400 mt-3">Kargo Maliyeti burada işletmenin taşıyıcıya ödediği gerçek maliyet — müşteriden alınan kargo ÜCRETİNDEN (Senaryo Kuralları → SHIPPING_COST) bilerek ayrı tutuldu, ikisi farklı olabilir.</p>
+                      <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2 flex-wrap">
                         <span className="text-xs text-gray-500">Hesaplanan birim maliyet:</span>
-                        <span className="font-mono font-bold text-gray-900">({fmt1(siseUSD)} + {fmt1(kutuUSD)}) × {fmt1(usdKuru)} + {fmt(digerTL)} + {fmt(kargoTL)} =</span>
+                        <span className="font-mono font-bold text-gray-900">({fmt1(siseUSD)} + {fmt1(kutuUSD)}) × {fmt1(usdKuru)} + {fmt(digerTL)} + {fmt(kargoMaliyetTL)} =</span>
                         <span className="font-mono font-bold text-rose-600 text-base">{fmt(birimMaliyet)} TL</span>
+                        <span className="text-xs text-gray-400 ml-2">(satış {fmt(satisFiyati)} TL üzerinden brüt marj: %{fmt1(satisFiyati > 0 ? ((satisFiyati - birimMaliyet) / satisFiyati) * 100 : 0)})</span>
                       </div>
                     </div>
 
@@ -2318,15 +2340,22 @@ export default function AdminDashboard() {
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="font-semibold text-gray-900">2. Satış Fiyatı &amp; Büyüme Senaryosu (Varsayımlar)</h3>
-                        <button onClick={() => saveKeys(['AVG_SALE_PRICE_TRY', 'DAILY_NEW_MEMBERS', 'REFERRAL_RATE_PERCENT', 'AVG_REFERRALS_PER_MEMBER', 'REFERRAL_CONVERSION_PERCENT'])} disabled={savingId !== null} className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5">
+                        <button onClick={() => saveKeys(['AVG_SALE_PRICE_TRY', 'DAILY_NEW_MEMBERS', 'REFERRAL_RATE_PERCENT', 'AVG_REFERRALS_PER_MEMBER', 'REFERRAL_CONVERSION_PERCENT', 'ELCI_DAILY_ORDERS'])} disabled={savingId !== null} className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5">
                           <Save size={13} /> Senaryoyu Kaydet
                         </button>
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                         <div>
                           <label className={labelCls}>Ort. Satış Fiyatı (TL)</label>
                           <input type="number" step="1" value={satisFiyati} onChange={e => setVal('AVG_SALE_PRICE_TRY', parseFloat(e.target.value) || 0)} className={inputCls} />
                         </div>
+                        <div>
+                          <label className={labelCls}>Elçi Kaynaklı Günlük Sipariş</label>
+                          <input type="number" step="1" value={elciSiparis} onChange={e => setVal('ELCI_DAILY_ORDERS', parseFloat(e.target.value) || 0)} className={inputCls} />
+                        </div>
+                      </div>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2">Müşteri Tavsiyesi Hunisi (Kanal A)</p>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div>
                           <label className={labelCls}>Günlük Yeni Üye</label>
                           <input type="number" step="1" value={gunlukYeniUye} onChange={e => setVal('DAILY_NEW_MEMBERS', parseFloat(e.target.value) || 0)} className={inputCls} />
@@ -2345,13 +2374,13 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       <p className="text-xs text-gray-400 mt-3">
-                        Ödül tutarları (davet eden {fmt(davetEdenOdulu)} TL, yeni üye {fmt(yeniUyeOdulu)} TL) ve elçi komisyonu (%{fmt1(elciKomisyon)}) Senaryo Kuralları sekmesinden yönetiliyor, burada otomatik kullanılıyor.
+                        Sabit ödüller (davet eden {fmt(davetEdenOdulu)} TL, yeni üye {fmt(yeniUyeOdulu)} TL — Kanal A'da) ve elçi komisyonu (%{fmt1(elciKomisyon)} — Kanal B'de) Senaryo Kuralları sekmesinden yönetiliyor, burada otomatik kullanılıyor.
                       </p>
                     </div>
 
                     {/* HUNİ (FUNNEL) */}
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-                      <h3 className="font-semibold text-gray-900 mb-4">3. Günlük Tavsiye Hunisi</h3>
+                      <h3 className="font-semibold text-gray-900 mb-4">3. Kanal A — Günlük Tavsiye Hunisi</h3>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         {[
                           { label: 'Yeni Üye', value: gunlukYeniUye, color: 'bg-gray-100 text-gray-700' },
@@ -2367,11 +2396,33 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
+                    {/* KANAL KIYASLAMASI */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                        <h4 className="font-semibold text-gray-900 mb-1 flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-indigo-500"></span> Kanal A — Müşteri Tavsiyesi</h4>
+                        <p className="text-xs text-gray-400 mb-4">{fmt1(donusenTavsiye)} sipariş/gün × sabit {fmt(davetEdenOdulu + yeniUyeOdulu)} TL ödül</p>
+                        <div className="space-y-1.5 text-sm">
+                          <div className="flex justify-between"><span className="text-gray-500">Ciro</span><span className="font-mono">{fmt(ciroA)} TL</span></div>
+                          <div className="flex justify-between"><span className="text-gray-500">Maliyet + Ödül</span><span className="font-mono text-rose-500">−{fmt(cogsA + oduluA)} TL</span></div>
+                          <div className="flex justify-between pt-1.5 border-t border-gray-100"><span className="font-semibold text-gray-900">Net Kâr</span><span className={`font-mono font-bold ${netKarA >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>{fmt(netKarA)} TL</span></div>
+                        </div>
+                      </div>
+                      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                        <h4 className="font-semibold text-gray-900 mb-1 flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-rose-500"></span> Kanal B — Elçi / Influencer</h4>
+                        <p className="text-xs text-gray-400 mb-4">{fmt1(elciSiparis)} sipariş/gün × %{fmt1(elciKomisyon)} komisyon</p>
+                        <div className="space-y-1.5 text-sm">
+                          <div className="flex justify-between"><span className="text-gray-500">Ciro</span><span className="font-mono">{fmt(ciroB)} TL</span></div>
+                          <div className="flex justify-between"><span className="text-gray-500">Maliyet + Komisyon</span><span className="font-mono text-rose-500">−{fmt(cogsB + komisyonB)} TL</span></div>
+                          <div className="flex justify-between pt-1.5 border-t border-gray-100"><span className="font-semibold text-gray-900">Net Kâr</span><span className={`font-mono font-bold ${netKarB >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>{fmt(netKarB)} TL</span></div>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* SONUÇ: GÜNLÜK / HAFTALIK / AYLIK */}
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                       <div className="p-6 pb-0">
-                        <h3 className="font-semibold text-gray-900 mb-1">4. Sonuç: Kâr/Zarar Tablosu</h3>
-                        <p className="text-xs text-gray-400 mb-4">Yukarıdaki huninin, siparişe dönüşen tavsiyeler üzerinden ürettiği ciro ve kârlılık.</p>
+                        <h3 className="font-semibold text-gray-900 mb-1">4. Sonuç: Toplam Kâr/Zarar Tablosu (Kanal A + B)</h3>
+                        <p className="text-xs text-gray-400 mb-4">İki kanalın toplamı — kanal bazında kırılım yukarıda.</p>
                       </div>
                       <table className="w-full text-sm">
                         <thead>
@@ -2384,7 +2435,7 @@ export default function AdminDashboard() {
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                           <tr>
-                            <td className="px-6 py-3 text-gray-500">Referans Kaynaklı Ciro</td>
+                            <td className="px-6 py-3 text-gray-500">Toplam Ciro (A+B)</td>
                             <td className="px-6 py-3 text-right font-mono">{fmt(ciro)} TL</td>
                             <td className="px-6 py-3 text-right font-mono">{fmt(ciro * 7)} TL</td>
                             <td className="px-6 py-3 text-right font-mono">{fmt(ciro * 30)} TL</td>
@@ -2396,16 +2447,16 @@ export default function AdminDashboard() {
                             <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(cogs * 30)} TL</td>
                           </tr>
                           <tr>
-                            <td className="px-6 py-3 text-gray-500">Sabit Referans Ödülleri ({fmt(davetEdenOdulu)}+{fmt(yeniUyeOdulu)} TL)</td>
-                            <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(sabitOduller)} TL</td>
-                            <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(sabitOduller * 7)} TL</td>
-                            <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(sabitOduller * 30)} TL</td>
+                            <td className="px-6 py-3 text-gray-500">Sabit Referans Ödülleri (Kanal A)</td>
+                            <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(oduluA)} TL</td>
+                            <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(oduluA * 7)} TL</td>
+                            <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(oduluA * 30)} TL</td>
                           </tr>
                           <tr>
-                            <td className="px-6 py-3 text-gray-500">Elçi Komisyonu (%{fmt1(elciKomisyon)})</td>
-                            <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(elciKomisyonuTutar)} TL</td>
-                            <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(elciKomisyonuTutar * 7)} TL</td>
-                            <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(elciKomisyonuTutar * 30)} TL</td>
+                            <td className="px-6 py-3 text-gray-500">Elçi Komisyonu (Kanal B, %{fmt1(elciKomisyon)})</td>
+                            <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(komisyonB)} TL</td>
+                            <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(komisyonB * 7)} TL</td>
+                            <td className="px-6 py-3 text-right font-mono text-rose-500">−{fmt(komisyonB * 30)} TL</td>
                           </tr>
                           <tr className="bg-emerald-50/60">
                             <td className="px-6 py-4 font-semibold text-gray-900">Net Kâr</td>
@@ -2417,7 +2468,7 @@ export default function AdminDashboard() {
                       </table>
                       <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-wrap items-center gap-x-8 gap-y-2 text-xs text-gray-500">
                         <span>Kâr Marjı: <b className="text-gray-900">%{fmt1(karMarji)}</b></span>
-                        <span>Referans ödülü/komisyonu olmasaydı (aynı hacim organik gelseydi) brüt kâr: <b className="text-gray-900">{fmt(oduluSuzKar)} TL/gün</b> — aradaki fark, büyüme için "harcanan" pay.</span>
+                        <span>Ödül/komisyon hiç olmasaydı (aynı hacim organik gelseydi) brüt kâr: <b className="text-gray-900">{fmt(oduluSuzKar)} TL/gün</b> — aradaki fark, büyüme için "harcanan" pay.</span>
                       </div>
                     </div>
                   </div>
