@@ -28,3 +28,24 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
+
+/* Pazarlama açısından öne çıkarılması istenen kartlar (Cüzdan Bakiyesi, Tavsiye Et &
+   Kazan) için dönen, ışıldayan çerçeve efekti. Kart içeriğine dokunmadan sadece bir
+   sarmalayıcı ekleyerek kullanılır: <div className="rotating-frame p-[2px] rounded-3xl">
+   ...kart (kendi arkaplanıyla)...</div> — ::before döner, kartın kendisi sabit kalır. */
+@keyframes rotating-frame-spin {
+  to { transform: rotate(1turn); }
+}
+.rotating-frame {
+  position: relative;
+  isolation: isolate;
+}
+.rotating-frame::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: inherit;
+  background: conic-gradient(from 0turn, var(--accent-gold), transparent 25%, transparent 75%, var(--accent-gold) 100%);
+  animation: rotating-frame-spin 3s linear infinite;
+}

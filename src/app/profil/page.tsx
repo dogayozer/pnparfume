@@ -358,22 +358,24 @@ export default function ProfilePage() {
             {activeTab === 'ozet' && (
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Cüzdan */}
-                  <div className="bg-foreground/5 border border-foreground/10 rounded-3xl p-8 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-                      <Wallet size={120} />
+                  {/* Cüzdan — pazarlama açısından öne çıkarılsın diye dönen çerçeve */}
+                  <div className="rotating-frame rounded-3xl p-[2px]">
+                    <div className="bg-background border border-foreground/10 rounded-3xl p-8 relative overflow-hidden h-full">
+                      <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                        <Wallet size={120} />
+                      </div>
+                      <p className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Cüzdan Bakiyesi</p>
+                      <h2 className="text-4xl font-light text-accent-gold mb-3">{displayUser.wallet_balance} TL</h2>
+                      <p className="text-xs text-foreground/70 leading-relaxed font-light mb-4">
+                        Tavsiye ve elçilik kazançlarınızı sonraki alışverişlerinizde harcayabilir veya kupona dönüştürebilirsiniz.
+                      </p>
+                      <button
+                        onClick={() => setActiveTab('b2b')}
+                        className="inline-flex items-center gap-1.5 text-xs text-accent-gold hover:underline font-medium"
+                      >
+                        Kazanç Paneline Git <ChevronRight size={14} />
+                      </button>
                     </div>
-                    <p className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Cüzdan Bakiyesi</p>
-                    <h2 className="text-4xl font-light text-accent-gold mb-3">{displayUser.wallet_balance} TL</h2>
-                    <p className="text-xs text-foreground/70 leading-relaxed font-light mb-4">
-                      Tavsiye ve elçilik kazançlarınızı sonraki alışverişlerinizde harcayabilir veya kupona dönüştürebilirsiniz.
-                    </p>
-                    <button 
-                      onClick={() => setActiveTab('b2b')}
-                      className="inline-flex items-center gap-1.5 text-xs text-accent-gold hover:underline font-medium"
-                    >
-                      Kazanç Paneline Git <ChevronRight size={14} />
-                    </button>
                   </div>
 
                   {/* Son Siparişler Özeti */}
@@ -392,7 +394,8 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Hızlı Davet & Paylaşım Kartı */}
+                {/* Hızlı Davet & Paylaşım Kartı — pazarlama açısından en önemlisi, dönen çerçeve */}
+                <div className="rotating-frame rounded-3xl p-[2px]">
                 <div className="bg-gradient-to-br from-amber-500/10 via-background to-accent-gold/5 border border-accent-gold/20 rounded-3xl p-8">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
@@ -426,6 +429,7 @@ export default function ProfilePage() {
                       </a>
                     </div>
                   </div>
+                </div>
                 </div>
               </div>
             )}
