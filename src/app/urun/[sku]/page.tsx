@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
-import { Sparkles, ArrowLeft, ShoppingBag, SunMoon, Compass, CalendarRange, Sun, MoonStar, Snowflake, Leaf, Briefcase, Coffee, Wine, Zap, Layers } from 'lucide-react'
+import { Sparkles, ArrowLeft, ShoppingBag, SunMoon, Compass, CalendarRange, Sun, MoonStar, Snowflake, Leaf, Briefcase, Coffee, Wine, Zap, Layers, Plane } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import ProductGallery from '@/components/ProductGallery'
@@ -247,6 +247,15 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
           </div>
 
           <div className="text-foreground/80 leading-relaxed text-base md:text-lg font-light" dangerouslySetInnerHTML={{ __html: description }} />
+
+          {/* Tek bir yerde, kod seviyesinde tutuluyor — 339 ürünün açıklama metnine
+              tek tek yazmak yerine burada, çünkü hepsi zaten aynı varsayılan 50ml
+              kompakt şişeyle satılıyor (bkz. bottleOptions.ts). Böylece yeni eklenen
+              ürünlerde de otomatik görünür, elle güncellenmesi gerekmez. */}
+          <p className="flex items-center gap-2 text-sm text-foreground/60">
+            <Plane size={16} className="text-accent-gold flex-shrink-0" />
+            50 mililitrelik kompakt şişe boyutu sayesinde seyahat dostudur.
+          </p>
 
           <ProductActions
             sku={product.sku}
