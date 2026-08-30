@@ -8,7 +8,20 @@ const DEFAULT_RULES = [
   { rule_key: 'AFFILIATE_COMMISSION_RATE', rule_value: 15, description: 'Marka Elçisi Komisyon Oranı (%)' },
   { rule_key: 'SECOND_ITEM_DISCOUNT', rule_value: 250, description: '2. Ürün Sepet İndirimi (TL)' },
   { rule_key: 'VIP_COUPON_PERCENT', rule_value: 15, description: 'Sipariş Teslimat VIP İndirim Kuponu (%)' },
-  { rule_key: 'MIN_PROFIT_MARGIN_PERCENT', rule_value: 0, description: 'Kupon Sonrası Minimum Kâr Marjı (%) — 0 = sepet toplamı maliyetin altına düşemez' }
+  { rule_key: 'MIN_PROFIT_MARGIN_PERCENT', rule_value: 0, description: 'Kupon Sonrası Minimum Kâr Marjı (%) — 0 = sepet toplamı maliyetin altına düşemez' },
+
+  // --- Kârlılık Simülatörü girdileri (admin panelinde ayrı bir sekmede,
+  // hesap makinesi arayüzüyle düzenleniyor — aşağıdaki değerler sadece
+  // örnek/placeholder, gerçek maliyetler girilene kadar kullanılmamalı) ---
+  { rule_key: 'USD_TRY_KURU', rule_value: 34, description: 'Kârlılık Simülatörü: USD/TRY Kuru (örnek değer, güncelleyin)' },
+  { rule_key: 'BOTTLE_COST_USD', rule_value: 1.5, description: 'Kârlılık Simülatörü: Şişe Maliyeti (USD, örnek değer)' },
+  { rule_key: 'BOX_COST_USD', rule_value: 0.8, description: 'Kârlılık Simülatörü: Kutu Maliyeti (USD, örnek değer)' },
+  { rule_key: 'OTHER_PRODUCT_COST_TRY', rule_value: 40, description: 'Kârlılık Simülatörü: Esans/Diğer Ürün Maliyeti (TL, örnek değer)' },
+  { rule_key: 'AVG_SALE_PRICE_TRY', rule_value: 599, description: 'Kârlılık Simülatörü: Ortalama Satış Fiyatı (TL)' },
+  { rule_key: 'DAILY_NEW_MEMBERS', rule_value: 10, description: 'Kârlılık Simülatörü: Günlük Yeni Üye Sayısı (varsayım)' },
+  { rule_key: 'REFERRAL_RATE_PERCENT', rule_value: 15, description: 'Kârlılık Simülatörü: Tavsiye Eden Üye Oranı (%, varsayım)' },
+  { rule_key: 'AVG_REFERRALS_PER_MEMBER', rule_value: 1.5, description: 'Kârlılık Simülatörü: Üye Başına Ortalama Tavsiye Sayısı (varsayım)' },
+  { rule_key: 'REFERRAL_CONVERSION_PERCENT', rule_value: 50, description: 'Kârlılık Simülatörü: Tavsiyenin Siparişe Dönüşme Oranı (%, varsayım)' }
 ]
 
 // Bütün senaryo kurallarını getirir
