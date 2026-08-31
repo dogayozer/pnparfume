@@ -6,6 +6,9 @@ import './globals.css'
 // Google Analytics (GA4) ölçüm kimliği — tüm sayfalarda ziyaretçi/etkinlik
 // takibi için. Gizli bir değer değil, istemci tarafında herkese açık çalışır.
 const GA_MEASUREMENT_ID = 'G-XZC7243TVP'
+
+// Google Tag Manager konteyner kimliği.
+const GTM_CONTAINER_ID = 'GTM-K3Z7KQT5'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { CartProvider } from '@/contexts/CartContext'
@@ -53,6 +56,27 @@ export default function RootLayout({
   return (
     <html lang="tr" className="scroll-smooth" suppressHydrationWarning>
       <body className={`${inter.className} bg-background text-foreground antialiased selection:bg-accent-gold/30 selection:text-accent-gold overflow-x-hidden w-full`} suppressHydrationWarning>
+        {/* Google Tag Manager — strategy="beforeInteractive" Next.js'e bunu
+            sunucudan gelen ilk HTML'in <head>'ine, sayfadaki başka hiçbir
+            script'ten önce enjekte etmesini söyler (JSX'te nereye yazılırsa
+            yazılsın Next.js otomatik olarak <head>'e taşır — GTM'in "mümkün
+            olan en üst konum" talimatının Next.js App Router karşılığı). */}
+        <Script id="gtm-init" strategy="beforeInteractive">
+          {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+          new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+          j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+          'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+          })(window,document,'script','dataLayer','${GTM_CONTAINER_ID}');`}
+        </Script>
+        {/* Google Tag Manager (noscript) — body açılışının hemen ardından */}
+        <noscript>
+          <iframe
+            src={`https://www.googletagmanager.com/ns.html?id=${GTM_CONTAINER_ID}`}
+            height="0"
+            width="0"
+            style={{ display: 'none', visibility: 'hidden' }}
+          />
+        </noscript>
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
           strategy="afterInteractive"
