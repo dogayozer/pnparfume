@@ -123,14 +123,38 @@ export async function POST(req: Request) {
     const STOPWORDS = new Set(['for', 'with', 'and', 'the', 'de', 'da', 've', 'ile', 'bir', 'pour', 'du', 'la', 'le', 'of', 'by', 'pas'])
     const tokenize = (s: string) => Array.from(new Set((s.toLowerCase().match(/[a-zçğıöşü0-9]+/g) || []).filter(t => t.length >= 3 && !STOPWORDS.has(t))))
 
+    // Kelime sıklığı (kaç farklı üründe geçiyor) — "armani" gibi markalarda çok
+    // ürüne yayılan genel bir kelime, "you" gibi tek bir hatta özgü nadir bir
+    // kelimeye göre çok daha ZAYIF bir sinyal. Paylaşılan kelimeyi seçerken en
+    // NADİR ortak kelimeyi esas alıyoruz — aksi halde "armani" gibi kelimeler
+    // kataloğun yarısını "kardeş ürün" gibi gösterip alakasız önerilere yol açar.
+    const tokenDocFreq = new Map<string, number>()
+    for (const p of allProducts) {
+      if (!p.original_name) continue
+      for (const tok of tokenize(p.original_name)) {
+        tokenDocFreq.set(tok, (tokenDocFreq.get(tok) || 0) + 1)
+      }
+    }
+
     const findSiblingMatches = (primarySku: string, needleTokens: string[]) => {
       if (needleTokens.length === 0) return []
-      return allProducts.filter(p => {
-        if (p.sku === primarySku) return false
-        if (!p.original_name || p.original_name.length < 4) return false
-        const nameLower = p.original_name.toLowerCase()
-        return needleTokens.some(tok => new RegExp(`\\b${tok}\\b`).test(nameLower))
-      })
+      const scored = allProducts
+        .filter(p => p.sku !== primarySku && p.original_name && p.original_name.length >= 4)
+        .map(p => {
+          const nameLower = p.original_name!.toLowerCase()
+          const sharedTokens = needleTokens.filter(tok => new RegExp(`\\b${tok}\\b`).test(nameLower))
+          if (sharedTokens.length === 0) return null
+          const rarestFreq = Math.min(...sharedTokens.map(tok => tokenDocFreq.get(tok) || 99))
+          return { product: p, rarestFreq }
+        })
+        .filter((x): x is { product: (typeof allProducts)[number], rarestFreq: number } => x !== null)
+        // Bir markanın ürün sayısı arttıkça o marka adı daha az ayırt edici hale
+        // gelir — bu yüzden 4'ten fazla üründe geçen kelimeler (ör. yaygın marka
+        // adları) "kardeş ürün" sinyali olarak sayılmıyor, çok fazla alakasız
+        // öneriye yol açmasın diye.
+        .filter(x => x.rarestFreq <= 4)
+        .sort((a, b) => a.rarestFreq - b.rarestFreq)
+      return scored.map(x => x.product)
     }
 
     // FAST PATH: veritabanındaki original_name ile basit metin eşleşmesi (sıfır LLM/web maliyeti).
