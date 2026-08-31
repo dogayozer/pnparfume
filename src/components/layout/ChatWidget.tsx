@@ -16,6 +16,11 @@ import { useCart } from '@/contexts/CartContext'
 let msgIdCounter = 0
 const genId = () => `${Date.now()}-${msgIdCounter++}`
 
+// Sonuç sayısı bu eşiğin altındaysa "Sonuçları daraltmak ister misiniz?" sorusu
+// anlamsız hale geliyor (zaten 1-3 ürün var, daraltacak bir şey yok) — bu yüzden
+// atlanıyor ve akış doğrudan kapanıyor.
+const REFINEMENT_MIN_RESULTS = 3
+
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<any[]>([])
@@ -37,6 +42,17 @@ export default function ChatWidget() {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
   }, [messages, isOpen])
+
+  // iOS Safari'de widget açıkken arka plandaki sayfa gövdesi de kaydırılabiliyordu
+  // ("arka ekran kayıyor") — iOS'ta iç scroll container'ın momentum/rubber-band
+  // hareketi, altındaki <body>'e "scroll chaining" ile sızıyor. Widget açıkken
+  // body'yi kilitlemek bunu kökten engeller.
+  useEffect(() => {
+    if (!isOpen) return
+    const original = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = original }
+  }, [isOpen])
 
   const handleAddToCart = (prod: any) => {
     addToCart({
@@ -127,10 +143,13 @@ export default function ChatWidget() {
           toolResults: wizardProducts.length > 0 ? [{ toolName: 'searchProducts', result: wizardProducts }] : []
         }])
         
-        if (wizardProducts.length > 0) {
+        if (wizardProducts.length > REFINEMENT_MIN_RESULTS) {
            setTimeout(() => addWizardStep('refinement'), 800)
         } else {
            setFlowMode('initial')
+           if (wizardProducts.length > 0) {
+             setTimeout(() => setMessages(prev => [...prev, { id: genId(), role: 'assistant', content: 'Yukarıdaki üründen beğendiğinizi detaylı inceleyebilirsiniz. Başka bir konuda yardımcı olabilir miyim?' }]), 800)
+           }
         }
       }
       return
@@ -183,8 +202,13 @@ export default function ChatWidget() {
         content: `İşte "${value}" kriterine göre daraltılmış sonuçlar:`,
         toolResults: [{ toolName: 'searchProducts', result: filtered }]
       }])
-      
-      setTimeout(() => addWizardStep('refinement'), 500)
+
+      if (filtered.length > REFINEMENT_MIN_RESULTS) {
+        setTimeout(() => addWizardStep('refinement'), 500)
+      } else {
+        setFlowMode('initial')
+        setTimeout(() => setMessages(prev => [...prev, { id: genId(), role: 'assistant', content: 'Yukarıdaki listeden beğendiğinizi detaylı inceleyebilirsiniz. Başka bir konuda yardımcı olabilir miyim?' }]), 500)
+      }
       return
     }
 
@@ -423,7 +447,7 @@ export default function ChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-0 right-0 w-full h-[75vh] md:bottom-6 md:right-6 md:w-[420px] md:h-[620px] md:max-h-[82vh] bg-background border border-foreground/10 rounded-t-2xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden z-[60]"
+            className="fixed bottom-0 right-0 w-full h-[70dvh] max-h-[560px] md:bottom-6 md:right-6 md:w-[420px] md:h-[620px] md:max-h-[82vh] bg-background border border-foreground/10 rounded-t-2xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden overscroll-contain z-[60]"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 bg-foreground text-background">
@@ -453,7 +477,7 @@ export default function ChatWidget() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-foreground/[0.02]">
+            <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4 bg-foreground/[0.02]" style={{ WebkitOverflowScrolling: 'touch' }}>
               {messages.length === 0 && (
                 <div className="mb-4">
                   <div className="flex items-start gap-3">
@@ -528,7 +552,7 @@ export default function ChatWidget() {
                         return (
                           <div key={idx} className="mt-3 p-3 bg-foreground/5 rounded-xl border border-foreground/10">
                             <p className="text-[10px] font-medium text-accent-gold mb-2 tracking-widest uppercase">Önerilen İmza Parfümler ({Array.isArray(resultData) ? resultData.length : 0})</p>
-                            <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1 custom-scrollbar">
+                            <div className="space-y-2 max-h-[280px] overflow-y-auto overscroll-contain pr-1 custom-scrollbar">
                               {Array.isArray(resultData) && resultData.length > 0 ? resultData.map((prod: any) => {
                                 // Gerçek fotoğraf yoksa (prod.image null), ürünle alakasız rastgele
                                 // bir görsel (eski "kasap" placeholder seti) göstermek yerine SKU
@@ -540,7 +564,7 @@ export default function ChatWidget() {
                                   : null
                                 return (
                                   <div key={prod.sku} className="p-2.5 bg-background rounded-xl border border-foreground/10 flex items-center justify-between gap-2 shadow-sm">
-                                    <div className="flex items-center gap-2.5 min-w-0">
+                                    <Link href={`/urun/${prod.sku}`} className="flex items-center gap-2.5 min-w-0">
                                       <div className="w-10 h-10 rounded-lg overflow-hidden relative flex-shrink-0 bg-foreground/5 flex items-center justify-center">
                                         {prodImgSrc ? (
                                           <Image src={prodImgSrc} alt={prod.sku} fill className="object-cover" />
@@ -549,13 +573,13 @@ export default function ChatWidget() {
                                         )}
                                       </div>
                                       <div className="min-w-0">
-                                        <Link href={`/urun/${prod.sku}`} className="font-bold text-foreground hover:text-accent-gold transition-colors text-xs truncate block">
+                                        <span className="font-bold text-foreground hover:text-accent-gold transition-colors text-xs truncate block">
                                           PN {prod.sku}
-                                        </Link>
+                                        </span>
                                         <span className="text-[10px] text-foreground/50 truncate block">{prod.mood_tag || prod.fragrance_family?.[0] || 'İmza Koku'}</span>
                                         <span className="text-[11px] font-semibold text-accent-gold block">{prod.price || 850} TL</span>
                                       </div>
-                                    </div>
+                                    </Link>
 
                                     <button
                                       onClick={() => handleAddToCart(prod)}
