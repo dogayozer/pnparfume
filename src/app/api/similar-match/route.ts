@@ -112,6 +112,27 @@ export async function POST(req: Request) {
         (needleLower.includes(p.original_name.toLowerCase()) || p.original_name.toLowerCase().includes(needleLower)))
     }
 
+    // Bağlamı geniş tutmak için: kataloğumuzda erkek/kadın versiyonları FARKLI
+    // isimlerle kayıtlı olabiliyor (örn. kadın "ARMANI YOU" iken erkek karşılığı
+    // "STRONGER WITH YOU" — ikisi de gerçek dünyada aynı "you" hattına ait ama
+    // original_name'de ortak kelime dışında bağ yok). Türkçe konuşan kullanıcılar
+    // markayı/isimi genelde eksik/farklı ifade ediyor, bu yüzden tek taraflı
+    // (sadece bulunan tam eşleşmeyi) varsaymak yerine — sorgudaki anlamlı bir
+    // kelimeyi paylaşan BAŞKA ürünler varsa bunları da "bunlardan biri mi?"
+    // seçeneği olarak sunuyoruz, tek taraflı Evet/Hayır'a zorlamıyoruz.
+    const STOPWORDS = new Set(['for', 'with', 'and', 'the', 'de', 'da', 've', 'ile', 'bir', 'pour', 'du', 'la', 'le', 'of', 'by', 'pas'])
+    const tokenize = (s: string) => Array.from(new Set((s.toLowerCase().match(/[a-zçğıöşü0-9]+/g) || []).filter(t => t.length >= 3 && !STOPWORDS.has(t))))
+
+    const findSiblingMatches = (primarySku: string, needleTokens: string[]) => {
+      if (needleTokens.length === 0) return []
+      return allProducts.filter(p => {
+        if (p.sku === primarySku) return false
+        if (!p.original_name || p.original_name.length < 4) return false
+        const nameLower = p.original_name.toLowerCase()
+        return needleTokens.some(tok => new RegExp(`\\b${tok}\\b`).test(nameLower))
+      })
+    }
+
     // FAST PATH: veritabanındaki original_name ile basit metin eşleşmesi (sıfır LLM/web maliyeti).
     // Not: bu birebir metin eşleşmesi — yazım hatalarını yakalamaz, onu LLM adımı yakalıyor.
     const userMsgLower = lastUserMessage.toLowerCase().trim()
@@ -140,8 +161,22 @@ export async function POST(req: Request) {
         })
       }
 
-      // İlk kez eşleşti — sonucu göstermeden önce onay iste.
+      // İlk kez eşleşti — sonucu göstermeden önce onay iste. Ama önce, sorgudaki
+      // anlamlı bir kelimeyi paylaşan başka (farklı isimli) bir ürün var mı diye
+      // bak — varsa tek taraflı varsaymak yerine ikisini de seçenek olarak sun.
       const top = fastMatches[0]
+      const siblings = findSiblingMatches(top.sku, tokenize(lastUserMessage)).slice(0, 2)
+
+      if (siblings.length > 0) {
+        const candidates = [top, ...siblings]
+        return NextResponse.json({
+          type: 'did_you_mean_multi',
+          candidates: candidates.map(c => ({ sku: c.sku, suggestion: c.original_name, gender: c.gender })),
+          text: `Bahsettiğiniz koku bunlardan biri olabilir mi?`,
+          products: []
+        })
+      }
+
       return NextResponse.json({
         type: 'did_you_mean',
         suggestion: top.original_name,
@@ -176,6 +211,19 @@ export async function POST(req: Request) {
       const brandMatches = findBrandMatches(intent.brand, true)
       if (brandMatches.length > 0) {
         const top = brandMatches[0]
+        const siblings = findSiblingMatches(top.sku, tokenize(intent.brand)).slice(0, 2)
+
+        if (siblings.length > 0) {
+          const candidates = [top, ...siblings]
+          return NextResponse.json({
+            type: 'did_you_mean_multi',
+            candidates: candidates.map(c => ({ sku: c.sku, suggestion: c.original_name, gender: c.gender })),
+            language: intent.language,
+            text: `Bahsettiğiniz koku bunlardan biri olabilir mi?`,
+            products: []
+          })
+        }
+
         return NextResponse.json({
           type: 'did_you_mean',
           suggestion: top.original_name,

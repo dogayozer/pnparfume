@@ -134,6 +134,23 @@ export default function ChatWidget() {
       return
     }
 
+    // Sorgu birden fazla ürünle (örn. aynı hattın kadın/erkek versiyonu farklı
+    // isimlerle kayıtlıysa) eşleşebiliyorsa, tek taraflı varsaymak yerine hepsini
+    // seçenek olarak sunuyoruz (bkz. api/similar-match/route.ts findSiblingMatches).
+    if (step === 'did_you_mean_multi') {
+      const suggestionMsg = messages.find(m => m.step === 'did_you_mean_multi')
+      const candidate = suggestionMsg?.candidates?.find((c: any) => `PN ${c.sku}` === value)
+      if (candidate) {
+        setFlowMode('similar')
+        setMessages(prev => [...prev, { id: genId(), role: 'assistant', content: 'Kütüphanemizde koku profilini arıyorum...' }])
+        setTimeout(() => handleSubmit(undefined, candidate.suggestion, `PN ${candidate.sku}, doğru.`, suggestionMsg.language), 800)
+      } else {
+        setFlowMode('initial')
+        setMessages(prev => [...prev, { id: genId(), role: 'assistant', content: 'Anladım. Rica etsem aradığınızı biraz daha detaylı tarif edebilir misiniz?' }])
+      }
+      return
+    }
+
     if (step === 'show_results') {
       if (value === 'Sonuçları Gör') {
         setMessages(prev => [...prev, {
@@ -398,6 +415,17 @@ export default function ChatWidget() {
             options: ['Evet', 'Hayır'],
             step: 'did_you_mean',
             suggestion: data.suggestion,
+            language: data.language
+          }
+          setMessages(prev => [...prev, assistantMessage])
+        } else if (data.type === 'did_you_mean_multi' && Array.isArray(data.candidates)) {
+          const assistantMessage = {
+            id: genId(),
+            role: 'wizard',
+            content: data.text,
+            options: [...data.candidates.map((c: any) => `PN ${c.sku}`), 'Hiçbiri / Farklı bir koku'],
+            step: 'did_you_mean_multi',
+            candidates: data.candidates,
             language: data.language
           }
           setMessages(prev => [...prev, assistantMessage])
