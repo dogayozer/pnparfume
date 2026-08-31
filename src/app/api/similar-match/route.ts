@@ -48,7 +48,7 @@ const getTemplate = (lang?: string) => TEMPLATES[lang || 'tr'] || TEMPLATES.tr
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { messages, lang } = body
+    const { messages, lang, confirmed } = body
 
     if (!messages || messages.length === 0) {
       return NextResponse.json({ text: "Mesaj bulunamadı." })
@@ -147,10 +147,16 @@ export async function POST(req: Request) {
     }
 
     if (fastMatches.length > 0 && userMsgLower.length > 3) {
-      // Kullanıcı "Evet" deyip önerilen ismi (suggestion) geri gönderdiyse — bu, bir
-      // ürünün original_name'iyle TAM eşleşir. Bu durumda onay sormadan doğrudan sonucu ver.
       const exactMatch = fastMatches.find(p => p.original_name!.toLowerCase() === userMsgLower)
-      if (exactMatch) {
+
+      // Kullanıcı "Evet" deyip önerilen ismi (suggestion) geri gönderdiyse — bu,
+      // frontend'in `confirmed: true` ile işaretlediği bir RESUBMIT (bkz.
+      // ChatWidget.tsx handleWizardSelect). Bu durumda onay sormadan doğrudan
+      // sonucu ver. `confirmed` işaretlenmemişse (kullanıcının kendi yazdığı ilk
+      // mesaj, original_name'e TESADÜFEN birebir denk gelmiş olabilir — örn.
+      // "Armani you") direkt sonuca atlamıyoruz, aşağıdaki onay/kardeş-ürün
+      // akışına devam ediyoruz.
+      if (exactMatch && confirmed) {
         // "Evet" onayı burada bir önceki (LLM'li) cevabın dilini `lang` ile geri
         // taşıyor — aksi halde İngilizce/Rusça/Arapça bir onaydan sonra sonuç
         // her zaman Türkçe dönerdi (LLM'siz bu adımda dil algılama yok).
@@ -164,7 +170,7 @@ export async function POST(req: Request) {
       // İlk kez eşleşti — sonucu göstermeden önce onay iste. Ama önce, sorgudaki
       // anlamlı bir kelimeyi paylaşan başka (farklı isimli) bir ürün var mı diye
       // bak — varsa tek taraflı varsaymak yerine ikisini de seçenek olarak sun.
-      const top = fastMatches[0]
+      const top = exactMatch || fastMatches[0]
       const siblings = findSiblingMatches(top.sku, tokenize(lastUserMessage)).slice(0, 2)
 
       if (siblings.length > 0) {

@@ -126,7 +126,7 @@ export default function ChatWidget() {
         // zaten kendi kataloğumuzdan LLM'siz geliyor, sadece kullanıcıya bir
         // arama hissi veriyor.
         setMessages(prev => [...prev, { id: genId(), role: 'assistant', content: 'Kütüphanemizde koku profilini arıyorum...' }])
-        setTimeout(() => handleSubmit(undefined, suggestionMsg.suggestion, 'Evet, doğru.', suggestionMsg.language), 800)
+        setTimeout(() => handleSubmit(undefined, suggestionMsg.suggestion, 'Evet, doğru.', suggestionMsg.language, true), 800)
       } else {
         setFlowMode('initial')
         setMessages(prev => [...prev, { id: genId(), role: 'assistant', content: 'Anladım. Rica etsem aradığınızı biraz daha detaylı tarif edebilir misiniz?' }])
@@ -143,7 +143,7 @@ export default function ChatWidget() {
       if (candidate) {
         setFlowMode('similar')
         setMessages(prev => [...prev, { id: genId(), role: 'assistant', content: 'Kütüphanemizde koku profilini arıyorum...' }])
-        setTimeout(() => handleSubmit(undefined, candidate.suggestion, `PN ${candidate.sku}, doğru.`, suggestionMsg.language), 800)
+        setTimeout(() => handleSubmit(undefined, candidate.suggestion, `PN ${candidate.sku}, doğru.`, suggestionMsg.language, true), 800)
       } else {
         setFlowMode('initial')
         setMessages(prev => [...prev, { id: genId(), role: 'assistant', content: 'Anladım. Rica etsem aradığınızı biraz daha detaylı tarif edebilir misiniz?' }])
@@ -293,7 +293,7 @@ export default function ChatWidget() {
     }
   }
 
-  const handleSubmit = async (e?: React.FormEvent, customInput?: string, displayOverride?: string, langOverride?: string) => {
+  const handleSubmit = async (e?: React.FormEvent, customInput?: string, displayOverride?: string, langOverride?: string, confirmed?: boolean) => {
     if (e) e.preventDefault()
 
     const textToSend = customInput || input
@@ -368,7 +368,13 @@ export default function ChatWidget() {
         body: JSON.stringify({
           messages: newMessages.map(m => ({ role: m.role, content: m.content })).filter(m => m.role === 'user' || m.role === 'assistant'),
           userId: loggedInUserId,
-          lang: langOverride
+          lang: langOverride,
+          // "Evet"/aday seçimiyle resubmit edilen bir onay mı, yoksa kullanıcının
+          // ilk kez yazdığı ve TESADÜFEN bir ürün adına birebir denk gelen serbest
+          // metin mi? Bu ayrım olmadan backend ikisini de aynı fast-path kısayoluyla
+          // (doğrudan sonuç) işler — bu da ilk yazımda "kardeş ürün" olasılığını hiç
+          // sormadan atlar (bkz. api/similar-match/route.ts).
+          confirmed: !!confirmed
         })
       })
 
