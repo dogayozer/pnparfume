@@ -9,6 +9,28 @@ const GA_MEASUREMENT_ID = 'G-XZC7243TVP'
 
 // Google Tag Manager konteyner kimliği.
 const GTM_CONTAINER_ID = 'GTM-K3Z7KQT5'
+
+// SEO: Google'a markanın/sitenin kim olduğunu anlatan yapılandırılmış veri —
+// önceden hiçbir sayfada schema.org işaretlemesi yoktu, bu da Google'ın siteyi
+// güvenilir bir e-ticaret markası olarak tanımasını zorlaştırıyordu.
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'PN Parfüm',
+  url: 'https://pnparfume.com',
+  logo: 'https://pnparfume.com/icon.png',
+  sameAs: [] as string[]
+}
+// Not: SearchAction (sitelinks arama kutusu) eklenmedi — /katalog şu an URL
+// parametresiyle sunucu tarafında arama desteklemiyor (arama SearchModal
+// bileşeniyle istemci tarafında çalışıyor), Google'a çalışmayan bir hedef
+// vermemek için bu özellik atlandı.
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'PN Parfüm',
+  url: 'https://pnparfume.com'
+}
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { CartProvider } from '@/contexts/CartContext'
@@ -56,6 +78,14 @@ export default function RootLayout({
   return (
     <html lang="tr" className="scroll-smooth" suppressHydrationWarning>
       <body className={`${inter.className} bg-background text-foreground antialiased selection:bg-accent-gold/30 selection:text-accent-gold overflow-x-hidden w-full`} suppressHydrationWarning>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
         {/* Google Tag Manager — strategy="beforeInteractive" Next.js'e bunu
             sunucudan gelen ilk HTML'in <head>'ine, sayfadaki başka hiçbir
             script'ten önce enjekte etmesini söyler (JSX'te nereye yazılırsa

@@ -78,7 +78,7 @@ const getOccasionIcon = (tag: string | null) => {
 
 export default async function ProductPage({ params }: { params: Promise<{ sku: string }> }) {
   const { sku } = await params
-  
+
   const product = await prisma.product.findUnique({
     where: { sku: decodeURIComponent(sku) },
     include: {
@@ -94,6 +94,15 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
   if (!product) {
     notFound()
   }
+
+  // SEO: Google'ın arama sonuçlarında fiyat/stok/puan gösterebilmesi (rich result)
+  // için schema.org Product yapılandırılmış verisi — önceden hiç yoktu, sayfa
+  // Google'a sıradan bir metin sayfası gibi görünüyordu.
+  const reviewAgg = await prisma.review.aggregate({
+    where: { productSku: product.sku, isApproved: true },
+    _avg: { rating: true },
+    _count: { rating: true }
+  })
 
   const trendyolListing = product.marketplaceListings?.find((l: any) => l.platform === 'trendyol')
   const finalImageUrl = trendyolListing?.images?.[0] || null
@@ -121,9 +130,39 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
 
   const isOutOfStock = product.publish_status === 'OUT_OF_STOCK'
   const title = product.seo_name ? `${product.seo_name} - PN ${product.sku}` : `PN ${product.sku}`
+  const canonicalUrl = `https://pnparfume.com/urun/${product.sku}`
+
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: title,
+    sku: product.sku,
+    description: (product.seo_name || `PN ${product.sku}`) + ' — ' + (product.mood_tag || 'karakterli bir koku'),
+    image: finalImageUrl ? [finalImageUrl] : undefined,
+    brand: { '@type': 'Brand', name: 'PN Parfüm' },
+    offers: {
+      '@type': 'Offer',
+      url: canonicalUrl,
+      priceCurrency: 'TRY',
+      price: displayPrice,
+      availability: isOutOfStock ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+      itemCondition: 'https://schema.org/NewCondition'
+    },
+    ...(reviewAgg._count.rating > 0 ? {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: reviewAgg._avg.rating,
+        reviewCount: reviewAgg._count.rating
+      }
+    } : {})
+  }
 
   return (
     <div className="min-h-screen max-w-5xl mx-auto px-4 md:px-12 py-6 md:py-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
       <Link href="/katalog" className="inline-flex items-center gap-2 text-foreground/50 hover:text-accent-rose mb-6 md:mb-12 transition-colors text-base md:text-lg">
         <ArrowLeft size={18} /> Kataloğa Dön
       </Link>

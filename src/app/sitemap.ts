@@ -18,8 +18,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.85,
   }))
 
+  // 🔴 KRİTİK: SKU'larda boşluk var ("M 17" gibi) — encodeURIComponent olmadan
+  // sitemap'e ham boşlukla yazılıyordu (geçersiz XML/URL). Google Search Console
+  // bu yüzden 300+ ürün URL'sini "geçersiz" diye reddediyor, hiç indekslemiyor
+  // olabilir — muhtemelen "sitemiz bulunamıyor" şikayetinin ana sebeplerinden biri.
   const productUrls = products.map((p: any) => ({
-    url: `https://pnparfume.com/urun/${p.sku}`,
+    url: `https://pnparfume.com/urun/${encodeURIComponent(p.sku)}`,
     lastModified: p.updatedAt,
     changeFrequency: 'weekly' as const,
     priority: 0.8,
