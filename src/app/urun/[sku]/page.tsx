@@ -104,6 +104,24 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
     _count: { rating: true }
   })
 
+  // Google Search Console "aggregateRating varken review eksik" uyarısı verdiği
+  // için — birkaç gerçek onaylı yorumu da yapılandırılmış veriye dahil ediyoruz.
+  const sampleReviews = reviewAgg._count.rating > 0
+    ? await prisma.review.findMany({
+        where: { productSku: product.sku, isApproved: true },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        select: { customerName: true, rating: true, comment: true, createdAt: true }
+      })
+    : []
+
+  // Kargo ücreti (Senaryo Kuralları → SHIPPING_COST) — sepet/kupon durumuna göre
+  // ücretsiz kargoya düşebilir (bkz. dynamicShipping.ts), ama schema.org
+  // OfferShippingDetails tek bir sabit değer istiyor; burada müşteriden varsayılan
+  // olarak alınan standart ücret temsili değer olarak kullanılıyor.
+  const shippingRule = await prisma.scenarioRule.findUnique({ where: { rule_key: 'SHIPPING_COST' } })
+  const shippingCost = shippingRule && shippingRule.is_active ? shippingRule.rule_value : 110
+
   const trendyolListing = product.marketplaceListings?.find((l: any) => l.platform === 'trendyol')
   const finalImageUrl = trendyolListing?.images?.[0] || null
   const displayPrice = trendyolListing?.price || product.base_cost
@@ -130,13 +148,19 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
 
   const isOutOfStock = product.publish_status === 'OUT_OF_STOCK'
   const title = product.seo_name ? `${product.seo_name} - PN ${product.sku}` : `PN ${product.sku}`
-  const canonicalUrl = `https://pnparfume.com/urun/${product.sku}`
+  // 🔴 sitemap.ts'teki ile aynı hata: SKU'da boşluk var ("M 17"), encode edilmeden
+  // URL'e basılırsa geçersiz olur — burada da encodeURIComponent şart.
+  const canonicalUrl = `https://pnparfume.com/urun/${encodeURIComponent(product.sku)}`
+  // Google Search Console "sku alanındaki değer geçersiz" uyarısı verdi —
+  // Merchant listing doğrulayıcısı SKU'da boşluk istemiyor, görünen isim aynı
+  // kalsın diye sadece yapılandırılmış veride boşluksuz halini kullanıyoruz.
+  const schemaSku = product.sku.replace(/\s+/g, '')
 
   const productJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: title,
-    sku: product.sku,
+    sku: schemaSku,
     description: (product.seo_name || `PN ${product.sku}`) + ' — ' + (product.mood_tag || 'karakterli bir koku'),
     image: finalImageUrl ? [finalImageUrl] : undefined,
     brand: { '@type': 'Brand', name: 'PN Parfüm' },
@@ -146,14 +170,45 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
       priceCurrency: 'TRY',
       price: displayPrice,
       availability: isOutOfStock ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
-      itemCondition: 'https://schema.org/NewCondition'
+      itemCondition: 'https://schema.org/NewCondition',
+      // İptal ve İade Koşulları'ndaki (Mesafeli Sözleşmeler Yönetmeliği, madde 11-22)
+      // yasal 14 günlük cayma hakkı ve iade masrafının satıcıya ait olması (madde 14).
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'TR',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 14,
+        returnMethod: 'https://schema.org/ReturnByMail',
+        returnFees: 'https://schema.org/FreeReturn'
+      },
+      // "24 saat içerisinde kargoya teslim edilecektir" (bkz. basarili/page.tsx) —
+      // teslimat (transit) süresi sitede yazılı olarak belirtilmediği için yurt içi
+      // kargo için makul bir varsayım kullanıldı (1-3 iş günü); gerçek kargo firması
+      // SLA'sı netleşirse burası güncellenmeli.
+      shippingDetails: {
+        '@type': 'OfferShippingDetails',
+        shippingRate: { '@type': 'MonetaryAmount', value: shippingCost, currency: 'TRY' },
+        shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'TR' },
+        deliveryTime: {
+          '@type': 'ShippingDeliveryTime',
+          handlingTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 1, unitCode: 'DAY' },
+          transitTime: { '@type': 'QuantitativeValue', minValue: 1, maxValue: 3, unitCode: 'DAY' }
+        }
+      }
     },
     ...(reviewAgg._count.rating > 0 ? {
       aggregateRating: {
         '@type': 'AggregateRating',
         ratingValue: reviewAgg._avg.rating,
         reviewCount: reviewAgg._count.rating
-      }
+      },
+      review: sampleReviews.map(r => ({
+        '@type': 'Review',
+        author: { '@type': 'Person', name: r.customerName },
+        datePublished: r.createdAt.toISOString().slice(0, 10),
+        reviewBody: r.comment,
+        reviewRating: { '@type': 'Rating', ratingValue: r.rating, bestRating: 5, worstRating: 1 }
+      }))
     } : {})
   }
 
