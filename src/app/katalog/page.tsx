@@ -1,8 +1,25 @@
 import { prisma } from '@/lib/prisma'
+import { unstable_cache } from 'next/cache'
 import ProductCard from '@/components/ProductCard'
 import FilterSidebar from '@/components/catalog/FilterSidebar'
 import MobileFilterSort from '@/components/catalog/MobileFilterSort'
 import Pagination from '@/components/catalog/Pagination'
+
+// Bu sayfa `searchParams` okuduğu için Next.js'i her ziyarette sıfırdan (hiç
+// önbelleksiz) render etmeye zorluyordu — muhtemelen sitenin en çok ziyaret
+// edilen sayfasında, her istekte tam bir Prisma sorgusu + join demek. Fiyat
+// değişiklikleri çok ender olduğu için (kullanıcı onayı) filtre kombinasyonu
+// başına 1 saatlik önbellek makul: tekrarlanan sorgu yükünü büyük ölçüde
+// azaltır, stok/yayın durumu da saatlik makul bir gecikmeyle güncellenir.
+const getCachedProducts = unstable_cache(
+  async (whereClause: any) => prisma.product.findMany({
+    where: whereClause,
+    orderBy: { sku: 'asc' },
+    include: { marketplaceListings: true }
+  }),
+  ['katalog-products'],
+  { revalidate: 3600, tags: ['katalog'] }
+)
 
 // SEO: aktif filtreye göre başlık/açıklama üretiyoruz — önceden ?gender=Erkek olsun
 // olmasın katalog hep aynı "Tüm Parfümler" başlığını taşıyordu.
@@ -63,11 +80,7 @@ export default async function KatalogPage({
 
   const sort = typeof params.sort === 'string' ? params.sort : 'best_sellers'
 
-  const allProducts = await prisma.product.findMany({
-    where: whereClause,
-    orderBy: { sku: 'asc' },
-    include: { marketplaceListings: true }
-  })
+  const allProducts = await getCachedProducts(whereClause)
 
   let processedProducts = allProducts.map((product: any) => {
     const trendyolListing = product.marketplaceListings?.find((l: any) => l.platform === 'trendyol')
