@@ -59,6 +59,12 @@ export default function WholesalePage() {
       </div>
 
       <B2BLeadForm defaultInterest="Distributor" />
+
+      {/* middleware.ts kök sayfayı ("/") bu bölgelerden gelen ziyaretçiler için
+          buraya yönlendiriyor — geri dönmek isteyenler için bir çıkış yolu. */}
+      <p className="text-center mt-10 text-sm text-foreground/40">
+        Looking for our Turkish store? <Link href="/" className="text-accent-gold hover:underline">Visit pnparfume.com</Link>
+      </p>
     </div>
   )
 }
