@@ -51,7 +51,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/mix/discovery-set',
     '/mix/engine',
     '/profil',
-    '/quiz'
+    '/quiz',
+    '/en/wholesale',
+    '/en/private-label'
   ].map((route) => ({
     url: `https://pnparfume.com${route}`,
     lastModified: new Date(),
