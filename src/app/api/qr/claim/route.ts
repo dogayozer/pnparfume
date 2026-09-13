@@ -60,7 +60,7 @@ export async function POST(req: Request) {
       await sendNotification({
         phone: formattedPhone,
         type: 'sms',
-        triggerReason: 'qr_scan_welcome',
+        triggerReason: 'custom',
         message: `PN Parfüm'e hoş geldin! İlk siparişine özel %20 indirim kodun: ${code} (48 saat geçerli). pnparfume.com`
       })
     } catch (e) {

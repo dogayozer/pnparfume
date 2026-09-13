@@ -49,9 +49,15 @@ export async function POST(req: Request) {
     })
 
     if (!admin) {
+      // Güvenlik: önceden ilk-kurulum admin'i sabit, kodda açık yazılı bir şifreyle
+      // ('pn2026!') oluşturuluyordu — bu şifre git geçmişinde kalıcı olarak görünür
+      // durumda. Artık bootstrap SADECE ADMIN_BOOTSTRAP_PASSWORD ortam değişkeni
+      // tanımlıysa çalışıyor ve o değeri kullanıyor; tanımlı değilse (normal durum,
+      // zaten bir admin hesabı var) bootstrap hiç devreye girmiyor.
       const totalAdmins = await prisma.adminUser.count()
-      if (totalAdmins === 0 && username === 'admin') {
-        const hashedPassword = await bcrypt.hash('pn2026!', 10)
+      const bootstrapPassword = process.env.ADMIN_BOOTSTRAP_PASSWORD
+      if (totalAdmins === 0 && username === 'admin' && bootstrapPassword) {
+        const hashedPassword = await bcrypt.hash(bootstrapPassword, 10)
         admin = await prisma.adminUser.create({
           data: {
             username: 'admin',
@@ -117,8 +123,15 @@ export async function PUT(req: Request) {
     let admin = await prisma.adminUser.findFirst()
 
     if (!admin) {
-      // Create with default first
-      const hashedPassword = await bcrypt.hash('pn2026!', 10)
+      // Buraya normalde hiç düşülmemeli (üstteki requireAdmin zaten var olan bir
+      // admin hesabına ait geçerli bir token gerektiriyor) — ama olur da AdminUser
+      // tablosu token hâlâ geçerliyken boşaltılırsa diye, sabit bir şifre yerine
+      // aynı ADMIN_BOOTSTRAP_PASSWORD şartı burada da aranıyor.
+      const bootstrapPassword = process.env.ADMIN_BOOTSTRAP_PASSWORD
+      if (!bootstrapPassword) {
+        return NextResponse.json({ error: 'Yönetici hesabı bulunamadı' }, { status: 401 })
+      }
+      const hashedPassword = await bcrypt.hash(bootstrapPassword, 10)
       admin = await prisma.adminUser.create({
         data: {
           username: 'admin',

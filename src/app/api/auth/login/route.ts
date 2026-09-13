@@ -38,6 +38,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Bu e-posta adresiyle kayıtlı bir hesap bulunamadı.' }, { status: 404 })
     }
 
+    if (!user.password) {
+      return NextResponse.json({ error: 'Bu hesap için şifre tanımlı değil.' }, { status: 401 })
+    }
+
     const isMatch = await bcrypt.compare(password, user.password)
     if (!isMatch) {
       return NextResponse.json({ error: 'Hatalı şifre.' }, { status: 401 })

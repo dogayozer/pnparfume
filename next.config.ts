@@ -47,7 +47,7 @@ const nextConfig: NextConfig = {
     unoptimized: true
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   // Güvenlik: önceden hiç özel header yoktu, sadece Vercel'in otomatik HSTS'i
   // vardı. X-Frame-Options/frame-ancestors (clickjacking), X-Content-Type-Options

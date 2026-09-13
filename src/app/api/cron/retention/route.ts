@@ -114,7 +114,8 @@ export async function GET(request: Request) {
       });
 
       if (!existingBdayNotif) {
-        const bdayCode = `VIPDOGUM-${cust.name.substring(0,3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
+        const custName = cust.name || 'Değerli Müşterimiz';
+        const bdayCode = `VIPDOGUM-${custName.substring(0,3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
         await prisma.coupon.create({
           data: {
@@ -131,7 +132,7 @@ export async function GET(request: Request) {
 
         try {
           await sendBirthdayNotification({
-            customerName: cust.name,
+            customerName: custName,
             phone: cust.phone,
             customerId: cust.id,
             couponCode: bdayCode,

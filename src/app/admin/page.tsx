@@ -8,7 +8,7 @@ import {
   EyeOff, Search, Filter, MapPin, User, Phone, Mail, Calendar, ChevronRight, 
   X, Package, Check, Copy, ArrowRight, ShoppingCart, Award, Gift, 
   CreditCard, Tag, Edit3, ShieldCheck, Key, Lock, History, Info, 
-  CheckSquare, Square, Bell, Send, MessageSquare, Calculator
+  CheckSquare, Square, Bell, Send, MessageSquare, Calculator, Star, Trash2
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 
@@ -250,7 +250,7 @@ const CHANGELOG = [
 ]
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<'scenarios' | 'ai' | 'orders' | 'customers' | 'notifications' | 'reports' | 'api' | 'products' | 'growth-sim'>('orders')
+  const [activeTab, setActiveTab] = useState<'scenarios' | 'ai' | 'orders' | 'customers' | 'notifications' | 'reports' | 'api' | 'products' | 'growth-sim' | 'coupons' | 'integrations' | 'reviews'>('orders')
   const [loading, setLoading] = useState(false)
   const [savingId, setSavingId] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
@@ -857,7 +857,6 @@ export default function AdminDashboard() {
   // --- Single Product Management Functions ---
   const handleOpenCreateProduct = () => {
     setProductModalMode('create')
-    setSelectedProduct(null)
     setProductForm({
       sku: '',
       original_name: '',
@@ -883,7 +882,6 @@ export default function AdminDashboard() {
 
   const handleOpenEditProduct = (prod: any) => {
     setProductModalMode('edit')
-    setSelectedProduct(prod)
     const listing = prod.marketplaceListings?.find((l: any) => l.platform === 'pn_store') || prod.marketplaceListings?.[0]
     setProductForm({
       sku: prod.sku,
