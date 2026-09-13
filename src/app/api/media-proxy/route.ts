@@ -12,13 +12,31 @@ export async function GET(request: Request) {
 
   try {
     const decodedUrl = decodeURIComponent(targetUrl)
-    
-    // Only allow proxying from trusted domains
-    if (!decodedUrl.includes('parfumtasarla.com') && !decodedUrl.includes('kasaptanetyiyelim.com') && !decodedUrl.includes('dsmcdn.com')) {
+
+    // Güvenlik: sadece http(s) ve GÜVENİLİR domainlerin TAM HOSTNAME'i (SSRF
+    // önleme). Önceden url.includes('parfumtasarla.com') gibi bir alt-dize
+    // kontrolü vardı — "evil.com/parfumtasarla.com" veya
+    // "parfumtasarla.com.evil.com" gibi bir URL bunu atlatıp bu route'u
+    // rastgele bir sunucuya (dahili ağ dahil) istek atmak için
+    // kullanabilirdi. Artık gerçek hostname'e tam eşleşme (veya alt-domaini
+    // olma) şartı aranıyor.
+    const ALLOWED_HOSTS = ['parfumtasarla.com', 'kasaptanetyiyelim.com', 'dsmcdn.com']
+    let parsed: URL
+    try {
+      parsed = new URL(decodedUrl)
+    } catch {
+      return new NextResponse('Invalid URL', { status: 400 })
+    }
+    const host = parsed.hostname.toLowerCase()
+    const hostAllowed = ALLOWED_HOSTS.some((d) => host === d || host.endsWith('.' + d))
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return new NextResponse('Protocol not allowed', { status: 403 })
+    }
+    if (!hostAllowed) {
       return new NextResponse('Domain not allowed', { status: 403 })
     }
 
-    const response = await fetch(decodedUrl, {
+    const response = await fetch(parsed.toString(), {
       headers: {
         'User-Agent': 'Mozilla/5.0 (PN-Parfum-Proxy/1.0)',
       },

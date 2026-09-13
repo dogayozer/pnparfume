@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getAIModel } from '@/lib/ai-gateway'
 import { generateObject } from 'ai'
 import { z } from 'zod'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 
 export const maxDuration = 30
 
@@ -47,6 +48,13 @@ const getTemplate = (lang?: string) => TEMPLATES[lang || 'tr'] || TEMPLATES.tr
 
 export async function POST(req: Request) {
   try {
+    // Güvenlik: bu route LLM çağrısı yapabiliyor (maliyetli) — önceden hiç
+    // limiti yoktu. IP başına dakikada 15 istek (chat/route.ts'teki limitle
+    // aynı büyüklük mertebesi).
+    if (!checkRateLimit(getClientIp(req), 15, 60 * 1000)) {
+      return NextResponse.json({ error: 'Çok fazla istek gönderildi, lütfen biraz sonra tekrar deneyin.' }, { status: 429 })
+    }
+
     const body = await req.json()
     const { messages, lang, confirmed } = body
 

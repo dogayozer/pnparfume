@@ -2,11 +2,18 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAIModel } from '@/lib/ai-gateway'
 import { generateText } from 'ai'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 
 export const maxDuration = 30; // 30 seconds
 
 export async function POST(req: Request) {
   try {
+    // Güvenlik: bu route LLM çağrısı yapabiliyor (maliyetli) — önceden hiç
+    // limiti yoktu.
+    if (!checkRateLimit(getClientIp(req), 15, 60 * 1000)) {
+      return NextResponse.json({ text: 'Çok fazla istek gönderildi, lütfen biraz sonra tekrar deneyin.', products: [] }, { status: 429 })
+    }
+
     const body = await req.json()
     const { filters } = body
 
