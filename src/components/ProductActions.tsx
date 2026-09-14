@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Sparkles, ShoppingBag, Bot, ShoppingCart, Check, Wand2 } from 'lucide-react'
+import { Sparkles, ShoppingBag, Bot, ShoppingCart, Check, Wand2, ExternalLink } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '@/contexts/CartContext'
 import { BOTTLE_OPTIONS, DEFAULT_BOTTLE_CODE, toSecureImageUrl } from '@/lib/bottleOptions'
@@ -107,6 +107,20 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
           </button>
         )}
       </div>
+
+      {/* Trendyol'dan Satın Al — sadece bu ürün için Trendyol linki tanımlıysa (
+          MarketplaceListing.platform === 'trendyol') görünür */}
+      {trendyolUrl && (
+        <a
+          href={trendyolUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 px-6 py-3 mb-6 rounded-full border border-[#f27a1a] text-[#f27a1a] text-sm font-medium uppercase tracking-widest hover:bg-[#f27a1a] hover:text-white transition-colors"
+        >
+          <ExternalLink size={16} />
+          Trendyol&apos;dan Satın Al
+        </a>
+      )}
 
       {/* Benim İçin Özelleştir */}
       {!isOutOfStock && (
