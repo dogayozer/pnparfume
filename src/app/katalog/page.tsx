@@ -32,16 +32,24 @@ export async function generateMetadata({
   const gender = typeof sp.gender === 'string' ? sp.gender : undefined
   const family = typeof sp.family === 'string' ? sp.family : undefined
 
+  // 🔴 /katalog?gender=Erkek gibi filtreli varyantların hiçbiri canonical taşımıyordu —
+  // bu da zaten var olan /erkek-parfum gibi temiz URL'li SEO sayfalarıyla yinelenen
+  // içerik (duplicate content) oluşturuyordu. /katalog'un tüm filtre varyantları artık
+  // temel /katalog'a canonical veriyor; asıl sıralamaya giren sayfalar /[keyword] sayfaları.
+  const canonical = 'https://pnparfume.com/katalog'
+
   if (!gender && !family) {
     return {
       title: 'Tüm Parfümler | Erkek, Kadın ve Unisex Koleksiyon | PN Parfüm',
-      description: 'Yapay zeka destekli koku analiziyle sana en uygun parfümü bul. Erkek, kadın ve unisex parfüm koleksiyonunun tamamı tek sayfada.'
+      description: 'Yapay zeka destekli koku analiziyle sana en uygun parfümü bul. Erkek, kadın ve unisex parfüm koleksiyonunun tamamı tek sayfada.',
+      alternates: { canonical }
     }
   }
   const parts = [family, gender].filter(Boolean).join(' ')
   return {
     title: `${parts} Parfüm Koleksiyonu | Filtrelenmiş Katalog | PN Parfüm`,
-    description: `${parts} parfüm seçeneklerini incele, teninize uygun olanı filtrele. PN Parfüm koleksiyonundan ${parts.toLowerCase()} kokular.`
+    description: `${parts} parfüm seçeneklerini incele, teninize uygun olanı filtrele. PN Parfüm koleksiyonundan ${parts.toLowerCase()} kokular.`,
+    alternates: { canonical }
   }
 }
 

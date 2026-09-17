@@ -51,7 +51,11 @@ export const metadata: Metadata = {
     'Pien parfüm', 'indirimli parfüm', 'öğrenci parfüm', 'gece parfümü',
     'date parfümü', 'spor parfüm', 'günlük parfüm', 'ofis parfümü',
     'yaz parfümü', 'kış parfümü', 'odunsu parfüm', 'çiçeksi parfüm', 'tatlı parfüm',
-    'kendi parfüm markanı yarat', 'parfüm markası kurma', 'private label parfüm üretici'
+    'kendi parfüm markanı yarat', 'parfüm markası kurma', 'private label parfüm üretici',
+    'muadil parfüm', 'parfüm muadili', 'esans parfüm', 'yağlı parfüm', 'alkolsüz parfüm',
+    'toptan parfüm', 'parfüm bayiliği', 'mix parfüm tasarımı', '5li keşif kutusu',
+    'parfüm hediye seti', 'sevgiliye hediye parfüm', 'doğum günü hediyesi parfüm',
+    'hangi parfüm bana uygun', 'parfüm testi', 'ucuz kaliteli parfüm', 'parfüm önerisi'
   ],
   openGraph: {
     title: 'PN Parfüm | Özel ve Niş Koku Deneyimi',
@@ -60,11 +64,15 @@ export const metadata: Metadata = {
     siteName: 'PN Parfüm',
     locale: 'tr_TR',
     type: 'website',
+    // Sitede hiçbir sayfada og:image tanımlı değildi — WhatsApp/sosyal medyada
+    // paylaşılan linkler görselsiz görünüyordu. Marka logosu varsayılan olarak eklendi.
+    images: [{ url: '/icon.png', width: 512, height: 512, alt: 'PN Parfüm' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'PN Parfüm | Özel ve Niş Koku Deneyimi',
     description: 'Yapay zeka analiz ilkeleriyle teninize en uygun imza kokuyu keşfedin.',
+    images: ['/icon.png'],
   },
   alternates: {
     canonical: 'https://pnparfume.com',

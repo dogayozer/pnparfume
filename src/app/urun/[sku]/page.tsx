@@ -26,11 +26,17 @@ export async function generateMetadata({ params }: { params: Promise<{ sku: stri
   const title = `${displayTitle} | ${product.gender} ${familyText} Parfüm | PN Parfüm`
   const description = `${displayTitle} — ${product.mood_tag || 'karakterli bir koku'}. Üst notalar: ${product.top_notes}. Kalıcı, ${familyText.toLowerCase()} bir ${product.gender?.toLowerCase()} parfümü.`.slice(0, 160)
 
+  // 🔴 SKU'larda boşluk var ("M 17" gibi) — encodeURIComponent olmadan canonical/OG URL'i
+  // sayfanın gerçekte sunulduğu (Next.js'in otomatik encode ettiği) URL'den farklı olur,
+  // bu da Google Search Console'da canonical uyuşmazlığı hatalarına yol açar
+  // (bkz. sitemap.ts'teki aynı sınıf hata, aynı sebeple daha önce düzeltilmişti).
+  const canonicalUrl = `https://pnparfume.com/urun/${encodeURIComponent(product.sku)}`
+
   return {
     title,
     description,
-    alternates: { canonical: `https://pnparfume.com/urun/${product.sku}` },
-    openGraph: { title, description, url: `https://pnparfume.com/urun/${product.sku}`, siteName: 'PN Parfüm', locale: 'tr_TR', type: 'website' }
+    alternates: { canonical: canonicalUrl },
+    openGraph: { title, description, url: canonicalUrl, siteName: 'PN Parfüm', locale: 'tr_TR', type: 'website' }
   }
 }
 
