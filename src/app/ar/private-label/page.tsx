@@ -55,10 +55,16 @@ export default function ArPrivateLabelPage() {
         </div>
       </div>
 
-      <div className="mb-16 p-8 bg-foreground/[0.02] rounded-3xl border border-foreground/5">
+      <div className="mb-6 p-8 bg-foreground/[0.02] rounded-3xl border border-foreground/5">
         <h2 className="text-2xl font-light mb-4">هل لديكم علامة تجارية بالفعل وتريدون الشراء بالجملة؟</h2>
         <p className="text-foreground/60 mb-4">إذا كنتم تفضلون توزيع كتالوجنا الحالي الذي يضم أكثر من 338 عطرًا تحت علامتنا، فقد يكون برنامج البيع بالجملة أنسب لكم.</p>
         <Link href="/ar/wholesale" className="text-accent-gold font-medium hover:underline">استكشفوا البيع بالجملة ←</Link>
+      </div>
+
+      <div className="mb-16 p-8 bg-foreground/[0.02] rounded-3xl border border-foreground/5">
+        <h2 className="text-2xl font-light mb-4">تعرفوا على استراتيجيتنا الكاملة لسوق الخليج</h2>
+        <p className="text-foreground/60 mb-4">التسعير الأمثل، متطلبات SFDA وGSO وCITES، اتجاهات العود الحديث، وهندسة التغليف الفاخر — دليل شامل مبني على بيانات السوق.</p>
+        <Link href="/ar/gulf-market-strategy" className="text-accent-gold font-medium hover:underline">اقرأوا الدليل الكامل ←</Link>
       </div>
 
       <B2BLeadForm defaultInterest="Private Label" lang="ar" />

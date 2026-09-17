@@ -53,10 +53,16 @@ export default function ArWholesalePage() {
         </div>
       </div>
 
-      <div className="mb-16 p-8 bg-foreground/[0.02] rounded-3xl border border-foreground/5">
+      <div className="mb-6 p-8 bg-foreground/[0.02] rounded-3xl border border-foreground/5">
         <h2 className="text-2xl font-light mb-4">هل تريدون تأسيس علامتكم التجارية الخاصة بدلاً من ذلك؟</h2>
         <p className="text-foreground/60 mb-4">إذا كنتم تفضلون بناء علامة عطور خاصة بكم من الفكرة إلى الرف، فقد يكون برنامج التصنيع الخاص (Private Label) خيارًا أنسب لكم.</p>
         <Link href="/ar/private-label" className="text-accent-gold font-medium hover:underline">استكشفوا برنامج العلامة الخاصة ←</Link>
+      </div>
+
+      <div className="mb-16 p-8 bg-foreground/[0.02] rounded-3xl border border-foreground/5">
+        <h2 className="text-2xl font-light mb-4">تعرفوا على استراتيجيتنا الكاملة لسوق الخليج</h2>
+        <p className="text-foreground/60 mb-4">التسعير الأمثل، متطلبات SFDA وGSO وCITES، اتجاهات العود الحديث، وهندسة التغليف الفاخر — دليل شامل مبني على بيانات السوق.</p>
+        <Link href="/ar/gulf-market-strategy" className="text-accent-gold font-medium hover:underline">اقرأوا الدليل الكامل ←</Link>
       </div>
 
       <B2BLeadForm defaultInterest="Distributor" lang="ar" />
