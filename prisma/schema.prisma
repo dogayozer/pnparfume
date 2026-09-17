@@ -418,3 +418,16 @@ model Review {
   @@index([productSku])
   @@index([isApproved])
 }
+
+// Ürün sayfası görüntülenme kaydı — tester/karekod (QR) kampanyalarının kaç kez
+// tıklandığını ölçmek için (bkz. ViewTracker bileşeni + /api/products/[sku]/view).
+// ISR sayfası 24 saat önbelleklendiği için sayaç sayfa render'ında DEĞİL, istemci
+// tarafında (her gerçek ziyaretçide) client-side bir fetch ile artırılıyor.
+model PageView {
+  id        String   @id @default(cuid())
+  sku       String
+  createdAt DateTime @default(now())
+
+  @@index([sku])
+  @@index([sku, createdAt])
+}

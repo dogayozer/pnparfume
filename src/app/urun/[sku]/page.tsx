@@ -6,6 +6,7 @@ import Image from 'next/image'
 import ProductGallery from '@/components/ProductGallery'
 import ProductActions from '@/components/ProductActions'
 import ProductReviews from '@/components/ProductReviews'
+import ViewTracker from '@/components/ViewTracker'
 
 export const revalidate = 86400 // Cache for 24 hours (super fast loading)
 
@@ -214,6 +215,7 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
 
   return (
     <div className="min-h-screen max-w-5xl mx-auto px-4 md:px-12 py-6 md:py-12">
+      <ViewTracker sku={product.sku} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
