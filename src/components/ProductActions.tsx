@@ -115,6 +115,16 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
           href={trendyolUrl}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => {
+            // Yeni sekmede açıldığı için bu sayfadan ayrılmıyoruz, tıklamayı
+            // kaydetmek için engelleyici olmayan bir istek yeterli.
+            fetch(`/api/products/${encodeURIComponent(sku)}/view`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ type: 'trendyol_click' }),
+              keepalive: true,
+            }).catch(() => {})
+          }}
           className="flex items-center justify-center gap-2 px-6 py-3 mb-6 rounded-full border border-[#f27a1a] text-[#f27a1a] text-sm font-medium uppercase tracking-widest hover:bg-[#f27a1a] hover:text-white transition-colors"
         >
           <ExternalLink size={16} />

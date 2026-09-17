@@ -426,8 +426,10 @@ model Review {
 model PageView {
   id        String   @id @default(cuid())
   sku       String
+  type      String   @default("view") // "view" (sayfa görüntülenmesi) veya "trendyol_click" (Trendyol linki tıklaması) vb.
   createdAt DateTime @default(now())
 
   @@index([sku])
   @@index([sku, createdAt])
+  @@index([sku, type])
 }
