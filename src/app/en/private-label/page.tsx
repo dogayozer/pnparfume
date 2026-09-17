@@ -5,6 +5,7 @@ import { Lightbulb, TestTube, Factory, PackageCheck, Truck } from 'lucide-react'
 export const metadata = {
   title: 'Private Label Perfume Manufacturer Turkey | PN Parfüm',
   description: 'Create your own perfume brand with PN Parfüm — a Turkish private label fragrance manufacturer. From concept to sample to production to your shelf.',
+  keywords: ['private label perfume manufacturer', 'contract manufacturing perfume', 'create your own perfume brand', 'perfume OEM Turkey'],
   alternates: { canonical: 'https://pnparfume.com/en/private-label' },
   openGraph: {
     title: 'Private Label Perfume Manufacturer Turkey | PN Parfüm',

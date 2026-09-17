@@ -11,9 +11,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Please fill in the required fields.' }, { status: 400 });
     }
 
-    // Aynı SMTP deseni: admin panelinden (Entegrasyonlar) yönetilen kimlik bilgileri —
-    // bkz. api/contact/corporate/route.ts (bu formun yerel/Türkçe karşılığı).
-    const { smtpHost, smtpUser, smtpPass, smtpPort, adminOrderEmail } = await getIntegrationSettings();
+    // SMTP kimlik bilgileri admin panelinden (Entegrasyonlar) yönetiliyor, ama bu formun
+    // alıcısı kasıtlı olarak adminOrderEmail'den (muhasebe/sipariş kutusu) bağımsız,
+    // sabit tutuluyor — uluslararası distribütörlük/private-label başvuruları doğrudan
+    // dogayozer@gmail.com'a gitsin diye (kullanıcının kendi talebi).
+    const { smtpHost, smtpUser, smtpPass, smtpPort } = await getIntegrationSettings();
 
     const transporter = nodemailer.createTransport({
       host: smtpHost || 'smtp.gmail.com',
@@ -27,7 +29,7 @@ export async function POST(req: Request) {
 
     const mailOptions = {
       from: `"PN Parfüm Wholesale Form" <${smtpUser}>`,
-      to: adminOrderEmail || 'muhasebe@pienparfume.com.tr',
+      to: 'dogayozer@gmail.com',
       subject: `New B2B Lead — ${interest} (${country})`,
       html: `
         <h2>New Wholesale / Private Label Inquiry</h2>

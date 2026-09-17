@@ -13,6 +13,13 @@ const TARGET_MARKET_REDIRECT: Record<string, string> = {
   BA: '/en/wholesale', // Bosna Hersek
   RS: '/en/wholesale', // Sırbistan
   ME: '/en/wholesale', // Karadağ
+  // Körfez ülkeleri — Arapça distribütörlük sayfasına yönlendirilir.
+  SA: '/ar/wholesale', // Suudi Arabistan
+  AE: '/ar/wholesale', // Birleşik Arap Emirlikleri
+  QA: '/ar/wholesale', // Katar
+  KW: '/ar/wholesale', // Kuveyt
+  BH: '/ar/wholesale', // Bahreyn
+  OM: '/ar/wholesale', // Umman
 }
 
 const REDIRECT_COOKIE = 'pn_market_redirected'

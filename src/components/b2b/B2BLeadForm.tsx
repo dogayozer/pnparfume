@@ -52,10 +52,34 @@ const STRINGS = {
     successMsg: 'Teşekkürler — talebiniz alındı. Ekibimiz en kısa sürede sizinle iletişime geçecek.',
     genericError: 'Bir şeyler ters gitti.', networkError: 'Talebiniz gönderilirken bir hata oluştu.',
   },
+  ar: {
+    heading: 'اطلب عرض سعر', step: 'خطوة', of: 'من',
+    interestPrompt: 'ماذا تبحثون عنه؟',
+    distributorLabel: 'أريد أن أصبح موزعًا', distributorDesc: 'شراء بالجملة، إعادة بيع تحت علامتنا',
+    privateLabelLabel: 'أريد إنشاء علامتي الخاصة', privateLabelDesc: 'تصنيع خاص (Private Label) — علامتكم، إنتاجنا',
+    country: 'الدولة', countryPh: 'مثال: الإمارات العربية المتحدة',
+    companyName: 'اسم الشركة', companyNamePh: 'اسم شركتكم',
+    contactName: 'الاسم الكامل', contactNamePh: 'الاسم الكامل',
+    back: 'رجوع', continueLabel: 'متابعة',
+    email: 'البريد الإلكتروني للعمل', emailPh: 'you@company.com',
+    whatsapp: 'واتساب / هاتف', whatsappPh: '+...',
+    website: 'الموقع الإلكتروني (اختياري)', websitePh: 'https://...',
+    volume: 'الحجم الشهري التقديري', selectPlaceholder: 'اختر...',
+    volOpts: [['<500', 'أقل من 500 وحدة'], ['500-2000', '500 – 2,000 وحدة'], ['2000-10000', '2,000 – 10,000 وحدة'], ['10000+', 'أكثر من 10,000 وحدة']] as [string, string][],
+    currentActivity: 'النشاط الحالي',
+    activityOpts: [['Retail', 'تجزئة'], ['Wholesale', 'جملة'], ['New startup', 'شركة ناشئة جديدة']] as [string, string][],
+    message: 'رسالتكم', messagePh: 'أخبرونا قليلاً عن عملكم وما تبحثون عنه...',
+    submit: 'إرسال الطلب',
+    successMsg: 'شكرًا لكم — تم استلام طلبكم. سيتواصل معكم فريقنا قريبًا.',
+    genericError: 'حدث خطأ ما.', networkError: 'حدث خطأ أثناء إرسال طلبكم.',
+  },
 }
 
-export default function B2BLeadForm({ defaultInterest, lang = 'en' }: { defaultInterest: 'Distributor' | 'Private Label'; lang?: 'en' | 'tr' }) {
+export default function B2BLeadForm({ defaultInterest, lang = 'en' }: { defaultInterest: 'Distributor' | 'Private Label'; lang?: 'en' | 'tr' | 'ar' }) {
   const t = STRINGS[lang]
+  // RTL'de "geri" mantıksal olarak sağa, "devam" sola gider — ok ikonları buna göre ters çevrilir.
+  const BackIcon = lang === 'ar' ? ArrowRight : ArrowLeft
+  const ContinueIcon = lang === 'ar' ? ArrowLeft : ArrowRight
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
@@ -170,9 +194,9 @@ export default function B2BLeadForm({ defaultInterest, lang = 'en' }: { defaultI
             </div>
           </div>
           <div className="flex items-center justify-between pt-2">
-            <button type="button" onClick={() => setStep(1)} className="text-sm text-foreground/50 hover:text-foreground flex items-center gap-1"><ArrowLeft size={14} /> {t.back}</button>
+            <button type="button" onClick={() => setStep(1)} className="text-sm text-foreground/50 hover:text-foreground flex items-center gap-1"><BackIcon size={14} /> {t.back}</button>
             <button type="button" disabled={!canContinueFromStep2} onClick={() => setStep(3)} className="bg-foreground text-background px-6 py-2.5 rounded-full text-sm font-medium hover:bg-accent-gold transition-colors disabled:opacity-40 flex items-center gap-2">
-              {t.continueLabel} <ArrowRight size={14} />
+              {t.continueLabel} <ContinueIcon size={14} />
             </button>
           </div>
         </div>
@@ -195,9 +219,9 @@ export default function B2BLeadForm({ defaultInterest, lang = 'en' }: { defaultI
             </div>
           </div>
           <div className="flex items-center justify-between pt-2">
-            <button type="button" onClick={() => setStep(2)} className="text-sm text-foreground/50 hover:text-foreground flex items-center gap-1"><ArrowLeft size={14} /> {t.back}</button>
+            <button type="button" onClick={() => setStep(2)} className="text-sm text-foreground/50 hover:text-foreground flex items-center gap-1"><BackIcon size={14} /> {t.back}</button>
             <button type="button" disabled={!canContinueFromStep3} onClick={() => setStep(4)} className="bg-foreground text-background px-6 py-2.5 rounded-full text-sm font-medium hover:bg-accent-gold transition-colors disabled:opacity-40 flex items-center gap-2">
-              {t.continueLabel} <ArrowRight size={14} />
+              {t.continueLabel} <ContinueIcon size={14} />
             </button>
           </div>
         </div>
@@ -226,7 +250,7 @@ export default function B2BLeadForm({ defaultInterest, lang = 'en' }: { defaultI
             <textarea rows={4} name="message" value={formData.message} onChange={handleChange} className={`${inputClass} resize-none`} placeholder={t.messagePh}></textarea>
           </div>
           <div className="flex items-center justify-between pt-2">
-            <button type="button" onClick={() => setStep(3)} className="text-sm text-foreground/50 hover:text-foreground flex items-center gap-1"><ArrowLeft size={14} /> {t.back}</button>
+            <button type="button" onClick={() => setStep(3)} className="text-sm text-foreground/50 hover:text-foreground flex items-center gap-1"><BackIcon size={14} /> {t.back}</button>
             <button type="submit" disabled={loading} className="bg-foreground text-background px-8 py-3 rounded-full text-sm font-medium hover:bg-accent-gold transition-colors disabled:opacity-50 flex items-center justify-center gap-2 min-w-[160px]">
               {loading ? <Loader2 size={18} className="animate-spin" /> : t.submit}
             </button>
