@@ -8,7 +8,7 @@ import {
   EyeOff, Search, Filter, MapPin, User, Phone, Mail, Calendar, ChevronRight, 
   X, Package, Check, Copy, ArrowRight, ShoppingCart, Award, Gift, 
   CreditCard, Tag, Edit3, ShieldCheck, Key, Lock, History, Info, 
-  CheckSquare, Square, Bell, Send, MessageSquare, Calculator, Star, Trash2
+  CheckSquare, Square, Bell, Send, MessageSquare, Calculator, Star, Trash2, Menu
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 
@@ -272,7 +272,11 @@ export default function AdminDashboard() {
   // Modals
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showVersionModal, setShowVersionModal] = useState(false)
-  
+  // Mobilde sabit 256px'lik sol menü ekranın çoğunu kaplayıp paneli kullanılamaz
+  // hale getiriyordu — artık mobilde gizli, hamburger ile açılan bir çekmece;
+  // md ve üzerinde eskisi gibi hep görünür.
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false)
+
   // Password Change Form States
   const [currentPassInput, setCurrentPassInput] = useState('')
   const [newUsernameInput, setNewUsernameInput] = useState('')
@@ -1334,8 +1338,18 @@ export default function AdminDashboard() {
   // ===================== ANA ADMIN ARAYUZU =====================
   return (
     <div className="min-h-screen bg-gray-50/50 flex">
-      {/* Sol Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200 p-6 flex flex-col justify-between">
+      {/* Mobilde menü acikken arka planı karartan, tiklaninca kapatan katman */}
+      {showMobileSidebar && (
+        <div
+          className="fixed inset-0 bg-black/40 z-30 md:hidden"
+          onClick={() => setShowMobileSidebar(false)}
+        />
+      )}
+
+      {/* Sol Sidebar — mobilde varsayılan gizli (çekmece), md ve üzerinde her zaman görünür */}
+      <div
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 p-6 flex flex-col justify-between overflow-y-auto transform transition-transform duration-200 ease-in-out ${showMobileSidebar ? 'translate-x-0' : '-translate-x-full'} md:static md:translate-x-0 md:z-auto`}
+      >
         <div>
           <div className="flex items-center justify-between mb-8 px-2">
             <div className="flex items-center gap-3">
@@ -1346,16 +1360,19 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <button 
-              onClick={() => setShowVersionModal(true)} 
+            <button
+              onClick={() => setShowVersionModal(true)}
               className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
               title="Sürüm Geçmişi (Changelog)"
             >
               <History size={16} />
             </button>
           </div>
-          
-          <nav className="space-y-1">
+
+          {/* onClick burada: icindeki 12 sekme butonundan herhangi birine
+              tiklaninca (event bubbling ile) mobil cekmece otomatik kapanir —
+              her butona tek tek dokunmaya gerek kalmadan. */}
+          <nav className="space-y-1" onClick={() => setShowMobileSidebar(false)}>
             <button 
               onClick={() => setActiveTab('orders')} 
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-medium text-sm transition-colors ${activeTab === 'orders' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
@@ -1482,11 +1499,20 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Sağ Ana İçerik */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 bg-white border-b border-gray-200 px-8 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="font-semibold text-gray-900 text-lg">
+      {/* Sağ Ana İçerik — sidebar artık "fixed" olduğu için md ve üzerinde sola
+          256px boşluk bırakıyoruz, mobilde tam genişlik kullanır */}
+      <div className="flex-1 flex flex-col min-w-0 md:ml-64">
+        <header className="h-16 bg-white border-b border-gray-200 px-4 md:px-8 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 md:gap-4 min-w-0">
+            {/* Hamburger — sadece mobilde görünür, sidebar çekmecesini açar */}
+            <button
+              onClick={() => setShowMobileSidebar(true)}
+              className="md:hidden p-2 -ml-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex-shrink-0"
+              title="Menü"
+            >
+              <Menu size={20} />
+            </button>
+            <h1 className="font-semibold text-gray-900 text-sm md:text-lg truncate">
               {activeTab === 'orders' && 'Sipariş Yönetimi & Lojistik'}
               {activeTab === 'customers' && 'Müşteriler, Elçiler & Cüzdan Yönetimi'}
               {activeTab === 'notifications' && 'Bildirim & SMS Merkezi'}
@@ -1539,7 +1565,7 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        <main className="p-8 flex-1 overflow-y-auto">
+        <main className="p-4 md:p-8 flex-1 overflow-y-auto min-w-0">
           {message && (
             <div className={`mb-6 p-4 rounded-xl text-sm flex items-center gap-3 border ${message.type === 'success' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-rose-50 text-rose-800 border-rose-200'}`}>
               <AlertCircle size={18} /> {message.text}
@@ -2188,6 +2214,7 @@ export default function AdminDashboard() {
                     <p>Bu bölümden sistem genelinde kullanılan dinamik kuralları (kargo alt limiti, kampanya tutarları vb.) yönetebilirsiniz. Değişiklikler anında tüm sisteme yansıyacaktır.</p>
                   </div>
                   <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead><tr className="bg-gray-50 border-b text-gray-500 text-sm"><th className="px-6 py-4 font-medium">Anahtar</th><th className="px-6 py-4 font-medium">Açıklama</th><th className="px-6 py-4 font-medium">Değer</th><th className="px-6 py-4">İşlem</th></tr></thead>
                       <tbody className="divide-y divide-gray-100">
@@ -2201,6 +2228,7 @@ export default function AdminDashboard() {
                         ))}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 </div>
               )}
@@ -2494,6 +2522,7 @@ export default function AdminDashboard() {
                         <h3 className="font-semibold text-gray-900 mb-1">6. Sonuç: Toplam Kâr/Zarar Tablosu (Kanal A + B)</h3>
                         <p className="text-xs text-gray-400 mb-4">İki kanalın toplamı, kargo dahil gerçek nakit kâr — kanal bazında kırılım yukarıda. Periyot uzunluğunu "3. Satış Fiyatı & Büyüme Senaryosu" bölümünden değiştirebilirsiniz.</p>
                       </div>
+                      <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-y border-gray-200 bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wider">
@@ -2530,6 +2559,7 @@ export default function AdminDashboard() {
                           </tr>
                         </tbody>
                       </table>
+                      </div>
                       <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-wrap items-center gap-x-8 gap-y-2 text-xs text-gray-500">
                         <span>Kâr Marjı: <b className="text-gray-900">%{fmt1(karMarji)}</b></span>
                         <span>Ödül/komisyon hiç olmasaydı (aynı hacim organik gelseydi) brüt kâr: <b className="text-gray-900">{fmt(oduluSuzKar)} TL/gün</b> — aradaki fark, büyüme için "harcanan" pay.</span>
@@ -2778,6 +2808,7 @@ export default function AdminDashboard() {
 
                   <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
                     <div className="p-6 border-b"><h3 className="font-semibold text-gray-900">Bağlı Mağazalar</h3></div>
+                    <div className="overflow-x-auto">
                     <table className="w-full text-left">
                       <thead className="bg-gray-50 border-b text-sm"><tr className="text-gray-500"><th className="px-6 py-4">Mağaza</th><th className="px-6 py-4">Platform</th><th className="px-6 py-4">Satıcı ID</th><th className="px-6 py-4">Durum</th></tr></thead>
                       <tbody className="divide-y">
@@ -2791,6 +2822,7 @@ export default function AdminDashboard() {
                         ))}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 </div>
               )}
@@ -3670,6 +3702,7 @@ export default function AdminDashboard() {
                   <Package size={14} /> Sipariş Edilen Parfümler & Ürünler
                 </h3>
                 <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                  <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
                       <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 font-semibold">
@@ -3704,6 +3737,7 @@ export default function AdminDashboard() {
                       </tr>
                     </tfoot>
                   </table>
+                  </div>
                 </div>
               </div>
             </div>
@@ -3989,6 +4023,7 @@ export default function AdminDashboard() {
                       </div>
 
                       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                        <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs">
                           <thead>
                             <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 font-semibold">
@@ -4019,6 +4054,7 @@ export default function AdminDashboard() {
                             </tr>
                           </tfoot>
                         </table>
+                        </div>
                       </div>
                     </>
                   ) : (
@@ -4041,6 +4077,7 @@ export default function AdminDashboard() {
                     </h4>
                     {Array.isArray(selectedCustomer.orders) && selectedCustomer.orders.length > 0 ? (
                       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                        <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs">
                           <thead>
                             <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 font-semibold">
@@ -4061,6 +4098,7 @@ export default function AdminDashboard() {
                             ))}
                           </tbody>
                         </table>
+                        </div>
                       </div>
                     ) : (
                       <div className="p-6 bg-gray-50 rounded-2xl text-center text-gray-400 text-xs border">
