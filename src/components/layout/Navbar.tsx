@@ -6,6 +6,7 @@ import { Search, User, Sparkles, ShoppingBag, Menu, X, Gift } from 'lucide-react
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import SearchModal from '@/components/SearchModal'
+import LanguageSwitcher from '@/components/layout/LanguageSwitcher'
 import { useCart } from '@/contexts/CartContext'
 
 const KURUMSAL_TEXTS = ['Kurumsal', 'İş Ortaklığı', 'Dijital Bayilik']
@@ -103,7 +104,9 @@ export default function Navbar() {
 
         <div className="flex items-center gap-2 md:gap-4">
 
-          <button 
+          <LanguageSwitcher />
+
+          <button
             onClick={() => setIsSearchOpen(true)}
             className="p-1.5 md:p-2 text-foreground/80 hover:text-accent-gold transition-colors"
           >
@@ -197,6 +200,13 @@ export default function Navbar() {
           </nav>
 
           <div className="mt-auto pt-12 flex flex-col gap-4">
+            <div className="flex items-center gap-4 text-sm text-foreground/60">
+              <Link href="/" className="hover:text-accent-gold transition-colors">Türkçe</Link>
+              <span className="text-foreground/20">/</span>
+              <Link href="/en/wholesale" className="hover:text-accent-gold transition-colors">English</Link>
+              <span className="text-foreground/20">/</span>
+              <Link href="/ar/wholesale" className="hover:text-accent-gold transition-colors">العربية</Link>
+            </div>
             <div className="p-6 bg-foreground/5 rounded-2xl">
               <h3 className="text-sm font-medium mb-2">WhatsApp Sipariş Hattı</h3>
               <p className="text-2xl font-light">+90 532 391 31 41</p>
