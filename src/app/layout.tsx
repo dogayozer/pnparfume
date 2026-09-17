@@ -50,7 +50,8 @@ export const metadata: Metadata = {
     'en iyi erkek parfümleri', 'kendi parfümünü yap', 'imza parfüm', 'imza koku',
     'Pien parfüm', 'indirimli parfüm', 'öğrenci parfüm', 'gece parfümü',
     'date parfümü', 'spor parfüm', 'günlük parfüm', 'ofis parfümü',
-    'yaz parfümü', 'kış parfümü', 'odunsu parfüm', 'çiçeksi parfüm', 'tatlı parfüm'
+    'yaz parfümü', 'kış parfümü', 'odunsu parfüm', 'çiçeksi parfüm', 'tatlı parfüm',
+    'kendi parfüm markanı yarat', 'parfüm markası kurma', 'private label parfüm üretici'
   ],
   openGraph: {
     title: 'PN Parfüm | Özel ve Niş Koku Deneyimi',

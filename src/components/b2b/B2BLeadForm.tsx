@@ -7,7 +7,55 @@ import { AlertCircle, CheckCircle2, Loader2, ArrowRight, ArrowLeft } from 'lucid
 // yapı: Adım 1 düşük sürtünmeli tek tık (iş modeli), sonra iletişim/hacim bilgileri.
 // `defaultInterest`, hangi sayfadan (wholesale/private-label) geldiğine göre
 // Adım 1'i önceden seçili gösterir ama kullanıcı değiştirebilir.
-export default function B2BLeadForm({ defaultInterest }: { defaultInterest: 'Distributor' | 'Private Label' }) {
+// `lang` sayfanın dilini belirler (varsayılan İngilizce — mevcut /en/* sayfaları
+// bozulmasın diye); Türkçe sayfalar (ör. /kendi-parfum-markani-yarat) 'tr' geçer.
+const STRINGS = {
+  en: {
+    heading: 'Request a Quote', step: 'Step', of: 'of',
+    interestPrompt: 'What are you looking for?',
+    distributorLabel: 'I want to become a distributor', distributorDesc: 'Wholesale purchasing, resell under our brand',
+    privateLabelLabel: 'I want to create my own brand', privateLabelDesc: 'Private label — your own brand, our production',
+    country: 'Country', countryPh: 'e.g. North Macedonia',
+    companyName: 'Company Name', companyNamePh: 'Your company name',
+    contactName: 'Your Name', contactNamePh: 'Full name',
+    back: 'Back', continueLabel: 'Continue',
+    email: 'Business Email', emailPh: 'you@company.com',
+    whatsapp: 'WhatsApp / Phone', whatsappPh: '+...',
+    website: 'Website (optional)', websitePh: 'https://...',
+    volume: 'Estimated Monthly Volume', selectPlaceholder: 'Select...',
+    volOpts: [['<500', 'Under 500 units'], ['500-2000', '500 – 2,000 units'], ['2000-10000', '2,000 – 10,000 units'], ['10000+', '10,000+ units']] as [string, string][],
+    currentActivity: 'Current Business',
+    activityOpts: [['Retail', 'Retail'], ['Wholesale', 'Wholesale'], ['New startup', 'New startup']] as [string, string][],
+    message: 'Message', messagePh: "Tell us a bit about your business and what you're looking for...",
+    submit: 'Submit Request',
+    successMsg: 'Thank you — your request has been received. Our team will contact you shortly.',
+    genericError: 'Something went wrong.', networkError: 'Something went wrong while sending your request.',
+  },
+  tr: {
+    heading: 'Teklif Talep Edin', step: 'Adım', of: '/',
+    interestPrompt: 'Ne arıyorsunuz?',
+    distributorLabel: 'Distribütör olmak istiyorum', distributorDesc: 'Toptan alım, markamız altında satış',
+    privateLabelLabel: 'Kendi markamı yaratmak istiyorum', privateLabelDesc: 'Private label — kendi markanız, bizim üretimimiz',
+    country: 'Ülke', countryPh: 'ör. Kuzey Makedonya',
+    companyName: 'Firma Adı', companyNamePh: 'Firmanızın adı',
+    contactName: 'Adınız Soyadınız', contactNamePh: 'Ad Soyad',
+    back: 'Geri', continueLabel: 'Devam Et',
+    email: 'İş E-postası', emailPh: 'siz@firma.com',
+    whatsapp: 'WhatsApp / Telefon', whatsappPh: '+90...',
+    website: 'Web Sitesi (opsiyonel)', websitePh: 'https://...',
+    volume: 'Tahmini Aylık Hacim', selectPlaceholder: 'Seçiniz...',
+    volOpts: [['<500', '500 adetten az'], ['500-2000', '500 – 2.000 adet'], ['2000-10000', '2.000 – 10.000 adet'], ['10000+', '10.000+ adet']] as [string, string][],
+    currentActivity: 'Mevcut İş Durumunuz',
+    activityOpts: [['Retail', 'Perakende'], ['Wholesale', 'Toptan'], ['New startup', 'Yeni girişim']] as [string, string][],
+    message: 'Mesajınız', messagePh: 'İşinizden ve aradığınız şeyden kısaca bahsedin...',
+    submit: 'Talebi Gönder',
+    successMsg: 'Teşekkürler — talebiniz alındı. Ekibimiz en kısa sürede sizinle iletişime geçecek.',
+    genericError: 'Bir şeyler ters gitti.', networkError: 'Talebiniz gönderilirken bir hata oluştu.',
+  },
+}
+
+export default function B2BLeadForm({ defaultInterest, lang = 'en' }: { defaultInterest: 'Distributor' | 'Private Label'; lang?: 'en' | 'tr' }) {
+  const t = STRINGS[lang]
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
@@ -46,13 +94,13 @@ export default function B2BLeadForm({ defaultInterest }: { defaultInterest: 'Dis
       const data = await res.json()
 
       if (res.ok && data.success) {
-        setStatus({ type: 'success', message: "Thank you — your request has been received. Our team will contact you shortly." })
+        setStatus({ type: 'success', message: t.successMsg })
         setStep(5)
       } else {
-        setStatus({ type: 'error', message: data.error || 'Something went wrong.' })
+        setStatus({ type: 'error', message: data.error || t.genericError })
       }
     } catch {
-      setStatus({ type: 'error', message: 'Something went wrong while sending your request.' })
+      setStatus({ type: 'error', message: t.networkError })
     } finally {
       setLoading(false)
     }
@@ -64,8 +112,8 @@ export default function B2BLeadForm({ defaultInterest }: { defaultInterest: 'Dis
   return (
     <div className="border-t border-foreground/10 pt-10">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-2xl font-light">Request a Quote</h3>
-        {step <= 4 && <span className="text-xs text-foreground/40">Step {step} of 4</span>}
+        <h3 className="text-2xl font-light">{t.heading}</h3>
+        {step <= 4 && <span className="text-xs text-foreground/40">{t.step} {step} {t.of} 4</span>}
       </div>
 
       {status && step === 5 && (
@@ -84,7 +132,7 @@ export default function B2BLeadForm({ defaultInterest }: { defaultInterest: 'Dis
 
       {step === 1 && (
         <div className="space-y-4">
-          <p className="text-sm text-foreground/60 mb-2">What are you looking for?</p>
+          <p className="text-sm text-foreground/60 mb-2">{t.interestPrompt}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {(['Distributor', 'Private Label'] as const).map(opt => (
               <button
@@ -94,10 +142,10 @@ export default function B2BLeadForm({ defaultInterest }: { defaultInterest: 'Dis
                 className={`text-left p-5 rounded-2xl border transition-colors ${formData.interest === opt ? 'border-accent-gold bg-accent-gold/5' : 'border-foreground/10 hover:border-accent-gold/50'}`}
               >
                 <span className="font-medium block mb-1">
-                  {opt === 'Distributor' ? 'I want to become a distributor' : 'I want to create my own brand'}
+                  {opt === 'Distributor' ? t.distributorLabel : t.privateLabelLabel}
                 </span>
                 <span className="text-xs text-foreground/50">
-                  {opt === 'Distributor' ? 'Wholesale purchasing, resell under our brand' : 'Private label — your own brand, our production'}
+                  {opt === 'Distributor' ? t.distributorDesc : t.privateLabelDesc}
                 </span>
               </button>
             ))}
@@ -108,23 +156,23 @@ export default function B2BLeadForm({ defaultInterest }: { defaultInterest: 'Dis
       {step === 2 && (
         <div className="space-y-5">
           <div>
-            <label className={labelClass}>Country *</label>
-            <input type="text" name="country" value={formData.country} onChange={handleChange} required className={inputClass} placeholder="e.g. North Macedonia" />
+            <label className={labelClass}>{t.country} *</label>
+            <input type="text" name="country" value={formData.country} onChange={handleChange} required className={inputClass} placeholder={t.countryPh} />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className={labelClass}>Company Name *</label>
-              <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} required className={inputClass} placeholder="Your company name" />
+              <label className={labelClass}>{t.companyName} *</label>
+              <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} required className={inputClass} placeholder={t.companyNamePh} />
             </div>
             <div>
-              <label className={labelClass}>Your Name *</label>
-              <input type="text" name="contactName" value={formData.contactName} onChange={handleChange} required className={inputClass} placeholder="Full name" />
+              <label className={labelClass}>{t.contactName} *</label>
+              <input type="text" name="contactName" value={formData.contactName} onChange={handleChange} required className={inputClass} placeholder={t.contactNamePh} />
             </div>
           </div>
           <div className="flex items-center justify-between pt-2">
-            <button type="button" onClick={() => setStep(1)} className="text-sm text-foreground/50 hover:text-foreground flex items-center gap-1"><ArrowLeft size={14} /> Back</button>
+            <button type="button" onClick={() => setStep(1)} className="text-sm text-foreground/50 hover:text-foreground flex items-center gap-1"><ArrowLeft size={14} /> {t.back}</button>
             <button type="button" disabled={!canContinueFromStep2} onClick={() => setStep(3)} className="bg-foreground text-background px-6 py-2.5 rounded-full text-sm font-medium hover:bg-accent-gold transition-colors disabled:opacity-40 flex items-center gap-2">
-              Continue <ArrowRight size={14} />
+              {t.continueLabel} <ArrowRight size={14} />
             </button>
           </div>
         </div>
@@ -133,23 +181,23 @@ export default function B2BLeadForm({ defaultInterest }: { defaultInterest: 'Dis
       {step === 3 && (
         <div className="space-y-5">
           <div>
-            <label className={labelClass}>Business Email *</label>
-            <input type="email" name="email" value={formData.email} onChange={handleChange} required className={inputClass} placeholder="you@company.com" />
+            <label className={labelClass}>{t.email} *</label>
+            <input type="email" name="email" value={formData.email} onChange={handleChange} required className={inputClass} placeholder={t.emailPh} />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className={labelClass}>WhatsApp / Phone</label>
-              <input type="tel" name="whatsapp" value={formData.whatsapp} onChange={handleChange} className={inputClass} placeholder="+..." />
+              <label className={labelClass}>{t.whatsapp}</label>
+              <input type="tel" name="whatsapp" value={formData.whatsapp} onChange={handleChange} className={inputClass} placeholder={t.whatsappPh} />
             </div>
             <div>
-              <label className={labelClass}>Website (optional)</label>
-              <input type="url" name="website" value={formData.website} onChange={handleChange} className={inputClass} placeholder="https://..." />
+              <label className={labelClass}>{t.website}</label>
+              <input type="url" name="website" value={formData.website} onChange={handleChange} className={inputClass} placeholder={t.websitePh} />
             </div>
           </div>
           <div className="flex items-center justify-between pt-2">
-            <button type="button" onClick={() => setStep(2)} className="text-sm text-foreground/50 hover:text-foreground flex items-center gap-1"><ArrowLeft size={14} /> Back</button>
+            <button type="button" onClick={() => setStep(2)} className="text-sm text-foreground/50 hover:text-foreground flex items-center gap-1"><ArrowLeft size={14} /> {t.back}</button>
             <button type="button" disabled={!canContinueFromStep3} onClick={() => setStep(4)} className="bg-foreground text-background px-6 py-2.5 rounded-full text-sm font-medium hover:bg-accent-gold transition-colors disabled:opacity-40 flex items-center gap-2">
-              Continue <ArrowRight size={14} />
+              {t.continueLabel} <ArrowRight size={14} />
             </button>
           </div>
         </div>
@@ -159,33 +207,28 @@ export default function B2BLeadForm({ defaultInterest }: { defaultInterest: 'Dis
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className={labelClass}>Estimated Monthly Volume</label>
+              <label className={labelClass}>{t.volume}</label>
               <select name="volume" value={formData.volume} onChange={handleChange} className={inputClass}>
-                <option value="">Select...</option>
-                <option value="<500">Under 500 units</option>
-                <option value="500-2000">500 – 2,000 units</option>
-                <option value="2000-10000">2,000 – 10,000 units</option>
-                <option value="10000+">10,000+ units</option>
+                <option value="">{t.selectPlaceholder}</option>
+                {t.volOpts.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
               </select>
             </div>
             <div>
-              <label className={labelClass}>Current Business</label>
+              <label className={labelClass}>{t.currentActivity}</label>
               <select name="currentActivity" value={formData.currentActivity} onChange={handleChange} className={inputClass}>
-                <option value="">Select...</option>
-                <option value="Retail">Retail</option>
-                <option value="Wholesale">Wholesale</option>
-                <option value="New startup">New startup</option>
+                <option value="">{t.selectPlaceholder}</option>
+                {t.activityOpts.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
               </select>
             </div>
           </div>
           <div>
-            <label className={labelClass}>Message</label>
-            <textarea rows={4} name="message" value={formData.message} onChange={handleChange} className={`${inputClass} resize-none`} placeholder="Tell us a bit about your business and what you're looking for..."></textarea>
+            <label className={labelClass}>{t.message}</label>
+            <textarea rows={4} name="message" value={formData.message} onChange={handleChange} className={`${inputClass} resize-none`} placeholder={t.messagePh}></textarea>
           </div>
           <div className="flex items-center justify-between pt-2">
-            <button type="button" onClick={() => setStep(3)} className="text-sm text-foreground/50 hover:text-foreground flex items-center gap-1"><ArrowLeft size={14} /> Back</button>
+            <button type="button" onClick={() => setStep(3)} className="text-sm text-foreground/50 hover:text-foreground flex items-center gap-1"><ArrowLeft size={14} /> {t.back}</button>
             <button type="submit" disabled={loading} className="bg-foreground text-background px-8 py-3 rounded-full text-sm font-medium hover:bg-accent-gold transition-colors disabled:opacity-50 flex items-center justify-center gap-2 min-w-[160px]">
-              {loading ? <Loader2 size={18} className="animate-spin" /> : 'Submit Request'}
+              {loading ? <Loader2 size={18} className="animate-spin" /> : t.submit}
             </button>
           </div>
         </form>
