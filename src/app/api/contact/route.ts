@@ -14,11 +14,11 @@ export async function POST(req: Request) {
       )
     }
 
-    // Admin panelinden (Entegrasyonlar) yönetilen SMTP kimlik bilgileri ve bildirim
-    // e-postası — önceden burada sabit "siparis@..." yazıyordu, muhasebe@pienparfume.com.tr
-    // hiç bilgilendirilmiyordu.
-    const { smtpUser, smtpPass, smtpHost, smtpPort, adminOrderEmail } = await getIntegrationSettings()
-    const recipientEmails = adminOrderEmail || 'muhasebe@pienparfume.com.tr'
+    // Admin panelinden (Entegrasyonlar) yönetilen SMTP kimlik bilgileri — alıcı ise
+    // kasıtlı olarak adminOrderEmail'den bağımsız, sabit dogayozer@gmail.com (kullanıcının
+    // kendi talebi: sitedeki tüm form bildirimleri bu adrese gitsin).
+    const { smtpUser, smtpPass, smtpHost, smtpPort } = await getIntegrationSettings()
+    const recipientEmails = 'dogayozer@gmail.com'
 
     // Form içeriği HTML
     const emailHtml = `

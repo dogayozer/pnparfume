@@ -12,10 +12,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Lütfen zorunlu alanları doldurun.' }, { status: 400 });
     }
 
-    // Admin panelinden (Entegrasyonlar) yönetilen SMTP kimlik bilgileri — önceden
-    // sabit process.env.SMTP_* okunuyordu, admin panelinden girilen bilgiler hiç
-    // devreye girmiyordu.
-    const { smtpHost, smtpUser, smtpPass, smtpPort, adminOrderEmail } = await getIntegrationSettings();
+    // Admin panelinden (Entegrasyonlar) yönetilen SMTP kimlik bilgileri — alıcı ise
+    // kasıtlı olarak adminOrderEmail'den bağımsız, sabit dogayozer@gmail.com (kullanıcının
+    // kendi talebi: sitedeki tüm form bildirimleri bu adrese gitsin).
+    const { smtpHost, smtpUser, smtpPass, smtpPort } = await getIntegrationSettings();
 
     const transporter = nodemailer.createTransport({
       host: smtpHost || 'smtp.gmail.com',
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
     const mailOptions = {
       from: `"PN Parfüm Kurumsal Form" <${smtpUser}>`,
-      to: adminOrderEmail || 'muhasebe@pienparfume.com.tr',
+      to: 'dogayozer@gmail.com',
       subject: 'Yeni Kurumsal Ön Başvuru Formu',
       html: `
         <h2>Yeni Bir Kurumsal Ön Başvuru Alındı</h2>

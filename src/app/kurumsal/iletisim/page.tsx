@@ -31,7 +31,7 @@ export default function IletisimPage() {
       if (res.ok && data.success) {
         setMsg({
           type: 'success',
-          text: data.message || 'Mesajınız siparis@pienparfume.com adresine başarıyla iletildi. En kısa sürede sizinle iletişime geçeceğiz.'
+          text: data.message || 'Mesajınız başarıyla iletildi. En kısa sürede sizinle iletişime geçeceğiz.'
         })
         setForm({
           name: '',
@@ -153,7 +153,7 @@ export default function IletisimPage() {
         {/* İletişim Formu */}
         <div className="bg-background border border-foreground/10 rounded-3xl p-6 md:p-8">
           <h3 className="text-xl font-medium mb-2">Bize Yazın</h3>
-          <p className="text-xs text-foreground/60 mb-6">Tüm talepleriniz doğrudan <strong className="text-accent-gold">siparis@pienparfume.com</strong> adresine iletilir.</p>
+          <p className="text-xs text-foreground/60 mb-6">Tüm talepleriniz ekibimize doğrudan iletilir.</p>
           
           {msg && (
             <div className={`mb-6 p-4 rounded-2xl text-xs flex items-center gap-3 ${

@@ -187,7 +187,7 @@ export async function POST(request: Request) {
     // haber verilir — kayıt işleminin kendisini asla bozmasın diye ayrı try/catch'te.
     if (wantsSalesRep) {
       try {
-        const { smtpHost, smtpUser, smtpPass, smtpPort, adminOrderEmail } = await getIntegrationSettings()
+        const { smtpHost, smtpUser, smtpPass, smtpPort } = await getIntegrationSettings()
         if (smtpUser && smtpPass) {
           const transporter = nodemailer.createTransport({
             host: smtpHost,
@@ -197,7 +197,7 @@ export async function POST(request: Request) {
           })
           await transporter.sendMail({
             from: `"PN Parfüm Üyelik" <${smtpUser}>`,
-            to: adminOrderEmail || 'muhasebe@pienparfume.com.tr',
+            to: 'dogayozer@gmail.com',
             subject: 'Yeni Üyemiz Satış Temsilcisi Olmak İstiyor',
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
