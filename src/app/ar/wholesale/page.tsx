@@ -1,12 +1,18 @@
 import Link from 'next/link'
 import B2BLeadForm from '@/components/b2b/B2BLeadForm'
-import { MapPin, Package, FlaskConical, ShieldCheck } from 'lucide-react'
+import { MapPin, Package, FlaskConical, ShieldCheck, ChevronDown } from 'lucide-react'
 
 export const metadata = {
   title: 'موزع عطور بالجملة من تركيا | PN Parfüm',
   description: 'PN Parfüm مُصنّع تركي للعطور يقدم توزيعًا بالجملة لعطور فاخرة بديلة. أكثر من 338 عطرًا جاهزًا، وتشكيلة زيوت عطرية خالية من الكحول.',
-  keywords: ['موزع عطور تركيا', 'توزيع عطور بالجملة', 'مصنع عطور تركي', 'عطور بالجملة'],
-  alternates: { canonical: 'https://pnparfume.com/ar/wholesale' },
+  keywords: [
+    'موزع عطور تركيا', 'توزيع عطور بالجملة', 'مصنع عطور تركي', 'عطور بالجملة',
+    'استيراد عطور من تركيا', 'شراء عطور بالجملة', 'وكيل عطور حصري'
+  ],
+  alternates: {
+    canonical: 'https://pnparfume.com/ar/wholesale',
+    languages: { 'en': 'https://pnparfume.com/en/wholesale', 'ar': 'https://pnparfume.com/ar/wholesale' }
+  },
   openGraph: {
     title: 'موزع عطور بالجملة من تركيا | PN Parfüm',
     description: 'مُصنّع تركي للعطور يقدم توزيعًا بالجملة لعطور فاخرة بديلة.',
@@ -17,9 +23,43 @@ export const metadata = {
   }
 }
 
+const faqs = [
+  {
+    q: 'كيف يمكنني أن أصبح موزعًا لعطور PN Parfüm؟',
+    a: 'عبّئوا نموذج طلب التوزيع في أسفل هذه الصفحة ببيانات بلدكم وشركتكم والحجم الشهري المتوقع، وسيتواصل فريقنا معكم بالأسعار والحد الأدنى للطلب والخطوات التالية.'
+  },
+  {
+    q: 'ما هو الحد الأدنى لكمية الطلب (MOQ) للبيع بالجملة؟',
+    a: 'يعتمد الحد الأدنى على السوق ومزيج المنتجات المطلوب — تتوفر طلبات تجريبية أصغر للموزعين الجدد، مع أسعار أفضل عند الكميات الأكبر.'
+  },
+  {
+    q: 'أين يتم تصنيع عطور PN Parfüm؟',
+    a: 'في مصنعنا الخاص بمنطقة سيليفري، إسطنبول، تركيا، وفق تركيبات متوافقة مع معايير الرابطة الدولية للعطور (IFRA) ولائحة مستحضرات التجميل الأوروبية.'
+  },
+  {
+    q: 'هل تقدمون خيارات عطور خالية من الكحول للبيع بالجملة؟',
+    a: 'نعم، إلى جانب خط Eau de Parfum الكحولي، ننتج أيضًا عطورًا زيتية خالية من الكحول — خيار مطلوب بشدة في أسواق الخليج والأسواق ذات الحساسية الدينية أو الثقافية تجاه الكحول.'
+  },
+]
+
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(f => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a }
+  }))
+}
+
 export default function ArWholesalePage() {
   return (
     <div lang="ar" dir="rtl" className="min-h-screen max-w-5xl mx-auto px-6 py-16 md:px-12 md:py-24">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+
       <div className="max-w-2xl mb-16">
         <span className="text-xs font-medium uppercase tracking-widest text-accent-gold">التوزيع بالجملة</span>
         <h1 className="text-4xl md:text-5xl font-light mt-4 mb-6 leading-tight">
@@ -63,6 +103,21 @@ export default function ArWholesalePage() {
         <h2 className="text-2xl font-light mb-4">تعرفوا على استراتيجيتنا الكاملة لسوق الخليج</h2>
         <p className="text-foreground/60 mb-4">التسعير الأمثل، متطلبات SFDA وGSO وCITES، اتجاهات العود الحديث، وهندسة التغليف الفاخر — دليل شامل مبني على بيانات السوق.</p>
         <Link href="/ar/gulf-market-strategy" className="text-accent-gold font-medium hover:underline">اقرأوا الدليل الكامل ←</Link>
+      </div>
+
+      <div className="mb-16">
+        <h2 className="text-2xl font-light mb-8">الأسئلة الشائعة</h2>
+        <div className="space-y-3">
+          {faqs.map((f) => (
+            <details key={f.q} className="group border border-foreground/10 rounded-2xl p-5">
+              <summary className="flex items-center justify-between cursor-pointer list-none font-medium gap-4">
+                {f.q}
+                <ChevronDown className="text-foreground/40 group-open:rotate-180 transition-transform flex-shrink-0" size={18} />
+              </summary>
+              <p className="text-sm text-foreground/60 leading-relaxed mt-3">{f.a}</p>
+            </details>
+          ))}
+        </div>
       </div>
 
       <B2BLeadForm defaultInterest="Distributor" lang="ar" />

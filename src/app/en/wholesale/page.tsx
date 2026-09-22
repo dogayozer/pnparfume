@@ -1,11 +1,18 @@
 import Link from 'next/link'
 import B2BLeadForm from '@/components/b2b/B2BLeadForm'
-import { MapPin, Package, FlaskConical, ShieldCheck } from 'lucide-react'
+import { MapPin, Package, FlaskConical, ShieldCheck, ChevronDown } from 'lucide-react'
 
 export const metadata = {
   title: 'Wholesale Perfume Supplier from Turkey | PN Parfüm',
   description: 'PN Parfüm is a Turkish perfume manufacturer offering wholesale distribution of designer-alternative fragrances. 338+ fragrance catalog, alcohol-free oil line available.',
-  alternates: { canonical: 'https://pnparfume.com/en/wholesale' },
+  keywords: [
+    'wholesale perfume supplier Turkey', 'perfume distributor Turkey', 'buy perfume wholesale',
+    'fragrance manufacturer Turkey', 'designer alternative perfume supplier', 'exclusive perfume distributor'
+  ],
+  alternates: {
+    canonical: 'https://pnparfume.com/en/wholesale',
+    languages: { 'en': 'https://pnparfume.com/en/wholesale', 'ar': 'https://pnparfume.com/ar/wholesale' }
+  },
   openGraph: {
     title: 'Wholesale Perfume Supplier from Turkey | PN Parfüm',
     description: 'Turkish perfume manufacturer offering wholesale distribution of designer-alternative fragrances.',
@@ -16,9 +23,43 @@ export const metadata = {
   }
 }
 
+const faqs = [
+  {
+    q: 'How can I become a wholesale distributor for PN Parfüm?',
+    a: 'Fill out the distributor application form on this page with your country, company details, and estimated monthly volume. Our team will respond with pricing, minimum order quantities, and next steps.'
+  },
+  {
+    q: 'What is the minimum order quantity (MOQ) for wholesale?',
+    a: 'MOQ depends on your target market and product mix — smaller pilot orders are available for new distributors, with better pricing at higher volumes.'
+  },
+  {
+    q: 'Where are PN Parfüm fragrances manufactured?',
+    a: 'All fragrances are produced at our own facility in Silivri, İstanbul, Turkey, under formulations that follow IFRA and EU Cosmetics Regulation standards.'
+  },
+  {
+    q: 'Do you offer alcohol-free fragrance options for wholesale?',
+    a: 'Yes — alongside our alcohol-based EDP line, we also produce oil-based, alcohol-free fragrances, a popular option in markets with religious or cultural preferences for alcohol-free products.'
+  },
+]
+
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(f => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a }
+  }))
+}
+
 export default function WholesalePage() {
   return (
     <div lang="en" className="min-h-screen max-w-5xl mx-auto px-6 py-16 md:px-12 md:py-24">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+
       <div className="max-w-2xl mb-16">
         <span className="text-xs font-medium uppercase tracking-widest text-accent-gold">Wholesale Distribution</span>
         <h1 className="text-4xl md:text-5xl font-light mt-4 mb-6 leading-tight">
@@ -56,6 +97,21 @@ export default function WholesalePage() {
         <h2 className="text-2xl font-light mb-4">Looking to start your own brand instead?</h2>
         <p className="text-foreground/60 mb-4">If you'd rather build your own perfume brand from concept to shelf, our private label program may be a better fit.</p>
         <Link href="/en/private-label" className="text-accent-gold font-medium hover:underline">Explore Private Label →</Link>
+      </div>
+
+      <div className="mb-16">
+        <h2 className="text-2xl font-light mb-8">Frequently Asked Questions</h2>
+        <div className="space-y-3">
+          {faqs.map((f) => (
+            <details key={f.q} className="group border border-foreground/10 rounded-2xl p-5">
+              <summary className="flex items-center justify-between cursor-pointer list-none font-medium gap-4">
+                {f.q}
+                <ChevronDown className="text-foreground/40 group-open:rotate-180 transition-transform flex-shrink-0" size={18} />
+              </summary>
+              <p className="text-sm text-foreground/60 leading-relaxed mt-3">{f.a}</p>
+            </details>
+          ))}
+        </div>
       </div>
 
       <B2BLeadForm defaultInterest="Distributor" />

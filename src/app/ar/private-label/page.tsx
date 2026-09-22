@@ -1,12 +1,18 @@
 import Link from 'next/link'
 import B2BLeadForm from '@/components/b2b/B2BLeadForm'
-import { Lightbulb, TestTube, Factory, PackageCheck, Truck } from 'lucide-react'
+import { Lightbulb, TestTube, Factory, PackageCheck, Truck, ChevronDown } from 'lucide-react'
 
 export const metadata = {
   title: 'تصنيع عطور خاص (Private Label) في تركيا | أنشئ علامتك | PN Parfüm',
   description: 'أنشئ علامتك التجارية الخاصة للعطور مع PN Parfüm — مُصنّع تركي يعمل بنظام العلامة الخاصة (Private Label) والتصنيع بالعقد (Contract Manufacturing). من الفكرة إلى العينة إلى الإنتاج إلى الرف.',
-  keywords: ['تصنيع عطور خاص', 'إنشاء علامة عطور خاصة', 'تصنيع بالعقد عطور', 'private label عطور تركيا', 'مصنع عطور تركيا'],
-  alternates: { canonical: 'https://pnparfume.com/ar/private-label' },
+  keywords: [
+    'تصنيع عطور خاص', 'إنشاء علامة عطور خاصة', 'تصنيع بالعقد عطور', 'private label عطور تركيا',
+    'مصنع عطور تركيا', 'فاصون عطور', 'OEM عطور تركيا', 'شركة تصنيع عطور بالعقد'
+  ],
+  alternates: {
+    canonical: 'https://pnparfume.com/ar/private-label',
+    languages: { 'en': 'https://pnparfume.com/en/private-label', 'ar': 'https://pnparfume.com/ar/private-label' }
+  },
   openGraph: {
     title: 'تصنيع عطور خاص (Private Label) في تركيا | PN Parfüm',
     description: 'أنشئ علامتك التجارية الخاصة للعطور — مُصنّع تركي للتصنيع الخاص والتصنيع بالعقد.',
@@ -15,6 +21,35 @@ export const metadata = {
     locale: 'ar',
     type: 'website'
   }
+}
+
+const faqs = [
+  {
+    q: 'ما هو التصنيع بالعقد (Contract Manufacturing) للعطور؟',
+    a: 'يعني أننا ننتج العطور تحت علامتكم التجارية الخاصة — تقدّمون الهوية والعلامة، ونتولى نحن التركيبة والإنتاج والتغليف بالكامل في مصنعنا بإسطنبول.'
+  },
+  {
+    q: 'هل يمكنني استخدام تركيبة خاصة بي، أم يجب الاختيار من كتالوجكم؟',
+    a: 'كلا الخيارين متاحان — يمكنكم البدء من مكتبتنا التي تضم أكثر من 338 عطرًا لتوفير الوقت، أو طلب تركيبة مخصصة بالكامل بناءً على بريف عطري خاص بعلامتكم.'
+  },
+  {
+    q: 'ما هو الحد الأدنى لكمية الطلب لإنتاج Private Label؟',
+    a: 'يختلف حسب نوع الزجاجة (جاهزة أو مخصصة التصميم) — خيارات الزجاجات الجاهزة تتيح بدء الطلب بكميات أصغر، بينما الزجاجات المخصصة تتطلب حدًا أدنى أعلى.'
+  },
+  {
+    q: 'هل تركيباتكم متوافقة مع اللوائح التنظيمية الدولية ولوائح الاتحاد الأوروبي؟',
+    a: 'نعم، جميع التركيبات تتبع معايير الرابطة الدولية للعطور (IFRA) ومتطلبات لائحة مستحضرات التجميل الأوروبية، مع توفر وثائق تقييم السلامة (CPSR) عند الطلب.'
+  },
+]
+
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(f => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a }
+  }))
 }
 
 const steps = [
@@ -28,6 +63,11 @@ const steps = [
 export default function ArPrivateLabelPage() {
   return (
     <div lang="ar" dir="rtl" className="min-h-screen max-w-5xl mx-auto px-6 py-16 md:px-12 md:py-24">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+
       <div className="max-w-2xl mb-16">
         <span className="text-xs font-medium uppercase tracking-widest text-accent-gold">Private Label</span>
         <h1 className="text-4xl md:text-5xl font-light mt-4 mb-6 leading-tight">
@@ -65,6 +105,21 @@ export default function ArPrivateLabelPage() {
         <h2 className="text-2xl font-light mb-4">تعرفوا على استراتيجيتنا الكاملة لسوق الخليج</h2>
         <p className="text-foreground/60 mb-4">التسعير الأمثل، متطلبات SFDA وGSO وCITES، اتجاهات العود الحديث، وهندسة التغليف الفاخر — دليل شامل مبني على بيانات السوق.</p>
         <Link href="/ar/gulf-market-strategy" className="text-accent-gold font-medium hover:underline">اقرأوا الدليل الكامل ←</Link>
+      </div>
+
+      <div className="mb-16">
+        <h2 className="text-2xl font-light mb-8">الأسئلة الشائعة</h2>
+        <div className="space-y-3">
+          {faqs.map((f) => (
+            <details key={f.q} className="group border border-foreground/10 rounded-2xl p-5">
+              <summary className="flex items-center justify-between cursor-pointer list-none font-medium gap-4">
+                {f.q}
+                <ChevronDown className="text-foreground/40 group-open:rotate-180 transition-transform flex-shrink-0" size={18} />
+              </summary>
+              <p className="text-sm text-foreground/60 leading-relaxed mt-3">{f.a}</p>
+            </details>
+          ))}
+        </div>
       </div>
 
       <B2BLeadForm defaultInterest="Private Label" lang="ar" />
