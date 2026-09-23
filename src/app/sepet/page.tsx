@@ -25,7 +25,7 @@ export default function CartPage() {
   // (bkz. /api/shipping-rules POST, src/lib/dynamicShipping.ts) — kargoyu işletme
   // üstlense bile marj korunuyorsa ücretsiz, korunmuyorsa normal ücret alınır. Hem
   // birikmiş kupon kullanan hem sıradan alışverişler için aynı kural işler.
-  const [dynamicShipping, setDynamicShipping] = useState({ freeShippingEligible: false, shippingFee: 100 })
+  const [dynamicShipping, setDynamicShipping] = useState({ freeShippingEligible: false, shippingFee: 120 })
   const [shippingLoading, setShippingLoading] = useState(false)
 
   // Auth & Checkout State

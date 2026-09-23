@@ -62,6 +62,11 @@ export default function Navbar() {
       animate={{ y: 0 }}
       className="fixed top-0 left-0 right-0 z-40 bg-background/50 backdrop-blur-md border-b border-foreground/5"
     >
+      {/* Kampanya duyuru barı — %35 indirim + kargo eşiği kampanyası için,
+          Navbar'ın fixed header'ı içine eklendi ki tek bir sabit blok olarak kalsın. */}
+      <div className="bg-foreground text-background text-center py-1.5 px-4 text-[11px] md:text-xs font-medium tracking-wide">
+        🎉 TÜM ÜRÜNLERDE %35 İNDİRİM — 1000₺ ve üzeri siparişlerde kargo bedava!
+      </div>
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <Link href="/" className="group inline-flex flex-col items-center justify-center border border-foreground/20 rounded-lg px-3 py-1 hover:border-accent-gold transition-colors">
           <span className="text-xl font-light tracking-widest leading-none text-foreground group-hover:text-accent-gold transition-colors">PN</span>

@@ -12,6 +12,7 @@ export interface ProductProps {
   families?: string[];
   gender?: string | null;
   price?: number | null;
+  originalPrice?: number | null;
   longevity?: string | null;
   imageUrl?: string | null;
   seoName?: string | null;
@@ -36,6 +37,8 @@ export default function ProductCard({ product }: { product: ProductProps }) {
   const [hasError, setHasError] = useState(false)
   const isOutOfStock = product.publishStatus === 'OUT_OF_STOCK'
   const title = product.seoName || `PN ${product.sku}`
+  const hasDiscount = !!(product.originalPrice && product.price && product.originalPrice > product.price)
+  const discountPercent = hasDiscount ? Math.round((1 - (product.price as number) / (product.originalPrice as number)) * 100) : 0
 
   const toSecureUrl = (url?: string | null) => {
     if (!url) return ''
@@ -83,6 +86,11 @@ export default function ProductCard({ product }: { product: ProductProps }) {
                STOKTA YOK
              </div>
           )}
+          {!isOutOfStock && hasDiscount && (
+             <div className="absolute top-4 left-4 text-[10px] font-bold tracking-wider px-2 py-1 bg-accent-gold text-background rounded-full z-10 shadow-sm">
+               %{discountPercent} İNDİRİM
+             </div>
+          )}
         </div>
         
         <div className="p-3 md:p-6 flex flex-col flex-grow">
@@ -103,9 +111,16 @@ export default function ProductCard({ product }: { product: ProductProps }) {
           </p>
           
           <div className="mt-auto pt-3 md:pt-4 flex flex-col gap-2 md:gap-3">
-            <span className="text-base md:text-lg font-bold text-foreground">
-              {product.price && product.price > 0 ? `${product.price.toLocaleString('tr-TR')} ₺` : 'Fiyat Belirlenmedi'}
-            </span>
+            {product.price && product.price > 0 ? (
+              <span className="flex items-baseline gap-2">
+                <span className="text-base md:text-lg font-bold text-foreground">{product.price.toLocaleString('tr-TR')} ₺</span>
+                {hasDiscount && (
+                  <span className="text-xs md:text-sm text-foreground/40 line-through">{(product.originalPrice as number).toLocaleString('tr-TR')} ₺</span>
+                )}
+              </span>
+            ) : (
+              <span className="text-base md:text-lg font-bold text-foreground">Fiyat Belirlenmedi</span>
+            )}
             {!isOutOfStock && product.price && product.price > 0 ? (
               <button 
                 onClick={handleAddToCart}

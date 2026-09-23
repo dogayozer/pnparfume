@@ -3,8 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/adminAuth'
 
 const DEFAULT_RULES = [
-  { rule_key: 'FREE_SHIPPING_LIMIT', rule_value: 500, description: 'Ücretsiz Kargo Barajı (TL)' },
-  { rule_key: 'SHIPPING_COST', rule_value: 100, description: 'Standart Kargo Ücreti (TL)' },
+  { rule_key: 'FREE_SHIPPING_LIMIT', rule_value: 1000, description: 'Ücretsiz Kargo Barajı (TL)' },
+  { rule_key: 'SHIPPING_COST', rule_value: 120, description: 'Standart Kargo Ücreti (TL)' },
   { rule_key: 'AFFILIATE_COMMISSION_RATE', rule_value: 15, description: 'Marka Elçisi Komisyon Oranı (%)' },
   { rule_key: 'SECOND_ITEM_DISCOUNT', rule_value: 250, description: '2. Ürün Sepet İndirimi (TL)' },
   { rule_key: 'VIP_COUPON_PERCENT', rule_value: 15, description: 'Sipariş Teslimat VIP İndirim Kuponu (%)' },

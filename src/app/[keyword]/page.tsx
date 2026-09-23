@@ -120,6 +120,7 @@ export default async function SeoKeywordPage({
               families: product.fragrance_family,
               gender: product.gender,
               price: product.trendyolListing?.price || product.base_cost,
+              originalPrice: product.trendyolListing?.marketPrice,
               longevity: String(product.longevity_score),
               imageUrl: product.finalImageUrl,
               seoName: product.seo_name,

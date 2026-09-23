@@ -127,7 +127,7 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
   // OfferShippingDetails tek bir sabit değer istiyor; burada müşteriden varsayılan
   // olarak alınan standart ücret temsili değer olarak kullanılıyor.
   const shippingRule = await prisma.scenarioRule.findUnique({ where: { rule_key: 'SHIPPING_COST' } })
-  const shippingCost = shippingRule && shippingRule.is_active ? shippingRule.rule_value : 110
+  const shippingCost = shippingRule && shippingRule.is_active ? shippingRule.rule_value : 120
 
   const trendyolListing = product.marketplaceListings?.find((l: any) => l.platform === 'trendyol')
   const finalImageUrl = trendyolListing?.images?.[0] || null

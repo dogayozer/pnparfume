@@ -14,13 +14,13 @@ export async function GET() {
     })
     const byKey = Object.fromEntries(rules.map(r => [r.rule_key, r.rule_value]))
     return NextResponse.json({
-      shippingCost: byKey.SHIPPING_COST ?? 100,
-      freeShippingLimit: byKey.FREE_SHIPPING_LIMIT ?? 500
+      shippingCost: byKey.SHIPPING_COST ?? 120,
+      freeShippingLimit: byKey.FREE_SHIPPING_LIMIT ?? 1000
     })
   } catch (error) {
     console.error('Shipping rules fetch error:', error)
     // Hata durumunda önceki sabit kodlanmış değerlere düş — sepet sayfası asla kırılmasın.
-    return NextResponse.json({ shippingCost: 100, freeShippingLimit: 500 })
+    return NextResponse.json({ shippingCost: 120, freeShippingLimit: 1000 })
   }
 }
 
@@ -46,6 +46,6 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error('Dynamic shipping compute error:', error)
     // Hata durumunda normal (indirimsiz) kargo ücretine düş — sepet asla kırılmasın.
-    return NextResponse.json({ freeShippingEligible: false, shippingFee: 110 })
+    return NextResponse.json({ freeShippingEligible: false, shippingFee: 120 })
   }
 }

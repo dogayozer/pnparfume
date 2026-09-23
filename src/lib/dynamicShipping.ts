@@ -1,37 +1,26 @@
 import { prisma } from '@/lib/prisma'
 
-// Kargo kuralı: sabit bir TL barajı yerine, sepetin GERÇEK ürün maliyetine ve
-// hedeflenen minimum kâr marjına göre kararı canlı hesaplar. "Kupon sonrası
-// minimum maliyet sınırı" (paytr/token) ile aynı Kârlılık Simülatörü
-// parametrelerini (TARGET_PROFIT_MARGIN_PERCENT, SIM_SHIPPING_COST_TRY)
-// kullanır — admin panelinden değiştirildiğinde her ikisi de otomatik güncellenir.
-//
-// Mantık: kargoyu işletme üstlenip müşteriden almasa bile, ürün maliyeti +
-// hedef minimum kâr + gerçek kargo maliyeti sepet tutarından karşılanıyorsa
-// ("indirimli tutar" — kupon/çoklu ürün indirimi sonrası) kargo ücretsiz
-// verilir. Karşılanmıyorsa normal kargo ücreti müşteriden alınır — bu durumda
-// kargoyu işletme değil müşteri karşılar, marj yine korunur.
+// Kargo kuralı: sabit, tanıtılabilir bir TL barajı — Senaryo Kuralları →
+// FREE_SHIPPING_LIMIT ve SHIPPING_COST üzerinden yönetilir (admin panelinden
+// değiştirilebilir). Maliyet koruması ayrıca /api/paytr/token'daki
+// MIN_PROFIT_MARGIN_PERCENT sunucu tarafı kontrolüyle sağlanıyor (sipariş
+// tutarı hiçbir zaman gerçek ürün maliyetinin altına düşemez) — bu yüzden
+// kargo eşiği burada basit tutulabiliyor, ayrıca marj hesabı yapmasına gerek yok.
 export async function computeDynamicShipping(cartCostTotal: number, discountedSubtotal: number) {
   const rules = await prisma.scenarioRule.findMany({
-    where: { rule_key: { in: ['TARGET_PROFIT_MARGIN_PERCENT', 'SIM_SHIPPING_COST_TRY', 'SHIPPING_COST'] } }
+    where: { rule_key: { in: ['FREE_SHIPPING_LIMIT', 'SHIPPING_COST'] } }
   })
   const byKey = Object.fromEntries(rules.filter(r => r.is_active).map(r => [r.rule_key, r.rule_value]))
 
-  const targetMarginPercent = byKey.TARGET_PROFIT_MARGIN_PERCENT ?? 20
-  const realCargoCost = byKey.SIM_SHIPPING_COST_TRY ?? 130
-  const shippingFeeIfCharged = byKey.SHIPPING_COST ?? 110
+  const freeShippingLimit = byKey.FREE_SHIPPING_LIMIT ?? 1000
+  const shippingFeeIfCharged = byKey.SHIPPING_COST ?? 120
 
-  const requiredMinProfit = cartCostTotal * (targetMarginPercent / 100)
-  const breakEvenWithFreeShipping = cartCostTotal + requiredMinProfit + realCargoCost
-  const freeShippingEligible = cartCostTotal > 0 && discountedSubtotal >= breakEvenWithFreeShipping
+  const freeShippingEligible = discountedSubtotal >= freeShippingLimit
 
   return {
     freeShippingEligible,
     shippingFee: freeShippingEligible ? 0 : shippingFeeIfCharged,
     shippingFeeIfCharged,
-    realCargoCost,
-    targetMarginPercent,
-    requiredMinProfit,
-    breakEvenWithFreeShipping
+    freeShippingLimit
   }
 }
