@@ -36,6 +36,21 @@ body {
 @keyframes rotating-frame-spin {
   to { transform: rotate(1turn); }
 }
+
+/* Navbar kampanya duyuru barı için kayan bant (marquee) efekti — içerik ikişer kez
+   art arda basılıp %-50 kaydırılıyor, döngü sonunda ilk kopyayla sorunsuz devam eder. */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 18s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
+}
 .rotating-frame {
   position: relative;
   isolation: isolate;
