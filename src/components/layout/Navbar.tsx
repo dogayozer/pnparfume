@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, User, Sparkles, ShoppingBag, Menu, X, Gift } from 'lucide-react'
+import { Search, User, Sparkles, ShoppingBag, Menu, X, Gift, Store } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import SearchModal from '@/components/SearchModal'
@@ -120,11 +120,13 @@ export default function Navbar() {
         <div className="flex items-center gap-2 md:gap-4">
 
           {isDealer ? (
-            <Link href="/katalog" className="hidden lg:inline-flex items-center px-3 py-1 rounded-full bg-accent-gold/15 text-accent-gold text-[11px] font-bold tracking-widest">
+            <Link href="/katalog" title="Bayi fiyatları aktif" className="hidden lg:inline-flex shrink-0 ml-3 items-center gap-1.5 whitespace-nowrap text-[11px] font-bold tracking-widest text-accent-gold">
+              <Store size={18} />
               BAYİ
             </Link>
           ) : (
-            <Link href="/bayi-girisi" className="hidden lg:inline-flex items-center px-3 py-1.5 rounded-full border border-foreground/20 text-xs tracking-wide text-foreground hover:border-accent-gold hover:text-accent-gold transition-colors">
+            <Link href="/bayi-girisi" title="Bayi Girişi" className="hidden lg:inline-flex shrink-0 ml-3 items-center gap-1.5 whitespace-nowrap text-[11px] tracking-wide text-foreground/80 hover:text-accent-gold transition-colors">
+              <Store size={18} />
               Bayi Girişi
             </Link>
           )}

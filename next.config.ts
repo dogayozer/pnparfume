@@ -70,12 +70,15 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://www.paytr.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googletagmanager.com https://www.google-analytics.com https://www.paytr.com",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https: http:",
               "font-src 'self' data:",
-              "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com",
-              "frame-src 'self' https://www.paytr.com",
+              // GA4 ölçüm isteklerini analytics.google.com, bölgesel *.google-analytics.com,
+              // www.google.com/g/collect ve stats.g.doubleclick.net'e gönderiyor — önceki
+              // listede sadece www.google-analytics.com vardı ve Analytics verisi engelleniyordu.
+              "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://analytics.google.com https://*.googletagmanager.com https://www.google.com https://stats.g.doubleclick.net",
+              "frame-src 'self' https://www.paytr.com https://www.googletagmanager.com",
               "frame-ancestors 'self'",
             ].join('; '),
           },
