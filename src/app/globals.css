@@ -46,8 +46,29 @@ body {
 .animate-marquee {
   animation: marquee 18s linear infinite;
 }
+/* "Al, Kazan / Öner, Kazan / Paylaş, Kazan" şeridi: üç madde sırayla parlar
+   (her birine index × 1.6s gecikme verilir, döngü 4.8s — aynı anda tek madde yanar). */
+@keyframes perk-glow {
+  0%, 32%, 100% { background-color: transparent; box-shadow: 0 0 0 1px transparent; }
+  12%, 20% { background-color: rgba(163, 131, 62, 0.12); box-shadow: 0 0 0 1px rgba(163, 131, 62, 0.35); }
+}
+@keyframes perk-icon-pulse {
+  0%, 32%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 transparent); }
+  12%, 20% { transform: scale(1.2); filter: drop-shadow(0 0 6px rgba(163, 131, 62, 0.8)); }
+}
+@keyframes perk-title-glow {
+  0%, 32%, 100% { color: var(--foreground); }
+  12%, 20% { color: var(--accent-gold); }
+}
+.perk-item { animation: perk-glow 4.8s ease-in-out infinite; }
+.perk-item .perk-icon { animation: perk-icon-pulse 4.8s ease-in-out infinite; animation-delay: inherit; }
+.perk-item .perk-title { animation: perk-title-glow 4.8s ease-in-out infinite; animation-delay: inherit; }
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-marquee {
+  .animate-marquee,
+  .perk-item,
+  .perk-item .perk-icon,
+  .perk-item .perk-title {
     animation: none;
   }
 }

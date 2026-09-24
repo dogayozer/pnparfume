@@ -17,11 +17,15 @@ export default function PerksBanner({ compact = false }: { compact?: boolean }) 
       className={`block group ${compact ? '' : 'max-w-7xl mx-auto px-4 md:px-12'}`}
     >
       <div className={`flex items-center justify-between gap-2 md:gap-6 border border-foreground/10 rounded-2xl bg-foreground/[0.02] hover:border-accent-gold/40 transition-colors ${compact ? 'px-3 py-2.5' : 'px-4 py-3 md:px-8 md:py-4'}`}>
-        {PERKS.map(({ icon: Icon, title, text }) => (
-          <div key={title} className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
-            <Icon size={compact ? 14 : 16} className="text-accent-gold flex-shrink-0" />
+        {PERKS.map(({ icon: Icon, title, text }, i) => (
+          <div
+            key={title}
+            className={`perk-item flex items-center gap-2 md:gap-3 min-w-0 flex-1 rounded-xl ${compact ? 'px-1.5 py-1' : 'px-2 py-1.5 md:px-3'}`}
+            style={{ animationDelay: `${i * 1.6}s` }}
+          >
+            <Icon size={compact ? 14 : 16} className="perk-icon text-accent-gold flex-shrink-0" />
             <div className="min-w-0">
-              <p className={`font-bold text-foreground truncate ${compact ? 'text-[10px]' : 'text-[11px] md:text-xs'}`}>{title}</p>
+              <p className={`perk-title font-bold text-foreground truncate ${compact ? 'text-[10px]' : 'text-[11px] md:text-xs'}`}>{title}</p>
               {!compact && (
                 <p className="text-[10px] md:text-[11px] text-foreground/50 truncate hidden sm:block">{text}</p>
               )}
