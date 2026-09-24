@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation'
 import SearchModal from '@/components/SearchModal'
 import LanguageSwitcher from '@/components/layout/LanguageSwitcher'
 import { useCart } from '@/contexts/CartContext'
+import { useDealer } from '@/contexts/DealerContext'
 
 const KURUMSAL_TEXTS = ['Kurumsal', 'İş Ortaklığı', 'Dijital Bayilik']
 
@@ -17,6 +18,7 @@ export default function Navbar() {
   const [user, setUser] = useState<any>(null)
 
   const { items, setIsCartOpen } = useCart()
+  const { isDealer } = useDealer()
   const [kurumsalIndex, setKurumsalIndex] = useState(0)
   const pathname = usePathname()
   
@@ -117,6 +119,16 @@ export default function Navbar() {
 
         <div className="flex items-center gap-2 md:gap-4">
 
+          {isDealer ? (
+            <Link href="/katalog" className="hidden lg:inline-flex items-center px-3 py-1 rounded-full bg-accent-gold/15 text-accent-gold text-[11px] font-bold tracking-widest">
+              BAYİ
+            </Link>
+          ) : (
+            <Link href="/bayi-girisi" className="hidden lg:inline-flex items-center px-3 py-1.5 rounded-full border border-foreground/20 text-xs tracking-wide text-foreground hover:border-accent-gold hover:text-accent-gold transition-colors">
+              Bayi Girişi
+            </Link>
+          )}
+
           <LanguageSwitcher />
 
           <button
@@ -198,6 +210,9 @@ export default function Navbar() {
             </Link>
             <Link href="/kurumsal/girisimcilere-ozel" className="border-b border-foreground/10 pb-4">
               Kurumsal & Bayilik
+            </Link>
+            <Link href={isDealer ? '/katalog' : '/bayi-girisi'} className="border-b border-foreground/10 pb-4">
+              {isDealer ? 'Bayi Fiyatları Aktif' : 'Bayi Girişi'}
             </Link>
             {user ? (
               <Link href="/profil" className="border-b border-foreground/10 pb-4 flex items-center gap-3">

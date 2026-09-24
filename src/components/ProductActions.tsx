@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Sparkles, ShoppingBag, Bot, ShoppingCart, Check, Wand2, ExternalLink } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '@/contexts/CartContext'
+import { useDealer } from '@/contexts/DealerContext'
 import { BOTTLE_OPTIONS, DEFAULT_BOTTLE_CODE, toSecureImageUrl } from '@/lib/bottleOptions'
 
 interface ProductActionsProps {
@@ -24,6 +25,8 @@ const EXTRAIT_SURCHARGE = 200 // Extrait de Parfum'a yükseltme
 export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfStock }: ProductActionsProps) {
   const router = useRouter()
   const { addToCart, setIsCartOpen } = useCart()
+  const { isDealer, dealerPrices } = useDealer()
+  const dealerPrice = isDealer ? dealerPrices[sku] : undefined
   const [showIntent, setShowIntent] = useState(false)
   const [showCustomize, setShowCustomize] = useState(false)
 
@@ -88,6 +91,12 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
 
   return (
     <>
+      {dealerPrice != null && (
+        <div className="mb-4 flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border border-accent-gold/40 bg-accent-gold/10">
+          <span className="text-xs font-bold uppercase tracking-widest text-accent-gold">Bayi Fiyatınız</span>
+          <span className="text-2xl font-light text-foreground">{dealerPrice.toLocaleString('tr-TR')} ₺</span>
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row gap-4 relative mb-4">
         {!isOutOfStock ? (
           <button

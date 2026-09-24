@@ -9,6 +9,7 @@ const DEFAULT_RULES = [
   { rule_key: 'SECOND_ITEM_DISCOUNT', rule_value: 250, description: '2. Ürün Sepet İndirimi (TL)' },
   { rule_key: 'VIP_COUPON_PERCENT', rule_value: 15, description: 'Sipariş Teslimat VIP İndirim Kuponu (%)' },
   { rule_key: 'MIN_PROFIT_MARGIN_PERCENT', rule_value: 0, description: 'Kupon Sonrası Minimum Kâr Marjı (%) — 0 = sepet toplamı maliyetin altına düşemez' },
+  { rule_key: 'DEALER_DISCOUNT_PERCENT', rule_value: 30, description: 'Varsayılan Bayi İskontosu (%) — satış fiyatı üzerinden; ürüne özel bayi fiyatı girilmemişse uygulanır' },
 
   // --- Kârlılık Simülatörü girdileri (admin panelinde ayrı bir sekmede,
   // hesap makinesi arayüzüyle düzenleniyor — aşağıdaki değerler sadece

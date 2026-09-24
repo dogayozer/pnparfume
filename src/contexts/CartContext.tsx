@@ -1,11 +1,14 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect } from 'react'
+import { useDealer } from '@/contexts/DealerContext'
 
 export interface CartItem {
   sku: string
   name: string
   price: number
+  // Perakende fiyat — bayi fiyatı uygulanmış kalemlerde bayi çıkış yapınca geri dönmek için saklanır.
+  retailPrice?: number
   quantity: number
   size?: string
   selectedScents?: string[]
@@ -70,13 +73,37 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(timer)
   }, [items, isLoaded])
 
-  const addToCart = (item: CartItem) => {
+  // Bayi fiyatı tek noktada uygulanıyor: ürün hangi butondan eklenirse eklensin
+  // (kart, ürün sayfası, sohbet asistanı) sepetteki fiyat bayi fiyatına çevrilir.
+  const { isDealer, dealerPrices } = useDealer()
+  const priceFor = (sku: string, retail: number) =>
+    isDealer && dealerPrices[sku] != null ? dealerPrices[sku] : retail
+
+  useEffect(() => {
+    if (!isLoaded) return
     setItems(prev => {
-      const existing = prev.find(i => i.sku === item.sku)
+      let changed = false
+      const next = prev.map(i => {
+        const retail = i.retailPrice ?? i.price
+        const price = priceFor(i.sku, retail)
+        if (price === i.price && i.retailPrice === retail) return i
+        changed = true
+        return { ...i, price, retailPrice: retail }
+      })
+      return changed ? next : prev
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded, isDealer, dealerPrices])
+
+  const addToCart = (item: CartItem) => {
+    const retail = item.retailPrice ?? item.price
+    const priced = { ...item, retailPrice: retail, price: priceFor(item.sku, retail) }
+    setItems(prev => {
+      const existing = prev.find(i => i.sku === priced.sku)
       if (existing) {
-        return prev.map(i => i.sku === item.sku ? { ...i, quantity: i.quantity + item.quantity } : i)
+        return prev.map(i => i.sku === priced.sku ? { ...i, quantity: i.quantity + priced.quantity } : i)
       }
-      return [...prev, item]
+      return [...prev, priced]
     })
   }
 

@@ -5,9 +5,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowLeft, Trash2, Tag, Truck, Info, Users, ShieldCheck, Check, Clock, X, CreditCard, LogIn, UserCheck, AlertCircle } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
+import { useDealer } from '@/contexts/DealerContext'
 
 export default function CartPage() {
   const { items, removeFromCart, totalAmount, clearCart } = useCart()
+  const { isDealer } = useDealer()
   const [couponCode, setCouponCode] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState<{code: string, discount: number} | null>(null)
   
@@ -135,8 +137,8 @@ export default function CartPage() {
   // Hesaplamalar
   const subtotal = totalAmount
 
-  // 2. Ürün İndirimi
-  const multiItemDiscount = items.length >= 2 ? SECOND_ITEM_DISCOUNT : 0
+  // 2. Ürün İndirimi — bayi fiyatı zaten toptan fiyat olduğu için bayilere uygulanmaz.
+  const multiItemDiscount = items.length >= 2 && !isDealer ? SECOND_ITEM_DISCOUNT : 0
 
   // Kupon İndirimi
   const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0

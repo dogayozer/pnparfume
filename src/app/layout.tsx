@@ -34,6 +34,7 @@ const websiteJsonLd = {
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { CartProvider } from '@/contexts/CartContext'
+import { DealerProvider } from '@/contexts/DealerContext'
 import CartModal from '@/components/cart/CartModal'
 import ChatWidget from '@/components/layout/ChatWidget'
 import WhatsAppButton from '@/components/common/WhatsAppButton'
@@ -128,6 +129,7 @@ export default function RootLayout({
             gtag('config', '${GA_MEASUREMENT_ID}');
           `}
         </Script>
+        <DealerProvider>
         <CartProvider>
           <Navbar />
           {/* pt-[116px]: Navbar'daki sabit yükseklikli kampanya duyuru barı (≈28px) +
@@ -140,6 +142,7 @@ export default function RootLayout({
           <ChatWidget />
           <WhatsAppButton />
         </CartProvider>
+        </DealerProvider>
       </body>
     </html>
   )

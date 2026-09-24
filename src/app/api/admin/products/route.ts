@@ -39,8 +39,14 @@ export async function GET(req: Request) {
       include: {
         marketplaceListings: true
       },
-      take: 300
+      // 300 sınırı 338 aktif ürünün bir kısmını hem admin panelinde hem mix sayfalarında gizliyordu.
+      take: 1000
     })
+
+    // Bu uç herkese açık (mix sayfaları kullanıyor) — bayi fiyatı sadece admin'e dönmeli.
+    if (!requireAdmin(req)) {
+      return NextResponse.json(products.map(({ dealer_price, ...rest }) => rest))
+    }
 
     return NextResponse.json(products)
   } catch (error) {
@@ -173,7 +179,8 @@ export async function PUT(req: Request) {
       stock,
       image,
       is_featured,
-      is_on_sale
+      is_on_sale,
+      dealer_price
     } = body
 
     if (!sku) {
@@ -214,6 +221,8 @@ export async function PUT(req: Request) {
     if (sillage_score !== undefined) updateData.sillage_score = Number(sillage_score)
     if (publish_status !== undefined) updateData.publish_status = publish_status
     if (base_cost !== undefined) updateData.base_cost = Number(base_cost)
+    // null/boş/0 → ürüne özel bayi fiyatı kaldırılır, varsayılan iskonto uygulanır.
+    if (dealer_price !== undefined) updateData.dealer_price = Number(dealer_price) > 0 ? Number(dealer_price) : null
 
     const updated = await prisma.product.update({
       where: { sku: cleanSku },

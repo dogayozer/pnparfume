@@ -11,6 +11,7 @@ import {
   CheckSquare, Square, Bell, Send, MessageSquare, Calculator, Star, Trash2, Menu
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
+import DealerPricesTab from './DealerPricesTab'
 
 type ScenarioRule = { id: string; rule_key: string; rule_value: number; description: string; is_active: boolean }
 type AiConfig = { id: string; system_prompt: string; active_campaign: string | null; can_give_discount: boolean; discount_limit: number }
@@ -51,6 +52,7 @@ type Customer = {
   referral_code?: string | null
   referredByCode?: string | null
   partner_type: string
+  is_dealer?: boolean
   wallet_balance: number
   earned_samples: number
   lastLogin?: string | null
@@ -354,7 +356,7 @@ export default function AdminDashboard() {
   const [productSearch, setProductSearch] = useState('')
   const [productGenderFilter, setProductGenderFilter] = useState('all')
   const [productStatusFilter, setProductStatusFilter] = useState('all')
-  const [productSubTab, setProductSubTab] = useState<'catalog' | 'bulk_price' | 'excel' | 'showcase'>('catalog')
+  const [productSubTab, setProductSubTab] = useState<'catalog' | 'bulk_price' | 'excel' | 'showcase' | 'dealer'>('catalog')
   const [showcaseSearch, setShowcaseSearch] = useState('')
   const [showProductModal, setShowProductModal] = useState(false)
   const [productModalMode, setProductModalMode] = useState<'create' | 'edit'>('create')
@@ -858,6 +860,28 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleToggleDealer = async (c: Customer) => {
+    const next = !c.is_dealer
+    if (!confirm(next
+      ? `${c.name || c.email} hesabına bayi statüsü verilsin mi? Giriş yaptığında bayi fiyatlarını görecek.`
+      : `${c.name || c.email} hesabının bayi statüsü kaldırılsın mı?`)) return
+    setSavingId(`dealer_${c.id}`)
+    try {
+      const res = await adminFetch('/api/admin/customers', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customerId: c.id, is_dealer: next })
+      })
+      if (!res.ok) throw new Error()
+      setCustomers(prev => prev.map(x => x.id === c.id ? { ...x, is_dealer: next } : x))
+      showMsg('success', next ? 'Bayi statüsü verildi.' : 'Bayi statüsü kaldırıldı.')
+    } catch {
+      showMsg('error', 'Bayi statüsü güncellenemedi.')
+    } finally {
+      setSavingId(null)
+    }
+  }
+
   // --- Single Product Management Functions ---
   const handleOpenCreateProduct = () => {
     setProductModalMode('create')
@@ -1127,6 +1151,7 @@ export default function AdminDashboard() {
       if (customerFilter === 'influencer' && c.partner_type !== 'influencer') return false
       if (customerFilter === 'b2b_sampler' && c.partner_type !== 'b2b_sampler') return false
       if (customerFilter === 'retail' && c.partner_type !== 'retail') return false
+      if (customerFilter === 'dealer' && !c.is_dealer) return false
       if (customerFilter === 'cart_full') {
         const cartItems = Array.isArray(c.cart) ? c.cart : []
         if (cartItems.length === 0) return false
@@ -1158,6 +1183,7 @@ export default function AdminDashboard() {
       influencer: customers.filter(c => c.partner_type === 'influencer').length,
       b2b_sampler: customers.filter(c => c.partner_type === 'b2b_sampler').length,
       retail: customers.filter(c => c.partner_type === 'retail').length,
+      dealer: customers.filter(c => c.is_dealer).length,
       cart_full: customers.filter(c => Array.isArray(c.cart) && c.cart.length > 0).length,
     }
   }, [customers])
@@ -1798,6 +1824,7 @@ export default function AdminDashboard() {
                         { key: 'all', label: 'Tüm Üyeler', count: customerCounts.all },
                         { key: 'influencer', label: '🌟 Influencer Elçiler', count: customerCounts.influencer },
                         { key: 'b2b_sampler', label: '📦 B2B Sampler', count: customerCounts.b2b_sampler },
+                        { key: 'dealer', label: '🏪 Bayiler', count: customerCounts.dealer },
                         { key: 'cart_full', label: '🛒 Sepeti Dolu Olanlar', count: customerCounts.cart_full },
                         { key: 'recent_login', label: '⚡ Son 24s Giriş Yapanlar', count: customers.filter(c => c.lastLogin && (Date.now() - new Date(c.lastLogin).getTime()) < 86400000).length },
                       ].map(tab => (
@@ -1828,6 +1855,7 @@ export default function AdminDashboard() {
                             <th className="px-6 py-4">Müşteri / Hesap Adı</th>
                             <th className="px-6 py-4">Telefon</th>
                             <th className="px-6 py-4">Üyelik Rolü</th>
+                            <th className="px-6 py-4 text-center">Bayi</th>
                             <th className="px-6 py-4">Son Giriş Tarihi</th>
                             <th className="px-6 py-4">Sepet Durumu</th>
                             <th className="px-6 py-4">Cüzdan / Elçi Bakiyesi</th>
@@ -1838,7 +1866,7 @@ export default function AdminDashboard() {
                         <tbody className="divide-y divide-gray-100 text-sm">
                           {filteredCustomers.length === 0 ? (
                             <tr>
-                              <td colSpan={8} className="p-12 text-center text-gray-400">
+                              <td colSpan={9} className="p-12 text-center text-gray-400">
                                 <Users size={36} className="mx-auto mb-2 opacity-40" />
                                 Bu filtreye uygun üye bulunamadı.
                               </td>
@@ -1880,6 +1908,17 @@ export default function AdminDashboard() {
                                     {c.referral_code && (
                                       <div className="text-[10px] font-mono text-gray-400 mt-0.5">Kod: {c.referral_code}</div>
                                     )}
+                                  </td>
+
+                                  <td className="px-6 py-4 text-center">
+                                    <input
+                                      type="checkbox"
+                                      checked={!!c.is_dealer}
+                                      disabled={savingId === `dealer_${c.id}`}
+                                      onChange={() => handleToggleDealer(c)}
+                                      title={c.is_dealer ? 'Bayi statüsünü kaldır' : 'Bayi statüsü ver'}
+                                      className="w-4 h-4 accent-indigo-600 cursor-pointer disabled:opacity-40"
+                                    />
                                   </td>
 
                                   <td className="px-6 py-4 text-xs text-gray-600">
@@ -2855,6 +2894,17 @@ export default function AdminDashboard() {
                     </button>
 
                     <button
+                      onClick={() => setProductSubTab('dealer')}
+                      className={`flex-1 min-w-[160px] py-2.5 px-4 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-2 ${
+                        productSubTab === 'dealer'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Tag size={16} /> Bayi Fiyatları
+                    </button>
+
+                    <button
                       onClick={() => setProductSubTab('bulk_price')}
                       className={`flex-1 min-w-[160px] py-2.5 px-4 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-2 ${
                         productSubTab === 'bulk_price'
@@ -3121,6 +3171,17 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     </div>
+                  )}
+
+                  {productSubTab === 'dealer' && (
+                    <DealerPricesTab
+                      products={products}
+                      adminFetch={adminFetch}
+                      showMsg={showMsg}
+                      onDealerPriceSaved={(sku, dealerPrice) =>
+                        setProducts((prev: any[]) => prev.map((p: any) => p.sku === sku ? { ...p, dealer_price: dealerPrice } : p))
+                      }
+                    />
                   )}
 
                   {/* SUBTAB 2: TOPLU FIYAT GUNCELLEME */}

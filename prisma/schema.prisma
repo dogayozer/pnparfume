@@ -41,6 +41,7 @@ model Product {
 
   // Maliyet ve Senaryo Yönetimi
   base_cost            Float    @default(0) // Maliyetin altında satışı önlemek için
+  dealer_price         Float?   // Elle girilen bayi fiyatı; boşsa satış fiyatı × (1 − DEALER_DISCOUNT_PERCENT) kullanılır
   is_sample            Boolean  @default(false) // B2B Sampler için ücretsiz tester ürünü mü?
 
   createdAt            DateTime @default(now())
@@ -142,6 +143,7 @@ model Customer {
   partner_type      String   @default("retail") // "retail", "influencer", "b2b_sampler"
   wallet_balance    Float    @default(0)        // Influencer/Öğrenci komisyon birikim cüzdanı
   earned_samples    Int      @default(0)        // B2B Satıcılarının hak ettiği tester (eşantiyon) kotası
+  is_dealer         Boolean  @default(false)    // Admin panelinden verilen bayi statüsü — bayi fiyatlarını görür/öder
 
   coupons           Coupon[] // Kullanıcının Kupon Kasası
   couponUsages      CouponUsage[]

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { Sparkles, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
+import { useDealer } from '@/contexts/DealerContext'
 import Image from 'next/image'
 
 export interface ProductProps {
@@ -37,8 +38,13 @@ export default function ProductCard({ product }: { product: ProductProps }) {
   const [hasError, setHasError] = useState(false)
   const isOutOfStock = product.publishStatus === 'OUT_OF_STOCK'
   const title = product.seoName || `PN ${product.sku}`
-  const hasDiscount = !!(product.originalPrice && product.price && product.originalPrice > product.price)
-  const discountPercent = hasDiscount ? Math.round((1 - (product.price as number) / (product.originalPrice as number)) * 100) : 0
+  const { isDealer, dealerPrices } = useDealer()
+  const dealerPrice = isDealer ? dealerPrices[product.sku] : undefined
+  // Bayide: ana fiyat bayi fiyatı, üstü çizili olan güncel perakende satış fiyatı.
+  const shownPrice = dealerPrice ?? product.price
+  const strikePrice = dealerPrice != null ? product.price : product.originalPrice
+  const hasDiscount = !!(strikePrice && shownPrice && strikePrice > shownPrice)
+  const discountPercent = hasDiscount ? Math.round((1 - (shownPrice as number) / (strikePrice as number)) * 100) : 0
 
   const toSecureUrl = (url?: string | null) => {
     if (!url) return ''
@@ -88,7 +94,7 @@ export default function ProductCard({ product }: { product: ProductProps }) {
           )}
           {!isOutOfStock && hasDiscount && (
              <div className="absolute top-4 left-4 text-[10px] font-bold tracking-wider px-2 py-1 bg-accent-gold text-background rounded-full z-10 shadow-sm">
-               %{discountPercent} İNDİRİM
+               {dealerPrice != null ? 'BAYİ FİYATI' : `%${discountPercent} İNDİRİM`}
              </div>
           )}
         </div>
@@ -111,11 +117,11 @@ export default function ProductCard({ product }: { product: ProductProps }) {
           </p>
           
           <div className="mt-auto pt-3 md:pt-4 flex flex-col gap-2 md:gap-3">
-            {product.price && product.price > 0 ? (
+            {shownPrice && shownPrice > 0 ? (
               <span className="flex items-baseline gap-2">
-                <span className="text-base md:text-lg font-bold text-foreground">{product.price.toLocaleString('tr-TR')} ₺</span>
+                <span className="text-base md:text-lg font-bold text-foreground">{shownPrice.toLocaleString('tr-TR')} ₺</span>
                 {hasDiscount && (
-                  <span className="text-xs md:text-sm text-foreground/40 line-through">{(product.originalPrice as number).toLocaleString('tr-TR')} ₺</span>
+                  <span className="text-xs md:text-sm text-foreground/40 line-through">{(strikePrice as number).toLocaleString('tr-TR')} ₺</span>
                 )}
               </span>
             ) : (

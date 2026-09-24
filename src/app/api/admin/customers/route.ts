@@ -54,7 +54,7 @@ export async function PUT(req: Request) {
     if (!admin) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
 
     const body = await req.json()
-    const { customerId, partner_type, wallet_balance, earned_samples, phone, name, address, profession } = body
+    const { customerId, partner_type, wallet_balance, earned_samples, phone, name, address, profession, is_dealer } = body
 
     if (!customerId) {
       return NextResponse.json({ error: 'Müşteri ID gereklidir' }, { status: 400 })
@@ -68,6 +68,7 @@ export async function PUT(req: Request) {
     if (name !== undefined) updateData.name = name
     if (address !== undefined) updateData.address = address
     if (profession !== undefined) updateData.profession = profession
+    if (is_dealer !== undefined) updateData.is_dealer = is_dealer === true
 
     const updated = await prisma.customer.update({
       where: { id: customerId },
