@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion'
 import { Sparkles, Beaker, Droplets, ShoppingBag } from 'lucide-react'
-import Link from 'next/link'
 
 export default function KolonyaVeKitlerPage() {
   const fadeUp = {
@@ -157,32 +156,30 @@ export default function KolonyaVeKitlerPage() {
         <section>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             
-            {/* Cologne 1 */}
-            <Link href="/urun/smyrna-fig">
-              <motion.div 
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.6, delay: 0 }}
-                className="group cursor-pointer bg-background border border-foreground/5 p-4 rounded-3xl hover:border-accent-gold/30 transition-colors duration-500 flex flex-col h-full"
-              >
-                <div className="bg-foreground/5 rounded-2xl aspect-[4/5] mb-6 overflow-hidden relative">
-                  <img 
-                    src="/cologne_fig_incense_1786736624153.jpg" 
-                    alt="Smyrna Fig & Incense" 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 mix-blend-multiply opacity-90"
-                  />
+            {/* Cologne 1 — önceden veritabanında olmayan /urun/smyrna-fig'e link veriyordu (Search Console 404) */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.6, delay: 0 }}
+              className="group cursor-pointer bg-background border border-foreground/5 p-4 rounded-3xl hover:border-accent-gold/30 transition-colors duration-500 flex flex-col"
+            >
+              <div className="bg-foreground/5 rounded-2xl aspect-[4/5] mb-6 overflow-hidden relative">
+                <img
+                  src="/cologne_fig_incense_1786736624153.jpg"
+                  alt="Smyrna Fig & Incense"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 mix-blend-multiply opacity-90"
+                />
+              </div>
+              <div className="px-2 flex-1 flex flex-col">
+                <h3 className="text-xl font-medium mb-1">Smyrna Fig & Incense</h3>
+                <p className="text-sm text-foreground/50 mb-4 flex-1">Mistik Ege İnciri & Buhur</p>
+                <div className="flex items-center justify-between border-t border-foreground/5 pt-4">
+                  <span className="font-light text-lg">600 TL</span>
+                  <button className="text-sm font-medium text-accent-gold group-hover:text-accent-rose transition-colors">Sepete Ekle</button>
                 </div>
-                <div className="px-2 flex-1 flex flex-col">
-                  <h3 className="text-xl font-medium mb-1 group-hover:text-accent-gold transition-colors">Smyrna Fig & Incense</h3>
-                  <p className="text-sm text-foreground/50 mb-4 flex-1">Mistik Ege İnciri & Buhur</p>
-                  <div className="flex items-center justify-between border-t border-foreground/5 pt-4">
-                    <span className="font-light text-lg">600 TL</span>
-                    <span className="text-sm font-medium text-accent-gold group-hover:text-accent-rose transition-colors">İncele</span>
-                  </div>
-                </div>
-              </motion.div>
-            </Link>
+              </div>
+            </motion.div>
 
             {/* Cologne 2 */}
             <motion.div 

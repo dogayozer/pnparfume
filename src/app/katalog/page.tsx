@@ -36,7 +36,12 @@ export async function generateMetadata({
   // bu da zaten var olan /erkek-parfum gibi temiz URL'li SEO sayfalarıyla yinelenen
   // içerik (duplicate content) oluşturuyordu. /katalog'un tüm filtre varyantları artık
   // temel /katalog'a canonical veriyor; asıl sıralamaya giren sayfalar /[keyword] sayfaları.
-  const canonical = 'https://pnparfume.com/katalog'
+  // İstisna: filtresiz katalogun 2+ sayfaları kendi canonical'ını taşır (Google'ın sayfalama önerisi).
+  const hasFilter = ['gender', 'family', 'season', 'occasion', 'persona', 'sort'].some(k => typeof sp[k] === 'string')
+  const pageNum = typeof sp.page === 'string' ? parseInt(sp.page, 10) : 1
+  const canonical = !hasFilter && pageNum > 1
+    ? `https://pnparfume.com/katalog?page=${pageNum}`
+    : 'https://pnparfume.com/katalog'
 
   if (!gender && !family) {
     return {

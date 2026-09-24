@@ -18,19 +18,31 @@ export async function generateStaticParams() {
   return SEO_LANDING_PAGES.map(p => ({ keyword: p.slug }))
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ keyword: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+  searchParams
+}: {
+  params: Promise<{ keyword: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}): Promise<Metadata> {
   const { keyword } = await params
   const page = getSeoLandingPage(keyword)
   if (!page) return {}
 
+  // Sayfalı listelerde her sayfa kendi canonical'ını taşımalı (Google önerisi) —
+  // hepsi 1. sayfaya işaret edince 2+ sayfalar "alternatif sayfa" olarak dışlanıyordu.
+  const sp = await searchParams
+  const pageNum = typeof sp.page === 'string' ? parseInt(sp.page, 10) : 1
+  const canonical = `https://pnparfume.com/${page.slug}${pageNum > 1 ? `?page=${pageNum}` : ''}`
+
   return {
-    title: page.title,
+    title: pageNum > 1 ? `${page.title} — Sayfa ${pageNum}` : page.title,
     description: page.metaDescription,
-    alternates: { canonical: `https://pnparfume.com/${page.slug}` },
+    alternates: { canonical },
     openGraph: {
       title: page.title,
       description: page.metaDescription,
-      url: `https://pnparfume.com/${page.slug}`,
+      url: canonical,
       siteName: 'PN Parfüm',
       locale: 'tr_TR',
       type: 'website'

@@ -9,8 +9,11 @@ export default function Pagination({ totalPages, currentPage }: { totalPages: nu
 
   const createPageUrl = (pageNumber: number) => {
     const params = new URLSearchParams(searchParams.toString())
-    params.set('page', pageNumber.toString())
-    return `${pathname}?${params.toString()}`
+    // 1. sayfa temiz URL'de kalmalı — "?page=1" Search Console'da ayrı bir kopya sayfa olarak görünüyordu.
+    if (pageNumber <= 1) params.delete('page')
+    else params.set('page', pageNumber.toString())
+    const query = params.toString()
+    return query ? `${pathname}?${query}` : pathname
   }
 
   if (totalPages <= 1) return null
