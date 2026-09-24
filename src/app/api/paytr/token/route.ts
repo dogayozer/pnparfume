@@ -2,11 +2,13 @@ import crypto from 'crypto'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCartCostTotal } from '@/lib/cartCost'
+import { requireCustomer } from '@/lib/customerAuth'
+import { priceCart, evaluateCoupon, isValidFriendOrder, computeTotals, computeShippingFee } from '@/lib/checkoutPricing'
 
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { customer, cart, totalAmount, discountApplied, shippingFee, couponCode, friendOrderCode, userId, referralCode } = body
+    const { customer, cart: clientCart, totalAmount: clientTotal, couponCode, friendOrderCode, userId, referralCode } = body
 
     const merchant_id = process.env.PAYTR_MERCHANT_ID
     const merchant_key = process.env.PAYTR_MERCHANT_KEY
@@ -17,26 +19,79 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Ödeme altyapısı yapılandırma hatası" }, { status: 500 })
     }
 
-    // 🔴 KUPON SONRASI MİNİMUM MALİYET SINIRI: sepetteki ürünlerin gerçek toplam
-    // maliyetinin (base_cost) altına düşen bir totalAmount ile sipariş oluşturulamaz.
-    // totalAmount client'tan (sepet sayfası) geliyor — kupon her ne kadar mantıklı
-    // görünse de, sunucu tarafında bağımsızca doğrulanmadan asla güvenilmemeli.
-    if (Array.isArray(cart) && cart.length > 0) {
-      try {
-        const totalCost = await getCartCostTotal(cart)
+    // 🔴 SUNUCU TARAFI FİYATLANDIRMA: önceden sepet fiyatları ve toplam tutar olduğu
+    // gibi tarayıcıdan alınıp PayTR'a gönderiliyordu (tek kontrol "maliyetin altında mı"
+    // idi). Artık her kalem veritabanından yeniden fiyatlanıyor, indirim/kupon/kargo
+    // burada hesaplanıyor ve ödeme bu tutarla başlatılıyor.
+    const auth = requireCustomer(req)
+    const authCustomer = auth
+      ? await prisma.customer.findUnique({ where: { id: auth.id }, select: { id: true, is_dealer: true } })
+      : null
+    const isDealer = !!authCustomer?.is_dealer
 
-        const marginRule = await prisma.scenarioRule.findUnique({ where: { rule_key: 'MIN_PROFIT_MARGIN_PERCENT' } })
-        const marginPercent = marginRule && marginRule.is_active ? marginRule.rule_value : 0
-        const minAllowedTotal = totalCost * (1 + marginPercent / 100)
-
-        if (totalCost > 0 && (totalAmount || 0) < minAllowedTotal) {
-          return NextResponse.json({
-            error: 'Bu kupon/indirim kombinasyonu bu sepette uygulanamıyor. Lütfen farklı bir kupon deneyin veya sepetinizi güncelleyin.'
-          }, { status: 400 })
-        }
-      } catch (costCheckErr) {
-        console.error('Min cost floor check error (allowing order to proceed):', costCheckErr)
+    const priced = await priceCart(clientCart, isDealer)
+    if ('error' in priced) {
+      if (priced.error.code === 'EMPTY_CART') {
+        return NextResponse.json({ error: 'Sepetiniz boş.' }, { status: 400 })
       }
+      return NextResponse.json({
+        code: 'UNAVAILABLE_ITEM',
+        sku: priced.error.sku,
+        error: `Sepetinizdeki "${priced.error.sku}" artık satışta değil. Lütfen sepetten kaldırıp tekrar deneyin.`
+      }, { status: 409 })
+    }
+    const lines = priced.lines
+    const { subtotal, multiItemDiscount } = computeTotals(lines, isDealer)
+
+    let couponDiscount = 0
+    if (couponCode) {
+      const coupon = await evaluateCoupon(String(couponCode), subtotal)
+      if (!coupon.ok) {
+        return NextResponse.json({ code: 'INVALID_COUPON', error: 'Kuponunuz artık geçerli değil. Kupon kaldırıldı, lütfen tutarı kontrol edip tekrar deneyin.' }, { status: 409 })
+      }
+      couponDiscount = coupon.discount
+    }
+
+    const friendOrderValid = friendOrderCode ? await isValidFriendOrder(String(friendOrderCode)) : false
+    if (friendOrderCode && !friendOrderValid) {
+      return NextResponse.json({ code: 'INVALID_FRIEND_ORDER', error: 'Girdiğiniz arkadaş sipariş kodu bulunamadı, kargo ücreti eklendi. Lütfen tutarı kontrol edip tekrar deneyin.' }, { status: 409 })
+    }
+
+    const discountApplied = multiItemDiscount + couponDiscount
+    const shippingFee = await computeShippingFee(subtotal - discountApplied, friendOrderValid)
+    const totalAmount = subtotal - discountApplied + shippingFee
+
+    // Tarayıcının gösterdiği tutarla sunucunun hesapladığı tutar farklıysa ödeme
+    // başlatılmaz; güncel perakende fiyatlar döndürülür, sepet bunlarla güncellenir.
+    if (Math.abs(Number(clientTotal) - totalAmount) > 1) {
+      return NextResponse.json({
+        code: 'PRICE_CHANGED',
+        error: `Sepetinizdeki fiyatlar güncellendi. Yeni toplam: ${totalAmount} TL. Lütfen kontrol edip tekrar ödeme yapın.`,
+        prices: Object.fromEntries(lines.map(l => [l.sku, l.retailPrice])),
+        totalAmount
+      }, { status: 409 })
+    }
+
+    const cart = lines.map(l => ({
+      sku: l.sku, name: l.name, price: l.unitPrice, quantity: l.quantity,
+      size: l.size, selectedScents: l.selectedScents, imageUrl: l.imageUrl
+    }))
+
+    // 🔴 KUPON SONRASI MİNİMUM MALİYET SINIRI: sepetteki ürünlerin gerçek toplam
+    // maliyetinin (base_cost) altına düşen bir tutarla sipariş oluşturulamaz.
+    try {
+      const totalCost = await getCartCostTotal(cart)
+      const marginRule = await prisma.scenarioRule.findUnique({ where: { rule_key: 'MIN_PROFIT_MARGIN_PERCENT' } })
+      const marginPercent = marginRule && marginRule.is_active ? marginRule.rule_value : 0
+      const minAllowedTotal = totalCost * (1 + marginPercent / 100)
+
+      if (totalCost > 0 && totalAmount < minAllowedTotal) {
+        return NextResponse.json({
+          error: 'Bu kupon/indirim kombinasyonu bu sepette uygulanamıyor. Lütfen farklı bir kupon deneyin veya sepetinizi güncelleyin.'
+        }, { status: 400 })
+      }
+    } catch (costCheckErr) {
+      console.error('Min cost floor check error (allowing order to proceed):', costCheckErr)
     }
 
     // 🔴 Dynamic Affiliate Commission Rate from ScenarioRule
@@ -65,7 +120,7 @@ export async function POST(req: Request) {
           ]
         }
       })
-      if (referrer && referrer.id !== (userId || null)) {
+      if (referrer && referrer.id !== (authCustomer?.id || userId || null)) {
         referrerId = referrer.id
         affiliateEarned = Math.round((totalAmount || 0) * commissionRate)
         if (referrer.partner_type === 'b2b_sampler') {
@@ -93,14 +148,14 @@ export async function POST(req: Request) {
       data: {
         orderNumber: merchant_oid,
         totalAmount: totalAmount,
-        discountApplied: discountApplied || 0,
+        discountApplied,
         status: 'pending',
         items: cart,
         customerName: customer.name,
         customerEmail: customer.email,
         customerPhone: customer.phone,
         customerAddress: customer.address,
-        customerId: userId || null,
+        customerId: authCustomer?.id || userId || null,
         referrerId: referrerId,
         referralCode: cleanRef,
         affiliateEarned: affiliateEarned,

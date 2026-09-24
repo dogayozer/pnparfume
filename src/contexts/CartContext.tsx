@@ -20,6 +20,7 @@ interface CartContextType {
   addToCart: (item: CartItem) => void
   removeFromCart: (sku: string) => void
   clearCart: () => void
+  syncRetailPrices: (prices: Record<string, number>) => void
   isCartOpen: boolean
   setIsCartOpen: (open: boolean) => void
   totalAmount: number
@@ -107,6 +108,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     })
   }
 
+  // Ödeme ucu "fiyatlar güncellendi" dediğinde sunucunun perakende fiyatlarıyla senkronlar.
+  const syncRetailPrices = (prices: Record<string, number>) => {
+    setItems(prev => prev.map(i =>
+      prices[i.sku] != null ? { ...i, retailPrice: prices[i.sku], price: priceFor(i.sku, prices[i.sku]) } : i
+    ))
+  }
+
   const removeFromCart = (sku: string) => {
     setItems(prev => prev.filter(i => i.sku !== sku))
   }
@@ -121,7 +129,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const totalAmount = items.reduce((acc, item) => acc + (item.price * item.quantity), 0)
 
   return (
-    <CartContext.Provider value={{ items, addToCart, removeFromCart, clearCart, isCartOpen, setIsCartOpen, totalAmount }}>
+    <CartContext.Provider value={{ items, addToCart, removeFromCart, clearCart, syncRetailPrices, isCartOpen, setIsCartOpen, totalAmount }}>
       {children}
     </CartContext.Provider>
   )

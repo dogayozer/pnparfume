@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '@/contexts/CartContext'
 import { useDealer } from '@/contexts/DealerContext'
 import { BOTTLE_OPTIONS, DEFAULT_BOTTLE_CODE, toSecureImageUrl } from '@/lib/bottleOptions'
+import { EXTRAIT_SURCHARGE } from '@/lib/pricingConstants'
 
 interface ProductActionsProps {
   sku: string
@@ -18,9 +19,6 @@ interface ProductActionsProps {
 }
 
 type Concentration = 'edp' | 'extrait'
-
-// Fiyat kuralları — kolayca değiştirilebilir:
-const EXTRAIT_SURCHARGE = 200 // Extrait de Parfum'a yükseltme
 
 export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfStock }: ProductActionsProps) {
   const router = useRouter()

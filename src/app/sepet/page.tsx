@@ -6,12 +6,13 @@ import Link from 'next/link'
 import { ArrowLeft, Trash2, Tag, Truck, Info, Users, ShieldCheck, Check, Clock, X, CreditCard, LogIn, UserCheck, AlertCircle } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
 import { useDealer } from '@/contexts/DealerContext'
+import { SECOND_ITEM_DISCOUNT } from '@/lib/pricingConstants'
 
 export default function CartPage() {
-  const { items, removeFromCart, totalAmount, clearCart } = useCart()
+  const { items, removeFromCart, totalAmount, clearCart, syncRetailPrices } = useCart()
   const { isDealer } = useDealer()
   const [couponCode, setCouponCode] = useState('')
-  const [appliedCoupon, setAppliedCoupon] = useState<{code: string, discount: number} | null>(null)
+  const [appliedCoupon, setAppliedCoupon] = useState<{code: string, type: string, value: number} | null>(null)
   
   // Paydaş Ekonomisi State
   const [combinedShipping, setCombinedShipping] = useState(false)
@@ -131,17 +132,17 @@ export default function CartPage() {
     return `${m}:${s}`
   }
 
-  // Kurallar (Senaryolardan Gelen)
-  const SECOND_ITEM_DISCOUNT = 250
-
   // Hesaplamalar
   const subtotal = totalAmount
 
   // 2. Ürün İndirimi — bayi fiyatı zaten toptan fiyat olduğu için bayilere uygulanmaz.
   const multiItemDiscount = items.length >= 2 && !isDealer ? SECOND_ITEM_DISCOUNT : 0
 
-  // Kupon İndirimi
-  const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0
+  // Kupon İndirimi — yüzdelik kupon her zaman GÜNCEL ara toplamdan hesaplanır
+  // (önceden kupon uygulandığı andaki tutarda donuyordu; ödeme ucu da böyle hesaplıyor).
+  const couponDiscount = !appliedCoupon ? 0
+    : appliedCoupon.type === 'percentage' ? Math.floor(subtotal * (appliedCoupon.value / 100))
+    : appliedCoupon.value
 
   // Kargo indirimleri/kuponlar sonrası kalan tutara göre yeniden hesaplanmalı —
   // sepet, indirim veya kupon her değiştiğinde sunucudan güncel karar isteniyor.
@@ -182,9 +183,14 @@ export default function CartPage() {
     setIsSubmitting(true)
 
     try {
+      // Oturum token'ı: sunucu bayi fiyatını ve siparişin sahibini bununla doğruluyor.
+      const sessionToken = localStorage.getItem('pn_session')
       const res = await fetch('/api/paytr/token', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {})
+        },
         body: JSON.stringify({
           customer: checkoutForm,
           userId: JSON.parse(localStorage.getItem('user') || '{}').id || null,
@@ -201,6 +207,13 @@ export default function CartPage() {
       const data = await res.json()
       if (data.token) {
         setPaytrToken(data.token)
+      } else if (res.status === 409) {
+        // Sunucu sepeti farklı fiyatladı: sepeti güncelle, müşteri yeni tutarı görüp tekrar ödesin.
+        if (data.code === 'PRICE_CHANGED' && data.prices) syncRetailPrices(data.prices)
+        if (data.code === 'INVALID_COUPON') setAppliedCoupon(null)
+        if (data.code === 'INVALID_FRIEND_ORDER') setShippingDiscountApplied(false)
+        setIsCheckoutModalOpen(false)
+        alert(data.error)
       } else {
         alert('Ödeme başlatılırken bir hata oluştu: ' + (data.error || 'Bilinmeyen hata'))
       }
@@ -223,12 +236,7 @@ export default function CartPage() {
       const data = await res.json()
       
       if (res.ok && data.value) {
-        // value contains fixed discount for now based on our db setup
-        let discountAmount = data.value;
-        if (data.type === 'percentage') {
-          discountAmount = Math.floor(subtotal * (data.value / 100));
-        }
-        setAppliedCoupon({ code: couponCode.toUpperCase(), discount: discountAmount })
+        setAppliedCoupon({ code: couponCode.toUpperCase(), type: data.type, value: data.value })
         setCouponCode('')
       } else {
         alert(data.error || 'Geçersiz kupon kodu')

@@ -910,7 +910,7 @@ export default function AdminDashboard() {
 
   const handleOpenEditProduct = (prod: any) => {
     setProductModalMode('edit')
-    const listing = prod.marketplaceListings?.find((l: any) => l.platform === 'pn_store') || prod.marketplaceListings?.[0]
+    const listing = prod.marketplaceListings?.find((l: any) => l.platform === 'trendyol') || prod.marketplaceListings?.[0]
     setProductForm({
       sku: prod.sku,
       original_name: prod.original_name,
@@ -3005,7 +3005,7 @@ export default function AdminDashboard() {
                                 </tr>
                               ) : (
                                 filteredProducts.map((prod: any) => {
-                                  const listing = prod.marketplaceListings?.find((l: any) => l.platform === 'pn_store') || prod.marketplaceListings?.[0]
+                                  const listing = prod.marketplaceListings?.find((l: any) => l.platform === 'trendyol') || prod.marketplaceListings?.[0]
                                   const priceVal = listing?.price || 850
                                   const stockVal = listing?.stock !== undefined ? listing.stock : 50
 

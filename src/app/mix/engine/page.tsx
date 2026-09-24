@@ -10,6 +10,7 @@ import { useCart } from '@/contexts/CartContext'
 import { computeBlendCompatibility, compatibilityLabel, FAMILY_ANGLES, type BlendItem, type WeightedIngredient } from '@/lib/fragranceCompatibility'
 import { blendProfiles, recommendEssenceForFamily, nearestCatalogMatch, topFamilies, type FamilyProfile, type CandidateProduct } from '@/lib/fragranceRecommender'
 import { BOTTLE_OPTIONS, DEFAULT_BOTTLE_CODE, toSecureImageUrl } from '@/lib/bottleOptions'
+import { BLEND_SAMPLE_10ML_PRICE } from '@/lib/pricingConstants'
 
 // Activity -> suggested family mapping (soft suggestion only, does not
 // restrict which products the user can pick in Step 3).
@@ -286,7 +287,9 @@ function BlendEngineContent() {
       name: `Kişiye Özel Blend (${designCode})`,
       price: blendPrice,
       quantity: 1,
-      size: `${selectedBottle.volumeMl}ml Blend`,
+      // Şişe adı kalemde yazmalı: hem üretimde hangi şişenin kullanılacağı belli olur hem
+      // ödeme ucu blend fiyatını şişeyle birlikte tam olarak doğrulayabilir.
+      size: `${selectedBottle.volumeMl}ml Blend · ${selectedBottle.label}`,
       selectedScents: scentList,
       imageUrl: toSecureImageUrl(selectedBottle.imageUrl)
     })
@@ -301,7 +304,7 @@ function BlendEngineContent() {
     addToCart({
       sku: `${designCode}-10ML`,
       name: `Tekli Keşif Seti (${designCode})`,
-      price: 200,
+      price: BLEND_SAMPLE_10ML_PRICE,
       quantity: 1,
       size: `10ml Numune`,
       selectedScents: scentList,

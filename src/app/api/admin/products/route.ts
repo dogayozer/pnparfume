@@ -2,6 +2,18 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/adminAuth'
 
+// Sitenin fiyat/görsel/stok için okuduğu ilan (bkz. urun/[sku]/page.tsx, katalog, sepet
+// fiyatlaması). Önceden admin formu ayrı bir 'pn_store' ilanına yazıyordu ve site o
+// kaydı hiç okumadığı için admin'den yapılan fiyat değişiklikleri sitede görünmüyordu.
+const STOREFRONT_PLATFORM = 'trendyol'
+
+// Formda "201.jpg" gibi sadece dosya adı girilirse kasap görsel proxy'sine çevir.
+function normalizeImage(image: string): string {
+  const v = image.trim()
+  if (/^(https?:)?\/\//.test(v) || v.startsWith('/')) return v
+  return `/api/kasap-image/${encodeURIComponent(v)}`
+}
+
 // NOT: Bu dosyanın GET metodu kasıtlı olarak requireAdmin ile korunmuyor — admin
 // paneli dışında /mix/engine ve /mix/discovery-set (herkese açık, müşteri tarafı
 // sayfalar) de aktif ürün kataloğunu çekmek için bu uca istek atıyor. Ürün kataloğu
@@ -130,10 +142,10 @@ export async function POST(req: Request) {
         base_cost: Number(base_cost) || 0,
         marketplaceListings: {
           create: {
-            platform: 'pn_store',
+            platform: STOREFRONT_PLATFORM,
             price: Number(price) || 850,
             stock: Number(stock) || 50,
-            images: image ? [image] : []
+            images: image ? [normalizeImage(image)] : []
           }
         }
       },
@@ -234,24 +246,34 @@ export async function PUT(req: Request) {
 
     // Update or create store listing for price and stock
     if (price !== undefined || stock !== undefined || image !== undefined) {
+      const current = await prisma.marketplaceListing.findUnique({
+        where: { productId_platform: { productId: cleanSku, platform: STOREFRONT_PLATFORM } },
+        select: { images: true }
+      })
+      // Formda tek görsel alanı var: sadece ana (ilk) görseli değiştir, galerinin
+      // geri kalanını koru — aksi halde her kayıtta ürünün diğer görselleri silinirdi.
+      const images = image
+        ? [normalizeImage(image), ...(current?.images || []).slice(1)]
+        : undefined
+
       await prisma.marketplaceListing.upsert({
         where: {
           productId_platform: {
             productId: cleanSku,
-            platform: 'pn_store'
+            platform: STOREFRONT_PLATFORM
           }
         },
         update: {
           price: price !== undefined ? Number(price) : undefined,
           stock: stock !== undefined ? Number(stock) : undefined,
-          images: image ? [image] : undefined
+          images
         },
         create: {
           productId: cleanSku,
-          platform: 'pn_store',
+          platform: STOREFRONT_PLATFORM,
           price: Number(price) || 850,
           stock: Number(stock) || 50,
-          images: image ? [image] : []
+          images: images || []
         }
       })
     }

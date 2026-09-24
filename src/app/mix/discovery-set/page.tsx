@@ -10,6 +10,7 @@ import {
   ChevronRight, RefreshCw, CheckCircle2
 } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
+import { DISCOVERY_BOX_PRICE, DISCOVERY_BOX_SKU } from '@/lib/pricingConstants'
 import { getProductKasapImage } from '@/lib/kasapImages'
 
 type PerfumeItem = {
@@ -63,7 +64,7 @@ export default function DiscoverySetPage() {
   const [addedAnimation, setAddedAnimation] = useState(false)
   const [customNote, setCustomNote] = useState('')
 
-  const BOX_PRICE = 690 // 5x10ml Avantajlı Set Fiyatı (Tekil 1000 TL yerine)
+  const BOX_PRICE = DISCOVERY_BOX_PRICE // 5x10ml Avantajlı Set Fiyatı (Tekil 1000 TL yerine)
 
   // Fetch all active perfumes
   useEffect(() => {
@@ -140,7 +141,7 @@ export default function DiscoverySetPage() {
     }
     
     addToCart({
-      sku: 'DISCOVERY-5X10',
+      sku: DISCOVERY_BOX_SKU,
       name: "5'li Lüks Keşif Kutusu (5x10ml Cam Şişe)",
       price: BOX_PRICE,
       quantity: 1,
