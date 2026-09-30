@@ -1694,7 +1694,7 @@ export default function AdminDashboard() {
                             <th className="px-6 py-4">Durum</th>
                             <th className="px-6 py-4">Kargo Bilgisi</th>
                             <th className="px-6 py-4">Tarih</th>
-                            <th className="px-6 py-4 text-right">İşlemler</th>
+                            <th className="px-6 py-4 text-right sticky right-0 bg-gray-50 shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">İşlemler</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 text-sm">
@@ -1756,7 +1756,7 @@ export default function AdminDashboard() {
                                   <td className="px-6 py-4 text-xs text-gray-500 whitespace-nowrap">
                                     {new Date(o.createdAt).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                   </td>
-                                  <td className="px-6 py-4 text-right whitespace-nowrap">
+                                  <td className="px-6 py-4 text-right whitespace-nowrap sticky right-0 bg-white shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">
                                     <div className="flex items-center justify-end gap-1.5">
                                       {o.status === 'pending' && (
                                         <button
@@ -1889,7 +1889,7 @@ export default function AdminDashboard() {
                             <th className="px-6 py-4">Sepet Durumu</th>
                             <th className="px-6 py-4">Cüzdan / Elçi Bakiyesi</th>
                             <th className="px-6 py-4">Kayıt Tarihi</th>
-                            <th className="px-6 py-4 text-right">İşlemler</th>
+                            <th className="px-6 py-4 text-right sticky right-0 bg-gray-50 shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">İşlemler</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 text-sm">
@@ -1989,7 +1989,7 @@ export default function AdminDashboard() {
                                     {new Date(c.createdAt).toLocaleDateString('tr-TR')}
                                   </td>
 
-                                  <td className="px-6 py-4 text-right whitespace-nowrap">
+                                  <td className="px-6 py-4 text-right whitespace-nowrap sticky right-0 bg-white shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">
                                     <button
                                       onClick={() => handleOpenCustomerDetail(c)}
                                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-medium transition-colors shadow-sm"
@@ -3021,7 +3021,7 @@ export default function AdminDashboard() {
                                 <th className="px-6 py-4">Kalıcılık / Yayılım</th>
                                 <th className="px-6 py-4">Fiyat & Stok</th>
                                 <th className="px-6 py-4">Durum</th>
-                                <th className="px-6 py-4 text-right">İşlemler</th>
+                                <th className="px-6 py-4 text-right sticky right-0 bg-gray-50 shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">İşlemler</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -3092,7 +3092,7 @@ export default function AdminDashboard() {
                                           {prod.publish_status === 'ACTIVE' ? '✅ Aktif' : '⏸️ Pasif'}
                                         </button>
                                       </td>
-                                      <td className="px-6 py-4 text-right whitespace-nowrap">
+                                      <td className="px-6 py-4 text-right whitespace-nowrap sticky right-0 bg-white shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">
                                         <div className="flex items-center justify-end gap-1.5">
                                           <button
                                             onClick={() => handleOpenEditProduct(prod)}
