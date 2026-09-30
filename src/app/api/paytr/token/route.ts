@@ -242,6 +242,10 @@ export async function POST(req: Request) {
         return NextResponse.json({ token: result.token })
       } else {
         console.error("PayTR Token Error:", result.reason)
+        await prisma.order.update({
+          where: { orderNumber: merchant_oid },
+          data: { paymentNote: `PayTR ödeme oturumu açılamadı: ${result.reason}` }
+        }).catch(() => {})
         return NextResponse.json({ error: result.reason }, { status: 400 })
       }
     } catch (parseError) {

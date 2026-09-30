@@ -54,7 +54,7 @@ export async function POST(req: Request) {
         // Update order status
         await tx.order.update({
           where: { orderNumber: merchant_oid },
-          data: { status: 'paid' }
+          data: { status: 'paid', paymentNote: null }
         })
 
         // Decrement stock for items
@@ -137,7 +137,7 @@ export async function POST(req: Request) {
     } else {
       await prisma.order.update({
         where: { orderNumber: merchant_oid },
-        data: { status: 'failed' }
+        data: { status: 'failed', paymentNote: `Ödeme başarısız: ${failed_reason_msg || 'neden bildirilmedi'}` }
       })
       console.error(`Order ${merchant_oid} payment failed: ${failed_reason_msg}`)
     }

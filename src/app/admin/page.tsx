@@ -28,6 +28,7 @@ type Order = {
   customerAddress?: string | null
   cargoCompany?: string | null
   trackingCode?: string | null
+  paymentNote?: string | null
   combinedWithOrderId?: string | null
   shippingCostDiscount?: number
   ai_assisted?: boolean
@@ -1209,6 +1210,17 @@ export default function AdminDashboard() {
     }
   }, [customers])
 
+  // Ödeme durumu açıklaması: PayTR hata mesajı varsa o; ödeme 30 dk'dan uzun süredir
+  // bekliyorsa PayTR'dan hiç yanıt gelmemiş demektir (müşteri ödeme ekranını yarıda bırakmış olabilir).
+  const getPaymentInfo = (o: Order): { text: string; tone: 'error' | 'warn' } | null => {
+    if (o.paymentNote) return { text: o.paymentNote, tone: 'error' }
+    if (o.status === 'failed') return { text: 'Ödeme başarısız (neden kaydedilmemiş)', tone: 'error' }
+    if (o.status === 'pending' && Date.now() - new Date(o.createdAt).getTime() > 30 * 60 * 1000) {
+      return { text: 'PayTR yanıtı 30 dakikadan uzun süredir gelmedi — ödeme tamamlanmamış', tone: 'warn' }
+    }
+    return null
+  }
+
   const getStatusBadge = (status: string) => {
     switch(status) {
       case 'pending':
@@ -1221,6 +1233,8 @@ export default function AdminDashboard() {
         return <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full text-xs font-semibold"><CheckCircle size={12} /> Teslim Edildi</span>
       case 'cancelled':
         return <span className="inline-flex items-center gap-1 bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-full text-xs font-semibold"><XCircle size={12} /> İptal Edildi</span>
+      case 'failed':
+        return <span className="inline-flex items-center gap-1 bg-red-50 text-red-700 border border-red-200 px-2.5 py-1 rounded-full text-xs font-semibold"><XCircle size={12} /> Ödeme Başarısız</span>
       default:
         return <span className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs font-semibold">{status}</span>
     }
@@ -1742,6 +1756,9 @@ export default function AdminDashboard() {
                                   </td>
                                   <td className="px-6 py-4">
                                     {getStatusBadge(o.status)}
+                                    {(() => { const info = getPaymentInfo(o); return info ? (
+                                      <div className={`mt-1.5 max-w-[220px] text-[11px] leading-snug ${info.tone === 'error' ? 'text-red-600' : 'text-amber-700'}`}>{info.text}</div>
+                                    ) : null })()}
                                   </td>
                                   <td className="px-6 py-4 text-xs">
                                     {o.cargoCompany ? (
@@ -3675,6 +3692,9 @@ export default function AdminDashboard() {
                   <h2 className="text-xl font-bold text-gray-900">Sipariş #{selectedOrder.orderNumber}</h2>
                   {getStatusBadge(selectedOrder.status)}
                 </div>
+                {(() => { const info = getPaymentInfo(selectedOrder); return info ? (
+                  <p className={`mt-1.5 text-xs ${info.tone === 'error' ? 'text-red-600' : 'text-amber-700'}`}>{info.text}</p>
+                ) : null })()}
                 <p className="text-xs text-gray-500 mt-1">
                   Sipariş Tarihi: {new Date(selectedOrder.createdAt).toLocaleString('tr-TR')}
                 </p>
