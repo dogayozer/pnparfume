@@ -964,6 +964,27 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleDeleteOrder = async (o: Order) => {
+    const paid = o.status === 'paid' || o.status === 'shipped' || o.status === 'delivered'
+    const warn = paid ? ' DİKKAT: Bu sipariş ödenmiş/işlem görmüş, silinirse muhasebe kaydı kalmaz.' : ''
+    if (!confirm(`${o.orderNumber} numaralı (${o.totalAmount} TL) siparişi KALICI olarak silmek istediğinize emin misiniz? Geri alınamaz.${warn}`)) return
+    setSavingId(`del_order_${o.id}`)
+    try {
+      const res = await adminFetch(`/api/admin/orders?id=${encodeURIComponent(o.id)}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        showMsg('success', data.message || 'Sipariş silindi.')
+        setOrders(prev => prev.filter(x => x.id !== o.id))
+      } else {
+        showMsg('error', data.error || 'Sipariş silinemedi')
+      }
+    } catch {
+      showMsg('error', 'Silme işlemi sırasında hata oluştu.')
+    } finally {
+      setSavingId(null)
+    }
+  }
+
   const handleDeleteProduct = async (sku: string) => {
     if (!confirm(`PN ${sku} ürününü silmek istediğinize emin misiniz?`)) return
     setSavingId(`del_${sku}`)
@@ -1776,6 +1797,14 @@ export default function AdminDashboard() {
                                         title="Sipariş Detayı"
                                       >
                                         <Eye size={16} />
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteOrder(o)}
+                                        disabled={savingId === `del_order_${o.id}`}
+                                        className="p-1.5 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border border-gray-200 disabled:opacity-40"
+                                        title="Siparişi Sil"
+                                      >
+                                        <Trash2 size={16} />
                                       </button>
                                     </div>
                                   </td>

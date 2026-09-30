@@ -162,3 +162,28 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: 'Sipariş güncellenemedi' }, { status: 500 })
   }
 }
+
+// Tek bir siparişi kalıcı olarak siler (admin panelindeki çöp kutusu butonu, onay penceresinden sonra).
+// Kupon kullanım kaydı siparişe bağlıysa bağı koparılır (kayıt kalır, orderId boşalır).
+export async function DELETE(req: Request) {
+  try {
+    const admin = requireAdmin(req)
+    if (!admin) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
+
+    const id = new URL(req.url).searchParams.get('id')
+    if (!id) return NextResponse.json({ error: 'Sipariş ID gereklidir' }, { status: 400 })
+
+    const order = await prisma.order.findUnique({ where: { id }, select: { orderNumber: true } })
+    if (!order) return NextResponse.json({ error: 'Sipariş bulunamadı' }, { status: 404 })
+
+    await prisma.$transaction([
+      prisma.couponUsage.updateMany({ where: { orderId: id }, data: { orderId: null } }),
+      prisma.order.delete({ where: { id } })
+    ])
+
+    return NextResponse.json({ success: true, message: `${order.orderNumber} numaralı sipariş silindi.` })
+  } catch (error) {
+    console.error('Delete order error:', error)
+    return NextResponse.json({ error: 'Sipariş silinemedi' }, { status: 500 })
+  }
+}
