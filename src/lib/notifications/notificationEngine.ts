@@ -121,12 +121,17 @@ export async function sendAdminOrderEmail(order: {
       ? order.items.map((i: any) => `- ${i.name || i.sku || 'Ürün'} x${i.quantity || 1}`).join('\n')
       : '(ürün detayı bulunamadı)'
 
+    // Ödemesi alınan her sipariş için aksiyon uyarısı: ayarlardaki bildirim adresine ve
+    // her zaman info@pienparfume.com.tr'ye gider (aynı adres ise tek kez).
+    const recipients = [...new Set([adminEmail, 'info@pienparfume.com.tr'].filter(Boolean).map(a => String(a).toLowerCase()))]
+
     await transporter.sendMail({
       from: `"PN Parfüm Sipariş Sistemi" <${smtpUser}>`,
-      to: adminEmail,
-      subject: `Yeni Siparişiniz Var — ${order.orderNumber} (${order.totalAmount} TL)`,
+      to: recipients,
+      subject: 'PnParfum.com web sitesinde aksiyon bekleyen 1 siparişiniz var',
       text: [
-        'Yeni bir sipariş ödemesi onaylandı.',
+        'PnParfum.com web sitesinde aksiyon bekleyen 1 siparişiniz var.',
+        'Sipariş ödemesi alındı, hazırlanıp kargoya verilmesi bekleniyor.',
         '',
         `Sipariş No: ${order.orderNumber}`,
         `Tutar: ${order.totalAmount} TL`,
