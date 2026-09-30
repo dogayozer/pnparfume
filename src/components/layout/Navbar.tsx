@@ -91,9 +91,6 @@ export default function Navbar() {
             <Gift size={14} />
             5'li Keşif Kutusu
           </Link>
-          <Link href="/mix" className="text-sm tracking-wide text-foreground hover:text-accent-gold transition-colors">
-            Mix Parfüm Tasarımı
-          </Link>
           <Link href="/kesfet" className="text-sm tracking-wide text-foreground hover:text-accent-gold transition-colors flex items-center gap-1">
             <Sparkles size={14} className="text-accent-gold" />
             Koku Rehberi
@@ -202,9 +199,6 @@ export default function Navbar() {
             <Link href="/mix/discovery-set" className="border-b border-foreground/10 pb-4 text-amber-500 font-normal flex items-center justify-between">
               <span>5'li Keşif Kutusu</span>
               <span className="text-xs bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">Özel Set</span>
-            </Link>
-            <Link href="/mix" className="border-b border-foreground/10 pb-4">
-              Mix Parfüm Tasarımı
             </Link>
             <Link href="/kesfet" className="border-b border-foreground/10 pb-4 flex items-center gap-3">
               <Sparkles size={24} className="text-accent-gold" />

@@ -20,6 +20,8 @@ interface ProductActionsProps {
 
 type Concentration = 'edp' | 'extrait'
 
+const CUSTOMIZE_ENABLED = false
+
 export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfStock }: ProductActionsProps) {
   const router = useRouter()
   const { addToCart, setIsCartOpen } = useCart()
@@ -139,8 +141,8 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
         </a>
       )}
 
-      {/* Benim İçin Özelleştir */}
-      {!isOutOfStock && (
+      {/* Benim İçin Özelleştir — şimdilik KAPALI (geri açmak için CUSTOMIZE_ENABLED'ı true yapın) */}
+      {CUSTOMIZE_ENABLED && !isOutOfStock && (
         <div className="text-center sm:text-left mt-6">
           <div className="inline-block">
             <div 

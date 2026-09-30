@@ -49,6 +49,15 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  // "Mix Parfüm Tasarımı" / "Kendi Kokunu Yarat" (Blend Engine) şimdilik kapalı: sayfalar
+  // katalog'a geçici (307) yönlendiriliyor. Geri açmak için bu bloğu ve Navbar/ProductActions
+  // /sitemap'teki işaretli yerleri geri alın. 5'li Keşif Kutusu (/mix/discovery-set) açık.
+  async redirects() {
+    return [
+      { source: '/mix', destination: '/katalog', permanent: false },
+      { source: '/mix/engine', destination: '/katalog', permanent: false },
+    ]
+  },
   // Güvenlik: önceden hiç özel header yoktu, sadece Vercel'in otomatik HSTS'i
   // vardı. X-Frame-Options/frame-ancestors (clickjacking), X-Content-Type-Options
   // (MIME sniffing) ve Referrer-Policy risksiz eklenebilir. CSP'de script-src
