@@ -10,27 +10,27 @@ const questions = [
     id: 1,
     title: "Bugün kendini nasıl hissetmek istiyorsun?",
     options: [
-      { id: 'energetic', label: 'Enerjik & Özgür', image: '/perfume_sillage_1786733363569.jpg' },
-      { id: 'mysterious', label: 'Gizemli & Derin', image: '/perfume_longevity_paradox_1786733060486.jpg' },
-      { id: 'elegant', label: 'Zarif & Klasik', image: '/signature_scent_1786733184742.jpg' },
+      { id: 'energetic', label: 'Enerjik & Özgür', image: '/blog-sillage.jpg' },
+      { id: 'mysterious', label: 'Gizemli & Derin', image: '/blog-longevity.jpg' },
+      { id: 'elegant', label: 'Zarif & Klasik', image: '/blog-signature.jpg' },
     ]
   },
   {
     id: 2,
     title: "Hangi ortam sana daha çok hitap ediyor?",
     options: [
-      { id: 'nature', label: 'Yağmur Sonrası Orman', image: '/skin_chemistry_perfume_1786734316391.jpg' },
-      { id: 'night', label: 'Loş Bir Jazz Bar', image: '/cologne_leather_amber_1786736633619.jpg' },
-      { id: 'sun', label: 'Güneşli Bir Sahil', image: '/cologne_neroli_oud_1786736688544.jpg' },
+      { id: 'nature', label: 'Yağmur Sonrası Orman', image: '/blog-skin-chemistry.jpg' },
+      { id: 'night', label: 'Loş Bir Jazz Bar', image: '/col_leather.jpg' },
+      { id: 'sun', label: 'Güneşli Bir Sahil', image: '/col_neroli.jpg' },
     ]
   },
   {
     id: 3,
     title: "Hangi notalar ruhuna dokunur?",
     options: [
-      { id: 'wood', label: 'Odunsu & Baharatlı', image: '/cologne_tobacco_honey_1786736699495.jpg' },
-      { id: 'floral', label: 'Taze & Çiçeksi', image: '/cologne_fig_incense_1786736624153.jpg' },
-      { id: 'oriental', label: 'Tatlı & Oryantal', image: '/perfume_locations_1786733237217.jpg' },
+      { id: 'wood', label: 'Odunsu & Baharatlı', image: '/col_tobacco.jpg' },
+      { id: 'floral', label: 'Taze & Çiçeksi', image: '/col_fig.jpg' },
+      { id: 'oriental', label: 'Tatlı & Oryantal', image: '/blog-locations.jpg' },
     ]
   }
 ]
@@ -166,7 +166,7 @@ export default function QuizPage() {
 
             <div className="bg-foreground/[0.02] border border-foreground/10 rounded-2xl p-8 lg:p-12 flex flex-col md:flex-row gap-12 items-center">
               <div className="w-full md:w-1/2 aspect-[3/4] relative bg-foreground/5 rounded-xl overflow-hidden">
-                <Image src="/cologne_leather_amber_1786736633619.jpg" alt="Pera Leather" fill className="object-cover mix-blend-multiply opacity-90" />
+                <Image src="/col_leather.jpg" alt="Pera Leather" fill className="object-cover mix-blend-multiply opacity-90" />
               </div>
               <div className="w-full md:w-1/2 space-y-8">
                 <div>
