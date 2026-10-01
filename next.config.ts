@@ -87,7 +87,11 @@ const nextConfig: NextConfig = {
               // www.google.com/g/collect ve stats.g.doubleclick.net'e gönderiyor — önceki
               // listede sadece www.google-analytics.com vardı ve Analytics verisi engelleniyordu.
               "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://analytics.google.com https://*.googletagmanager.com https://www.google.com https://stats.g.doubleclick.net",
-              "frame-src 'self' https://www.paytr.com https://www.googletagmanager.com",
+              // PayTR iframe'i kart doğrulamasında (3D Secure) bankaların kendi alan adlarına
+              // yönleniyor; frame-src iframe'in sonraki yönlendirmelerini de denetlediği için
+              // sadece paytr.com'a izin vermek ödeme ekranını kırıyordu ("üzgün sayfa" ikonu).
+              // Banka alan adları sabit/öngörülebilir olmadığından tüm https çerçevelere izin veriliyor.
+              "frame-src 'self' https:",
               "frame-ancestors 'self'",
             ].join('; '),
           },
