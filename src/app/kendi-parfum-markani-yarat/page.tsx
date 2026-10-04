@@ -11,7 +11,9 @@ export const metadata = {
   keywords: [
     'kendi parfüm markanı yarat', 'kendi markanı yarat', 'parfüm markası kurma',
     'private label parfüm üretici', 'fason parfüm üretimi', 'parfüm üretim tesisi türkiye',
-    'kendi kokunu yarat', 'parfüm oem üretici'
+    'kendi kokunu yarat', 'parfüm oem üretici',
+    'silivri parfüm üretim', 'kendi markan ile parfüm', 'koku fabrikası', 'fason kolonya',
+    'fason oda kokusu', 'parfüm fason üretim istanbul'
   ],
   alternates: { canonical: 'https://pnparfume.com/kendi-parfum-markani-yarat' },
   openGraph: {

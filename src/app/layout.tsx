@@ -56,7 +56,15 @@ export const metadata: Metadata = {
     'muadil parfüm', 'parfüm muadili', 'esans parfüm', 'yağlı parfüm', 'alkolsüz parfüm',
     'toptan parfüm', 'parfüm bayiliği', 'mix parfüm tasarımı', '5li keşif kutusu',
     'parfüm hediye seti', 'sevgiliye hediye parfüm', 'doğum günü hediyesi parfüm',
-    'hangi parfüm bana uygun', 'parfüm testi', 'ucuz kaliteli parfüm', 'parfüm önerisi'
+    'hangi parfüm bana uygun', 'parfüm testi', 'ucuz kaliteli parfüm', 'parfüm önerisi',
+    'silivri parfüm üretim', 'silivri parfüm üreticisi', 'silivri koku fabrikası', 'istanbul parfüm üretimi',
+    'ucuz parfüm', 'uygun fiyatlı parfüm', 'muadil parfümler', 'en iyi muadil parfüm',
+    'kendi markan ile parfüm', 'kendi markanla parfüm üret', 'kendi marka parfüm', 'markalı parfüm üretimi',
+    'koku fabrikası', 'parfüm fabrikası', 'parfüm imalatı', 'toptan parfüm üretici',
+    'oda kokusu', 'oda parfümü', 'ev kokusu', 'toptan oda kokusu', 'fason oda kokusu',
+    'difüzer', 'difüzör', 'oda difüzörü', 'çubuklu oda kokusu', 'ev parfümü',
+    'kolonya', 'ucuz kolonya', 'toptan kolonya', 'fason kolonya', 'kolonya üretimi',
+    'hediyelik kolonya', 'şişe kolonya', 'limon kolonyası', 'düğün kolonyası', 'nikah kolonyası'
   ],
   openGraph: {
     title: 'PN Parfüm | Özel ve Niş Koku Deneyimi',
