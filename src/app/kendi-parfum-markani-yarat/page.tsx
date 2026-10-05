@@ -231,7 +231,7 @@ export default function KendiParfumMarkaniYaratPage() {
             <Mail className="text-accent-gold flex-shrink-0 mt-0.5" size={20} />
             <div>
               <h3 className="font-medium mb-1">E-posta</h3>
-              <p className="text-sm text-foreground/60 leading-relaxed">info@pnparfume.com<br />siparis@pienparfume.com</p>
+              <p className="text-sm text-foreground/60 leading-relaxed">info@pnparfume.com</p>
             </div>
           </div>
         </div>
