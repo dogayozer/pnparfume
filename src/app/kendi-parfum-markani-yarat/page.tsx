@@ -224,7 +224,7 @@ export default function KendiParfumMarkaniYaratPage() {
             <Phone className="text-accent-gold flex-shrink-0 mt-0.5" size={20} />
             <div>
               <h3 className="font-medium mb-1">Telefon / WhatsApp</h3>
-              <p className="text-sm text-foreground/60 leading-relaxed">(+90) 212 736 09 90<br />WhatsApp: (+90) 544 736 09 90</p>
+              <p className="text-sm text-foreground/60 leading-relaxed">(+90) 212 736 09 90<br />WhatsApp: (+90) 532 391 31 41</p>
             </div>
           </div>
           <div className="flex items-start gap-4 p-5 rounded-2xl border border-foreground/10">
