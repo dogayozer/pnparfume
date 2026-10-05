@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { MapPin, Phone, Mail, Clock, MessageCircle, Send, CheckCircle2, AlertCircle } from 'lucide-react'
+import { MapPin, Phone, Mail, Clock, Send, CheckCircle2, AlertCircle } from 'lucide-react'
 
 export default function IletisimPage() {
   const [form, setForm] = useState({
@@ -43,13 +43,13 @@ export default function IletisimPage() {
       } else {
         setMsg({
           type: 'error',
-          text: data.error || 'Mesaj iletilirken bir sorun oluştu. Lütfen WhatsApp üzerinden bize yazınız.'
+          text: data.error || 'Mesaj iletilirken bir sorun oluştu. Lütfen e-posta veya telefonla bize ulaşınız.'
         })
       }
     } catch {
       setMsg({
         type: 'error',
-        text: 'Bağlantı hatası oluştu. Lütfen WhatsApp destek hattımızdan bize ulaşınız.'
+        text: 'Bağlantı hatası oluştu. Lütfen e-posta veya telefonla bize ulaşınız.'
       })
     } finally {
       setLoading(false)
@@ -69,32 +69,6 @@ export default function IletisimPage() {
         
         {/* İletişim Bilgileri */}
         <div className="space-y-6">
-          {/* WhatsApp Destek Hattı - Öne Çıkan Kart */}
-          <a
-            href="https://wa.me/905447360990?text=Merhaba,%20PN%20Parfüm%20hakkında%20bilgi%20ve%20destek%20almak%20istiyorum."
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-start space-x-4 p-5 rounded-2xl bg-[#25D366]/10 border border-[#25D366]/30 hover:bg-[#25D366]/15 hover:border-[#25D366]/50 transition-all duration-300 group shadow-sm block"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-[#25D366] text-white flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-105 transition-transform">
-              <MessageCircle size={24} />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center justify-between">
-                <h4 className="font-semibold text-foreground flex items-center gap-2">
-                  WhatsApp Destek Hattı
-                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#25D366] text-white">Canlı</span>
-                </h4>
-              </div>
-              <p className="text-sm font-mono text-[#25D366] font-bold mt-1">
-                +90 544 736 09 90
-              </p>
-              <p className="text-xs text-foreground/60 mt-1">
-                Sipariş, koku danışmanlığı ve hızlı destek için WhatsApp üzerinden anında yazabilirsiniz.
-              </p>
-            </div>
-          </a>
-
           <div className="flex items-start space-x-4 p-4 rounded-xl hover:bg-background border border-transparent hover:border-foreground/5 transition-colors">
             <div className="w-10 h-10 rounded-full bg-foreground/5 flex items-center justify-center flex-shrink-0 text-accent-gold">
               <MapPin size={20} />
@@ -117,7 +91,6 @@ export default function IletisimPage() {
               <h4 className="font-medium mb-1">Müşteri Hizmetleri & Santral</h4>
               <p className="text-sm text-foreground/60">
                 Telefon: (+90) 212 736 09 90<br />
-                WhatsApp: (+90) 544 736 09 90<br />
                 Fax: (+90) 212 736 09 91
               </p>
             </div>

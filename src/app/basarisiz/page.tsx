@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { AlertCircle, ShoppingBag, RefreshCw, MessageSquare, ArrowLeft } from 'lucide-react'
+import { AlertCircle, ShoppingBag, RefreshCw, ArrowLeft } from 'lucide-react'
 
 export default function BasarisizPage() {
   return (
@@ -60,15 +60,6 @@ export default function BasarisizPage() {
           >
             <RefreshCw size={16} /> Sepete Dön ve Tekrar Dene
           </Link>
-
-          <a
-            href="https://wa.me/905447360990?text=Merhaba,%20sitenizden%20sipari%C5%9F%20verirken%20%C3%B6deme%20a%C5%9Famas%C4%B1nda%20yard%C4%B1m%20almak%20istiyorum."
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/30 font-medium text-xs tracking-wider uppercase transition-colors flex items-center justify-center gap-2"
-          >
-            <MessageSquare size={16} /> WhatsApp Destek
-          </a>
         </motion.div>
       </div>
     </main>

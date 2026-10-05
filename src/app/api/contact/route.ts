@@ -75,7 +75,7 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error('Contact Form Error:', error)
     return NextResponse.json(
-      { success: false, error: 'Mesaj gönderilirken bir hata oluştu. Lütfen WhatsApp üzerinden ulaşınız.' },
+      { success: false, error: 'Mesaj gönderilirken bir hata oluştu. Lütfen e-posta veya telefonla ulaşınız.' },
       { status: 500 }
     )
   }

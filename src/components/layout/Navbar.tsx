@@ -231,10 +231,6 @@ export default function Navbar() {
               <span className="text-foreground/20">/</span>
               <Link href="/ar/wholesale" className="hover:text-accent-gold transition-colors">العربية</Link>
             </div>
-            <div className="p-6 bg-foreground/5 rounded-2xl">
-              <h3 className="text-sm font-medium mb-2">WhatsApp Sipariş Hattı</h3>
-              <p className="text-2xl font-light">+90 532 391 31 41</p>
-            </div>
           </div>
         </motion.div>
       </div>
