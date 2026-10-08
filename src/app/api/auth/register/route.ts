@@ -197,7 +197,7 @@ export async function POST(request: Request) {
           })
           await transporter.sendMail({
             from: `"PN Parfüm Üyelik" <${smtpUser}>`,
-            to: 'dogayozer@gmail.com',
+            to: ['dogayozer@gmail.com', 'pnparfumsales@gmail.com'],
             subject: 'Yeni Üyemiz Satış Temsilcisi Olmak İstiyor',
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">

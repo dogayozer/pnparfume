@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
     const mailOptions = {
       from: `"PN Parfüm Kurumsal Form" <${smtpUser}>`,
-      to: 'dogayozer@gmail.com',
+      to: ['dogayozer@gmail.com', 'pnparfumsales@gmail.com'],
       subject: 'Yeni Kurumsal Ön Başvuru Formu',
       html: `
         <h2>Yeni Bir Kurumsal Ön Başvuru Alındı</h2>

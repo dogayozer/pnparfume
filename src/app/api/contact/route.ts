@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     // kasıtlı olarak adminOrderEmail'den bağımsız, sabit dogayozer@gmail.com (kullanıcının
     // kendi talebi: sitedeki tüm form bildirimleri bu adrese gitsin).
     const { smtpUser, smtpPass, smtpHost, smtpPort } = await getIntegrationSettings()
-    const recipientEmails = 'dogayozer@gmail.com'
+    const recipientEmails = ['dogayozer@gmail.com', 'pnparfumsales@gmail.com']
 
     // Form içeriği HTML
     const emailHtml = `
