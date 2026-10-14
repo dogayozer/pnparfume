@@ -153,10 +153,6 @@ export default function GulfMarketStrategyPage() {
             <p className="text-sm text-foreground/60">القهوة والفستق والكراميل والكستناء تتصدر النوتات الغورميه الجديدة، متوازنة بلمسات ملح البحر والسمسم المحمص والجلد الناعم لتجنب الحلاوة المفرطة وإضافة عمق فكري للتركيبة.</p>
           </div>
           <div className="p-6 border border-foreground/10 rounded-2xl">
-            <h3 className="font-medium mb-2">الطلب على الحلال والاستدامة</h3>
-            <p className="text-sm text-foreground/60">الوعي المتزايد لدى المستهلك يجعل التركيبات الخالية من الكحول أو المصنّعة بكحول محلّل شرعًا، والخالية من أي تلوث بمشتقات حيوانية محظورة، ميزة تنافسية حقيقية وليست خيارًا هامشيًا.</p>
-          </div>
-          <div className="p-6 border border-foreground/10 rounded-2xl">
             <h3 className="font-medium mb-2">العطور المشتركة (Unisex)</h3>
             <p className="text-sm text-foreground/60">رغم أن عطور النساء تشكل 57% من السوق، فإن العطور المشتركة تكتسب حصة سوقية متزايدة بمعدل نمو سنوي 4.2%.</p>
           </div>

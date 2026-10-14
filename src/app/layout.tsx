@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     'date parfümü', 'spor parfüm', 'günlük parfüm', 'ofis parfümü',
     'yaz parfümü', 'kış parfümü', 'odunsu parfüm', 'çiçeksi parfüm', 'tatlı parfüm',
     'kendi parfüm markanı yarat', 'parfüm markası kurma', 'private label parfüm üretici',
-    'muadil parfüm', 'parfüm muadili', 'esans parfüm', 'yağlı parfüm', 'alkolsüz parfüm',
+    'muadil parfüm', 'parfüm muadili', 'esans parfüm', 'yağlı parfüm',
     'toptan parfüm', 'parfüm bayiliği', 'mix parfüm tasarımı', '5li keşif kutusu',
     'parfüm hediye seti', 'sevgiliye hediye parfüm', 'doğum günü hediyesi parfüm',
     'hangi parfüm bana uygun', 'parfüm testi', 'ucuz kaliteli parfüm', 'parfüm önerisi',
