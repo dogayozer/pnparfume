@@ -217,7 +217,7 @@ export default function KendiParfumMarkaniYaratPage() {
             <Factory className="text-accent-gold flex-shrink-0 mt-0.5" size={20} />
             <div>
               <h3 className="font-medium mb-1">Kapasite & Katalog</h3>
-              <p className="text-sm text-foreground/60 leading-relaxed">338+ hazır koku formülü, IFRA standartlarına uygun, alkolsüz esans hattı dahil.</p>
+              <p className="text-sm text-foreground/60 leading-relaxed">338+ hazır koku formülü, IFRA standartlarına uygun.</p>
             </div>
           </div>
           <div className="flex items-start gap-4 p-5 rounded-2xl border border-foreground/10">

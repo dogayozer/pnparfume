@@ -1,10 +1,10 @@
 import Link from 'next/link'
 import B2BLeadForm from '@/components/b2b/B2BLeadForm'
-import { MapPin, Package, FlaskConical, ShieldCheck, ChevronDown } from 'lucide-react'
+import { MapPin, Package, ShieldCheck, ChevronDown } from 'lucide-react'
 
 export const metadata = {
   title: 'Wholesale Perfume Supplier from Turkey | PN Parfüm',
-  description: 'PN Parfüm is a Turkish perfume manufacturer offering wholesale distribution of designer-alternative fragrances. 338+ fragrance catalog, alcohol-free oil line available.',
+  description: 'PN Parfüm is a Turkish perfume manufacturer offering wholesale distribution of designer-alternative fragrances. 338+ fragrance catalog.',
   keywords: [
     'wholesale perfume supplier Turkey', 'perfume distributor Turkey', 'buy perfume wholesale',
     'fragrance manufacturer Turkey', 'designer alternative perfume supplier', 'exclusive perfume distributor'
@@ -35,10 +35,6 @@ const faqs = [
   {
     q: 'Where are PN Parfüm fragrances manufactured?',
     a: 'All fragrances are produced at our own facility in Silivri, İstanbul, Turkey, under formulations that follow IFRA and EU Cosmetics Regulation standards.'
-  },
-  {
-    q: 'Do you offer alcohol-free fragrance options for wholesale?',
-    a: 'Yes — alongside our alcohol-based EDP line, we also produce oil-based, alcohol-free fragrances, a popular option in markets with religious or cultural preferences for alcohol-free products.'
   },
 ]
 
@@ -80,11 +76,6 @@ export default function WholesalePage() {
           <Package className="text-accent-gold mb-3" size={22} />
           <h3 className="font-medium text-lg mb-2">338+ Fragrance Catalog</h3>
           <p className="text-sm text-foreground/60">A ready-made catalog spanning men's, women's and unisex fragrance families — no need to start from scratch.</p>
-        </div>
-        <div className="p-6 border border-foreground/10 rounded-2xl bg-background">
-          <FlaskConical className="text-accent-gold mb-3" size={22} />
-          <h3 className="font-medium text-lg mb-2">Alcohol-Free Oil Line</h3>
-          <p className="text-sm text-foreground/60">In addition to our alcohol-based EDP line, we also produce oil-based (alcohol-free) fragrances — simpler and more cost-effective to ship as samples.</p>
         </div>
         <div className="p-6 border border-foreground/10 rounded-2xl bg-background">
           <ShieldCheck className="text-accent-gold mb-3" size={22} />

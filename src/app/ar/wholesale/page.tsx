@@ -1,10 +1,10 @@
 import Link from 'next/link'
 import B2BLeadForm from '@/components/b2b/B2BLeadForm'
-import { MapPin, Package, FlaskConical, ShieldCheck, ChevronDown } from 'lucide-react'
+import { MapPin, Package, ShieldCheck, ChevronDown } from 'lucide-react'
 
 export const metadata = {
   title: 'موزع عطور بالجملة من تركيا | PN Parfüm',
-  description: 'PN Parfüm مُصنّع تركي للعطور يقدم توزيعًا بالجملة لعطور فاخرة بديلة. أكثر من 338 عطرًا جاهزًا، وتشكيلة زيوت عطرية خالية من الكحول.',
+  description: 'PN Parfüm مُصنّع تركي للعطور يقدم توزيعًا بالجملة لعطور فاخرة بديلة. أكثر من 338 عطرًا جاهزًا.',
   keywords: [
     'موزع عطور تركيا', 'توزيع عطور بالجملة', 'مصنع عطور تركي', 'عطور بالجملة',
     'استيراد عطور من تركيا', 'شراء عطور بالجملة', 'وكيل عطور حصري'
@@ -35,10 +35,6 @@ const faqs = [
   {
     q: 'أين يتم تصنيع عطور PN Parfüm؟',
     a: 'في مصنعنا الخاص بمنطقة سيليفري، إسطنبول، تركيا، وفق تركيبات متوافقة مع معايير الرابطة الدولية للعطور (IFRA) ولائحة مستحضرات التجميل الأوروبية.'
-  },
-  {
-    q: 'هل تقدمون خيارات عطور خالية من الكحول للبيع بالجملة؟',
-    a: 'نعم، إلى جانب خط Eau de Parfum الكحولي، ننتج أيضًا عطورًا زيتية خالية من الكحول — خيار مطلوب بشدة في أسواق الخليج والأسواق ذات الحساسية الدينية أو الثقافية تجاه الكحول.'
   },
 ]
 
@@ -80,11 +76,6 @@ export default function ArWholesalePage() {
           <Package className="text-accent-gold mb-3" size={22} />
           <h3 className="font-medium text-lg mb-2">كتالوج يضم أكثر من 338 عطرًا</h3>
           <p className="text-sm text-foreground/60">كتالوج جاهز يشمل عطورًا رجالية ونسائية ومشتركة — لا حاجة للبدء من الصفر.</p>
-        </div>
-        <div className="p-6 border border-foreground/10 rounded-2xl bg-background">
-          <FlaskConical className="text-accent-gold mb-3" size={22} />
-          <h3 className="font-medium text-lg mb-2">تشكيلة زيوت خالية من الكحول</h3>
-          <p className="text-sm text-foreground/60">إلى جانب خط EDP الكحولي، ننتج أيضًا عطورًا زيتية (خالية من الكحول) — أسهل وأوفر تكلفة لشحن العينات.</p>
         </div>
         <div className="p-6 border border-foreground/10 rounded-2xl bg-background">
           <ShieldCheck className="text-accent-gold mb-3" size={22} />
