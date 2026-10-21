@@ -22,13 +22,20 @@ export async function POST(req: Request) {
       return new NextResponse('OK') 
     }
 
-    // Verify hash
+    // Verify hash — PayTR bildirim imzası: HMAC-SHA256(merchant_oid + merchant_salt + status + total_amount, merchant_key).
+    // (Token isteğinin aksine salt'ı ikinci kez eklemiyoruz; önceden eklendiği için her gerçek ödeme
+    // "Hash Mismatch" ile reddediliyor ve sipariş 'pending' kalıyordu.)
     const hash_str = merchant_oid + merchant_salt + status + total_amount
-    const calculated_hash = crypto.createHmac('sha256', merchant_key).update(hash_str + merchant_salt).digest('base64')
+    const calculated_hash = crypto.createHmac('sha256', merchant_key).update(hash_str).digest('base64')
 
-    if (hash !== calculated_hash) {
+    const hashOk = typeof hash === 'string' &&
+      hash.length === calculated_hash.length &&
+      crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(calculated_hash))
+
+    if (!hashOk) {
       console.error(`PayTR Callback Hash Mismatch for order ${merchant_oid}`)
-      return new NextResponse('OK') 
+      // "OK" dönmüyoruz: PayTR bildirimi tekrar dener, hata PayTR panelinde de görünür.
+      return new NextResponse('PAYTR notification failed: bad hash', { status: 400 })
     }
 
     // Find order
