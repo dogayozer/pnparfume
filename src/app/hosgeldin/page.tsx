@@ -14,7 +14,7 @@ export const metadata = {
 // mobil veride de hızlı açılıyor. Tek alanlı (telefon) hızlı kupon talebi + gerçek,
 // canlı "kurucu üye" sayacı (uydurma bir "son 3 kişi!" değil —
 // prisma.customer.count()'tan gerçek rakam).
-export const revalidate = 60
+export const revalidate = 300
 
 const FOUNDER_MEMBER_CAP = 500
 
