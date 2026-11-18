@@ -140,9 +140,9 @@ export default function RootLayout({
         <DealerProvider>
         <CartProvider>
           <Navbar />
-          {/* pt-[116px]: Navbar'daki sabit yükseklikli kampanya duyuru barı (≈28px) +
-              asıl nav satırı (h-20 = 80px) toplamı — banner eklendiğinde içerik altında kalmasın diye. */}
-          <main className="min-h-screen pt-[116px]">
+          {/* pt-[88px]: Navbar'ın sabit nav satırı (h-20 = 80px) + alt çizgi. Kampanya duyuru barı
+              yeniden eklenirse (≈28px) bu değer 116px olmalı ki içerik altında kalmasın. */}
+          <main className="min-h-screen pt-[88px]">
             {children}
           </main>
           <Footer />
