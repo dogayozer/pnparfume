@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import DistributorForm from './DistributorForm'
 import DigitalDealerFilm from './DigitalDealerFilm'
+import DistributorFilm from './DistributorFilm'
 
 type Locale = 'tr' | 'en' | 'ar'
 
@@ -227,6 +228,8 @@ export default function DistributorContent({ locale = 'tr' }: { locale?: Locale 
         ))}
       </dl>
 
+      {(locale === 'en' || locale === 'ar') && <DistributorFilm locale={locale} />}
+
       <section aria-labelledby={`${p}-why`} className="space-y-6">
         <h3 id={`${p}-why`} className="text-2xl font-light">{c.whyTitle}</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -254,10 +257,11 @@ export default function DistributorContent({ locale = 'tr' }: { locale?: Locale 
         </div>
         {locale === 'tr' && (
           <>
-            <DigitalDealerFilm />
+            <DigitalDealerFilm locale="tr" />
             <Link href={c.netHref} className="inline-block rounded-full border border-accent-gold px-5 py-2 text-sm text-accent-gold transition-colors hover:bg-accent-gold hover:text-background">{c.netCta}</Link>
           </>
         )}
+        {locale === 'en' && <DigitalDealerFilm locale="en" />}
       </section>
 
       <section aria-labelledby={`${p}-prof`} className="space-y-6">
