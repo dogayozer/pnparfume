@@ -1,5 +1,7 @@
 import Image from 'next/image'
+import Link from 'next/link'
 import DistributorForm from './DistributorForm'
+import DigitalDealerFilm from './DigitalDealerFilm'
 
 type Locale = 'tr' | 'en' | 'ar'
 
@@ -18,6 +20,25 @@ export const DISTRIBUTOR = {
       ['Köklü tecrübe', '24 yıllık üretim tecrübesi ve var olan markalarımızla güvenli bir iş ortaklığı zemini.'],
       ['Görsel ve içerik desteği', 'Ürünlerinizi tanıtmanız için hazır görsel ve metin desteği için ekibimizle görüşebilirsiniz.'],
     ],
+    profTitle: 'Ülkenizin kültürüne ve coğrafyasına uygun koku profili',
+    profLead: 'Her bölgenin iklimi, gelenekleri ve koku zevki farklıdır. Bölgenize uygun bir seçki oluşturmak için 400 koku seçeneğimizden birlikte çalışabiliriz.',
+    prof: [
+      ['İklim ve sıcaklık', 'Sıcak ve nemli bölgelerde ferah, narenciyeli ve hafif kokular; serin iklimlerde sıcak, odunsu, amber ve baharatlı kokular öne çıkma eğilimindedir.'],
+      ['Kültürel tercihler', 'Koku geleneği tercihleri belirler: bazı bölgelerde yoğun, misk ve oud ağırlıklı kokular, bazılarında daha hafif çiçeksi ve odunsu kokular sevilir.'],
+      ['Kullanım ve mevsim', 'Günlük kullanım, iş ortamı, davet ve özel günler ile mevsim ve kalıcılık beklentisi seçkiyi şekillendirir.'],
+      ['Bölgenize özel seçki', 'Pazarınızı bize anlatın; ekibimiz bölgenize uygun koku ve seri önerilerini sizinle birlikte değerlendirsin.'],
+    ],
+    profNote: 'Bunlar genel eğilimlerdir; bölgesel seçki ve kapsam başvuru sonrasında birlikte belirlenir.',
+    netTitle: 'PN ürün tedariği ile kendi ağınızı oluşturun',
+    netLead: 'Distribütör olarak yalnızca satmakla kalmayın; bölgenizde kendi satış ağınızı kurun. Kapsam ve koşullar başvuru sonrasında birlikte netleştirilir.',
+    net: [
+      ['Fiziksel mağaza dağıtımı', 'Bölgenizdeki parfüm, kozmetik ve perakende mağazalarına PN Parfüm ürünlerini ulaştırın.'],
+      ['Dijital bayilik verme', 'E-ticaret yapan girişimcilere dijital bayilik vererek online kanallardaki ağınızı genişletin.'],
+      ['Akaryakıt istasyonları', 'Akaryakıt istasyonu mağazalarına ürün tedariki ile yeni satış noktaları kazanın.'],
+      ['Market ve perakende zincirleri', 'Market ve zincir işletmelere tedarik yaparak geniş bir satış ağı oluşturun.'],
+    ],
+    netCta: 'Dijital bayilik modelini incele',
+    netHref: '/kurumsal/bayilik/dijital',
     processTitle: 'Başvuru süreci',
     steps: [
       ['Talebinizi gönderin', 'Formu ülke, şehir, alt bayi ağı ve deneyim bilgilerinizle doldurun.'],
@@ -51,6 +72,25 @@ export const DISTRIBUTOR = {
       ['Established experience', '24 years of production experience and our existing brands give you a solid base for a partnership.'],
       ['Visual and content support', 'Talk to our team about ready-made visuals and copy to help you promote the products.'],
     ],
+    profTitle: 'Fragrance profiles to suit your country’s culture and geography',
+    profLead: 'Every region has its own climate, traditions and taste in fragrance. We can work together on a selection for your market from our 400 fragrance options.',
+    prof: [
+      ['Climate and temperature', 'In hot and humid regions fresh, citrus and light scents tend to stand out; in cooler climates warm, woody, amber and spicy scents do.'],
+      ['Cultural preferences', 'Fragrance traditions shape taste: some regions favor intense, musk- and oud-led scents, others lighter floral and woody ones.'],
+      ['Use and season', 'Everyday wear, the workplace, evenings and special occasions, along with season and longevity expectations, shape the selection.'],
+      ['A selection for your region', 'Tell us about your market and our team will review fragrance and line suggestions for your region together with you.'],
+    ],
+    profNote: 'These are general trends; the regional selection and scope are agreed together after your application.',
+    netTitle: 'Build your own network with PN product supply',
+    netLead: 'As a distributor you can do more than sell: build your own sales network in your region. Scope and terms are clarified together after your application.',
+    net: [
+      ['Physical store distribution', 'Bring PN Parfüm products to perfume, cosmetics and retail stores in your region.'],
+      ['Granting digital dealerships', 'Expand your online network by granting digital dealerships to e-commerce entrepreneurs.'],
+      ['Fuel station shops', 'Gain new points of sale by supplying the shops at fuel stations.'],
+      ['Supermarkets and retail chains', 'Build a wide sales network by supplying supermarkets and retail chains.'],
+    ],
+    netCta: '',
+    netHref: '',
     processTitle: 'How the application works',
     steps: [
       ['Send your request', 'Fill in the form with your country, city, sub-dealer network and experience.'],
@@ -84,6 +124,25 @@ export const DISTRIBUTOR = {
       ['خبرة راسخة', 'خبرة إنتاج تمتد 24 عامًا وعلاماتنا القائمة تمنحك أساسًا متينًا للشراكة.'],
       ['دعم بصري ومحتوى', 'تحدث مع فريقنا حول الصور والنصوص الجاهزة التي تساعدك في الترويج للمنتجات.'],
     ],
+    profTitle: 'ملفات عطرية تناسب ثقافة بلدك وجغرافيته',
+    profLead: 'لكل منطقة مناخها وتقاليدها وذوقها العطري. يمكننا العمل معًا على اختيار يناسب سوقك من بين 400 خيار عطري لدينا.',
+    prof: [
+      ['المناخ ودرجة الحرارة', 'في المناطق الحارة والرطبة تميل الروائح المنعشة والحمضية والخفيفة إلى الظهور؛ وفي المناخات الباردة الروائح الدافئة والخشبية والعنبرية والتوابل.'],
+      ['التفضيلات الثقافية', 'تحدد التقاليد العطرية الذوق: بعض المناطق تفضّل الروائح القوية التي يغلب عليها المسك والعود، وأخرى الروائح الزهرية والخشبية الأخف.'],
+      ['الاستخدام والموسم', 'الاستخدام اليومي وبيئة العمل والسهرات والمناسبات الخاصة، إضافةً إلى الموسم وتوقعات الثبات، تحدد الاختيار.'],
+      ['اختيار خاص بمنطقتك', 'حدّثنا عن سوقك ليدرس فريقنا معك اقتراحات الروائح والسلاسل المناسبة لمنطقتك.'],
+    ],
+    profNote: 'هذه اتجاهات عامة؛ يُحدَّد الاختيار الإقليمي والنطاق معًا بعد تقديم الطلب.',
+    netTitle: 'ابنِ شبكتك الخاصة بتوريد منتجات PN',
+    netLead: 'بصفتك موزّعًا، لا تكتفِ بالبيع؛ بل ابنِ شبكة مبيعاتك الخاصة في منطقتك. يتم توضيح النطاق والشروط معًا بعد تقديم الطلب.',
+    net: [
+      ['التوزيع على المتاجر الفعلية', 'أوصِل منتجات PN Parfüm إلى متاجر العطور ومستحضرات التجميل والتجزئة في منطقتك.'],
+      ['منح وكالات رقمية', 'وسّع شبكتك عبر الإنترنت بمنح وكالات رقمية لرواد التجارة الإلكترونية.'],
+      ['متاجر محطات الوقود', 'اكسب نقاط بيع جديدة بتوريد المنتجات إلى متاجر محطات الوقود.'],
+      ['السوبرماركت وسلاسل التجزئة', 'ابنِ شبكة مبيعات واسعة بالتوريد إلى السوبرماركت وسلاسل التجزئة.'],
+    ],
+    netCta: '',
+    netHref: '',
     processTitle: 'مراحل تقديم الطلب',
     steps: [
       ['أرسل طلبك', 'املأ النموذج ببيانات بلدك ومدينتك وشبكة وكلائك الفرعيين وخبرتك.'],
@@ -178,6 +237,43 @@ export default function DistributorContent({ locale = 'tr' }: { locale?: Locale 
             </div>
           ))}
         </div>
+      </section>
+
+      <section aria-labelledby={`${p}-net`} className="space-y-6">
+        <div className="space-y-2">
+          <h3 id={`${p}-net`} className="text-2xl font-light">{c.netTitle}</h3>
+          <p className="max-w-3xl text-sm leading-relaxed text-foreground/65">{c.netLead}</p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {c.net.map(([t, d]) => (
+            <div key={t} className="rounded-2xl border border-foreground/10 bg-background p-6">
+              <h4 className="mb-2 font-medium text-foreground">{t}</h4>
+              <p className="text-sm leading-relaxed text-foreground/65">{d}</p>
+            </div>
+          ))}
+        </div>
+        {locale === 'tr' && (
+          <>
+            <DigitalDealerFilm />
+            <Link href={c.netHref} className="inline-block rounded-full border border-accent-gold px-5 py-2 text-sm text-accent-gold transition-colors hover:bg-accent-gold hover:text-background">{c.netCta}</Link>
+          </>
+        )}
+      </section>
+
+      <section aria-labelledby={`${p}-prof`} className="space-y-6">
+        <div className="space-y-2">
+          <h3 id={`${p}-prof`} className="text-2xl font-light">{c.profTitle}</h3>
+          <p className="max-w-3xl text-sm leading-relaxed text-foreground/65">{c.profLead}</p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {c.prof.map(([t, d]) => (
+            <div key={t} className="rounded-2xl border border-foreground/10 bg-background p-6">
+              <h4 className="mb-2 font-medium text-foreground">{t}</h4>
+              <p className="text-sm leading-relaxed text-foreground/65">{d}</p>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-foreground/50">{c.profNote}</p>
       </section>
 
       <section aria-labelledby={`${p}-process`} className="grid grid-cols-1 items-center gap-8 md:grid-cols-2">

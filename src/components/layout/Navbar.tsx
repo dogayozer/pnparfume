@@ -82,7 +82,7 @@ export default function Navbar() {
             <Sparkles size={14} className="text-accent-gold" />
             Koku Rehberi
           </Link>
-          <Link href="/kurumsal/girisimcilere-ozel" className="text-sm tracking-wide text-foreground hover:text-accent-gold transition-colors relative flex items-center justify-center w-[110px] h-6 overflow-hidden">
+          <Link href={KURUMSAL_TEXTS[kurumsalIndex] === 'Dijital Bayilik' ? '/kurumsal/bayilik/dijital' : '/kurumsal/girisimcilere-ozel'} className="text-sm tracking-wide text-foreground hover:text-accent-gold transition-colors relative flex items-center justify-center w-[110px] h-6 overflow-hidden">
             <AnimatePresence mode="popLayout">
               <motion.span
                 key={kurumsalIndex}

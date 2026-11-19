@@ -76,6 +76,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/kurumsal/markalarimiz',
     '/kurumsal/distributorluk',
     '/kurumsal/bayilik',
+    '/kurumsal/bayilik/dijital',
     '/kendi-parfum-markani-yarat',
     '/mix/b2b',
     '/mix/discovery-set',
