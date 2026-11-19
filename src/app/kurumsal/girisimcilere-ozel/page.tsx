@@ -4,6 +4,7 @@ export const metadata = {
     'Kendi parfüm markanızı kurun veya PN Parfüm dijital iş ortağı olun. Zihin haritası ve 11 adımlı algoritmik şema ile fason üretim, mevzuat ve markalaşma rehberi.',
 }
 
+import BrandPartnership from './BrandPartnership'
 import BrandRoadmapGuide from './BrandRoadmapGuide'
 import CorporateForm from './CorporateForm'
 
@@ -54,6 +55,8 @@ export default function GirisimcilereOzelPage() {
           </p>
         </div>
       </div>
+
+      <BrandPartnership />
 
       <BrandRoadmapGuide />
 
