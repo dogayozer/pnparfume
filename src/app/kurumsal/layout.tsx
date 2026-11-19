@@ -36,7 +36,7 @@ export default function KurumsalLayout({ children }: { children: React.ReactNode
               >
                 <span>Kurumsal</span>
                 <span className="flex items-center gap-1.5 text-sm font-medium text-accent-gold md:hidden">
-                  {links.find((l) => l.href === pathname)?.label}
+                  <span className="underline decoration-accent-gold underline-offset-4">{links.find((l) => l.href === pathname)?.label}</span>
                   <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
                 </span>
               </button>
