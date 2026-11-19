@@ -37,7 +37,7 @@ export default function BrandRoadmapGuide() {
 
   return (
     <div className="space-y-14">
-      {/* 1. Pien Parfüm Süreç Desteği */}
+      {/* 1. PN Parfüm Süreç Desteği */}
       <section aria-labelledby="pien-support-heading" className="space-y-6">
         <div className="space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full border border-accent-gold/30 bg-accent-gold/10 px-3.5 py-1 text-xs font-medium tracking-wide text-accent-gold">
@@ -45,12 +45,12 @@ export default function BrandRoadmapGuide() {
             Uçtan Uca Fason Üretim ve Marka Danışmanlığı
           </div>
           <h3 id="pien-support-heading" className="text-2xl font-light text-foreground">
-            Pien Parfüm Olarak Sürecin Hangi Aşamalarında Yanınızdayız?
+            PN Parfüm Olarak Sürecin Hangi Aşamalarında Yanınızdayız?
           </h3>
           <p className="text-sm leading-relaxed text-foreground/70">
             Türkiye&apos;de kozmetik ürünleri önceden ruhsatlandırılmaz; bunun yerine piyasaya arz
             öncesi <strong>ÜBD</strong>, <strong>CPSR</strong>, <strong>Sorumlu Teknik Eleman</strong>{' '}
-            ve <strong>ÜTS</strong> bildirimini şart koşan sıkı bir sorumluluk rejimi uygulanır. Pien
+            ve <strong>ÜTS</strong> bildirimini şart koşan sıkı bir sorumluluk rejimi uygulanır. PN
             Parfüm olarak yalnızca dolum değil, fikirden ilk satışa kadar tüm teknik ve operasyonel
             adımlarda yanınızdayız.
           </p>
@@ -84,7 +84,7 @@ export default function BrandRoadmapGuide() {
           </h3>
           <p className="text-sm text-foreground/65">
             Başarılı bir marka kurma süreci 6 ana eksenden oluşur. Detayları, kritik bağımlılık
-            kuralını ve Pien Parfüm desteğini görmek için dallardan birini seçin.
+            kuralını ve PN Parfüm desteğini görmek için dallardan birini seçin.
           </p>
         </div>
 
@@ -100,7 +100,7 @@ export default function BrandRoadmapGuide() {
                 Fason Parfüm Üretim ve Markalaşma Rehberi
               </div>
               <div className="mt-2 text-xs text-foreground/60">
-                6 Ana Sütun • Pien Parfüm Güvencesi
+                6 Ana Sütun • PN Parfüm Güvencesi
               </div>
             </div>
 
@@ -203,7 +203,7 @@ export default function BrandRoadmapGuide() {
               <div className="rounded-xl border border-accent-gold/30 bg-accent-gold/5 p-3.5">
                 <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-accent-gold">
                   <Sparkles size={14} aria-hidden="true" />
-                  Pien Parfüm Desteği
+                  PN Parfüm Desteği
                 </div>
                 <p className="text-xs leading-relaxed text-foreground/75">
                   {activeBranch.pienSupport}
@@ -296,7 +296,7 @@ export default function BrandRoadmapGuide() {
                 <div className="flex items-center gap-2 text-xs text-foreground/75">
                   <ClipboardCheck size={15} aria-hidden="true" className="text-accent-gold" />
                   <span>
-                    <strong className="text-foreground">Pien Parfüm Rolü:</strong>{' '}
+                    <strong className="text-foreground">PN Parfüm Rolü:</strong>{' '}
                     {activeStep.pienRole}
                   </span>
                 </div>
@@ -519,6 +519,10 @@ export default function BrandRoadmapGuide() {
               Bunlara ek olarak şirket kuruluşu/e-imza, GS1 barkod üyeliği, numune ve MOQ kapsamlı
               üretim (esans, alkol, şişe, valf, kutu), stabilite/uyumluluk testleri, CPSR/ÜBD
               danışmanlığı, Sorumlu Teknik Eleman ve e-ticaret altyapısı bütçeye dahil edilmelidir.
+            </p>
+            <p className="text-xs leading-relaxed text-foreground/50">
+              Yukarıdaki tutarlar tahminidir ve bilgi amaçlıdır; güncel rakamlar ilgili kurumlardan
+              teyit edilmelidir.
             </p>
           </div>
         )}

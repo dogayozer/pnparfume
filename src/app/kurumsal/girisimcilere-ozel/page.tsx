@@ -1,5 +1,5 @@
 export const metadata = {
-  title: 'Girişimcilere Özel | PN Parfüm (Pien Parfüm)',
+  title: 'Girişimcilere Özel | PN Parfüm (Pien Parfum)',
   description:
     'Kendi parfüm markanızı kurun veya PN Parfüm dijital iş ortağı olun. Zihin haritası ve 11 adımlı algoritmik şema ile fason üretim, mevzuat ve markalaşma rehberi.',
 }
@@ -15,7 +15,7 @@ export default function GirisimcilereOzelPage() {
           Girişimcilere Özel: Kendi Parfüm Markanızı Kurun
         </h2>
         <p className="text-foreground/70 leading-relaxed mb-4">
-          Yapay zeka analiz destekli koku tasarımında öncü olan <strong>Pien Parfüm (PN Parfüm)</strong>,
+          Yapay zeka analiz destekli koku tasarımında öncü olan <strong>PN Parfüm (Pien Parfum)</strong>, 2002'den beri parfüm üretimi yapan bir marka olarak,
           hem hazır ürün portföyümüzle kârlı dijital iş ortaklığı kurmak isteyenlere hem de{' '}
           <strong>kendi parfüm markasını sıfırdan hayata geçirmek isteyen girişimcilere</strong> uçtan uca
           fason üretim ve mevzuat rehberliği sunar.

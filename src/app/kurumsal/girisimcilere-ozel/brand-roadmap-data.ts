@@ -156,7 +156,7 @@ export const ALGORITHM_STEPS: AlgorithmStep[] = [
     question: 'Hedef kitle, koku profili, konsantrasyon (EDT/EDP/Extrait), hacim ve hedef birim maliyet belirlendi mi?',
     noAction: 'Koku ailesini ve bütçeyi netleştir; fiyat hedefi formülasyonu doğrudan belirler.',
     yesAction: 'Ürün özet dosyası (Brief) oluşturulur → Adım 1.',
-    pienRole: 'Pien Parfüm ile hedef bütçe ve koku konsepti brifi oluşturulur.',
+    pienRole: 'PN Parfüm ile hedef bütçe ve koku konsepti brifi oluşturulur.',
   },
   {
     step: 'Adım 1',
