@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 
-type Locale = 'tr' | 'en'
+type Locale = 'tr' | 'en' | 'ar'
 
 const IMAGES = [
   '/markalar/pien-serisi.jpg',
@@ -117,15 +117,67 @@ export const BRANDS = {
       },
     ],
   },
+  ar: {
+    eyebrow: 'ننتج منذ عام 2002',
+    heading: 'علاماتنا وسلاسل منتجاتنا',
+    intro:
+      'ست علامات وسلاسل مصممة لكل احتياج، من الاستخدام اليومي إلى المناسبات الخاصة، ومن السلاسل الاقتصادية إلى المجموعات الفاخرة.',
+    cta: 'البيع بالجملة والعلامة الخاصة',
+    ctaHref: '/ar/private-label',
+    items: [
+      {
+        name: 'Pien Series',
+        tag: 'يومي • اقتصادي',
+        chips: ['تركيز عطري 20%', 'استخدام يومي'],
+        text: 'سلسلة منتجات اقتصادية مصممة للاستخدام اليومي، بتركيز عطري يبلغ 20%.',
+        alt: 'زجاجة عطر Pien Series بين الحمضيات وتناثر الماء في ضوء الغروب',
+      },
+      {
+        name: 'Pien Intense',
+        tag: 'مكثّف • يومي',
+        chips: ['تركيز عطري أعلى بنسبة 20%', 'عطور بتصميم خاص'],
+        text: 'سلسلة اقتصادية للاستخدام اليومي، تضم عطورًا مصممة خصيصًا بتركيز عطري أعلى بنسبة 20%.',
+        alt: 'زجاجة Pien Intense سوداء تحت المطر وأضواء المدينة ليلًا',
+      },
+      {
+        name: 'Aşık Parfüm',
+        tag: 'سلسلة خاصة • المناسبات',
+        chips: ['تركيز عطري عالٍ', 'عطور مميزة'],
+        text: 'مجموعة سلسلة خاصة تضم عطورًا مميزة بتركيز عطري عالٍ وتصميم أنيق، تُستخدم في الدعوات والمناسبات الخاصة.',
+        alt: 'زجاجة Aşık Parfüm بنقوش ذهبية على طاولة مخملية في أمسية رومانسية',
+      },
+      {
+        name: 'Pien Luxury',
+        tag: 'فاخر • 100 مل',
+        chips: ['تركيز عطري عالٍ جدًا', 'زيوت عطرية خاصة', '100 مل'],
+        text: 'مجموعة عطور فاخرة بتصميم أنيق في زجاجة 100 مل، مصنوعة بتركيز عطري عالٍ جدًا وزيوت عطرية خاصة جدًا.',
+        alt: 'علبة Pien Luxury Perfume الحمراء والذهبية بين بتلات الورد وغبار الذهب',
+      },
+      {
+        name: 'PN',
+        tag: 'يومي • خلاصة من الدرجة الأولى',
+        chips: ['خلاصة من الدرجة الأولى', 'سلاسل خاصة', 'سلاسل بتصميم خاص'],
+        text: 'مجموعة مصممة للاستخدام اليومي بخلاصة عطرية من الدرجة الأولى، وتضم سلاسل خاصة وسلاسل بتصميم خاص.',
+        alt: 'علبة PN Parfume NUDE الوردية بين بتلات الورد وشريط الحرير',
+      },
+      {
+        name: 'PN Special Series',
+        tag: 'سلسلة خاصة • 100 مل',
+        chips: ['زجاجة بتصميم خاص', 'تحت مظلة PN', '100 مل'],
+        text: 'مجموعة عطور سلسلة خاصة تحت مظلة PN، بزجاجة كهرمانية بتصميم خاص وحجم 100 مل.',
+        alt: 'زجاجة PN Parfume كهرمانية بغطاء ذهبي بين قطع عود وبتلات ورد ودخان',
+      },
+    ],
+  },
 } as const
 
 export default function BrandsShowcase({ locale = 'tr' }: { locale?: Locale }) {
   const c = BRANDS[locale]
 
   return (
-    <section aria-labelledby={`brands-heading-${locale}`} className="space-y-12" lang={locale}>
+    <section aria-labelledby={`brands-heading-${locale}`} className="space-y-12" lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
       <div className="space-y-3">
-        <p className="text-xs font-medium uppercase tracking-[0.25em] text-accent-gold">
+        <p className="text-xs font-medium uppercase tracking-[0.25em] rtl:normal-case rtl:tracking-normal text-accent-gold">
           {c.eyebrow}
         </p>
         <h2 id={`brands-heading-${locale}`} className="text-3xl font-light text-foreground">
@@ -154,7 +206,7 @@ export default function BrandsShowcase({ locale = 'tr' }: { locale?: Locale }) {
               />
             </div>
             <div className="flex flex-col justify-center gap-4 p-7 md:p-10">
-              <p className="text-xs uppercase tracking-[0.2em] text-accent-gold">{b.tag}</p>
+              <p className="text-xs uppercase tracking-[0.2em] rtl:normal-case rtl:tracking-normal text-accent-gold">{b.tag}</p>
               <h3 className="text-3xl font-light text-foreground">{b.name}</h3>
               <p className="text-sm leading-relaxed text-foreground/70">{b.text}</p>
               <ul className="flex flex-wrap gap-2">

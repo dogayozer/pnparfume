@@ -15,6 +15,7 @@ export const metadata = {
     languages: {
       en: 'https://pnparfume.com/en/brands',
       tr: 'https://pnparfume.com/kurumsal/markalarimiz',
+      ar: 'https://pnparfume.com/ar/brands',
     },
   },
   openGraph: {

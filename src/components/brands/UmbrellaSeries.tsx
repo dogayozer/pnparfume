@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 
-type Locale = 'tr' | 'en'
+type Locale = 'tr' | 'en' | 'ar'
 
 const CONTENT = {
   tr: {
@@ -46,6 +46,27 @@ const CONTENT = {
     cta: 'Share Your Series Idea',
     ctaHref: '/en/private-label',
   },
+  ar: {
+    eyebrow: 'سلسلتك الخاصة تحت مظلة PN',
+    heading: 'أنشئ سلسلتك الخاصة تحت مظلة PN دون الحاجة لبناء علامة أولاً',
+    intro:
+      'ليس على كل رائد أعمال أن يبدأ مسار علامته الخاصة فورًا. تحت مظلة علامة PN يمكنك إطلاق سلسلة علامة فرعية خاصة بك، وتقليل تكاليفك وتجنب حدود الكميات العالية للإنتاج المستقل.',
+    benefits: [
+      { t: 'تكلفة أقل', d: 'تبدأ تحت مظلة PN الراسخة دون عبء بناء علامتك الخاصة أولًا.' },
+      { t: 'كميات إنتاج أكثر مرونة', d: 'يمكنك تجنب الحدود الدنيا العالية للكميات المرتبطة بالإنتاج تحت علامتك الخاصة.' },
+      { t: 'ثقة جاهزة', d: 'تنطلق بخبرة 24 عامًا وبنية علامة PN القائمة.' },
+      { t: 'هوية خاصة بك', d: 'اسم سلسلتك ولونها وعلبتك الخاصة، تُقدَّم بعبارة "A PN SERIES".' },
+    ],
+    exampleTitle: 'سلاسل نموذجية',
+    exampleNote: 'MIX وAGORA تصاميم نموذجية لسلاسل العلامات الفرعية التي يمكن إنشاؤها تحت مظلة PN.',
+    lineupAlt: 'علب عطور NUDE وAURA وALFA وMIX وAGORA جنبًا إلى جنب تحت مظلة PN',
+    deskAlt: 'رائد أعمال يختار سلسلته الخاصة بنماذج علب PN وعينات الألوان',
+    agoraAlt: 'AGORA: علبة سلسلة نموذجية بلون أخضر زمردي تحت مظلة PN',
+    mixAlt: 'MIX: علبة سلسلة نموذجية بلون الجرافيت تحت مظلة PN',
+    note: 'يتم الاتفاق على النطاق والكميات والشروط حسب المشروع.',
+    cta: 'شاركنا فكرة سلسلتك',
+    ctaHref: '/ar/private-label',
+  },
 } as const
 
 export default function UmbrellaSeries({ locale = 'tr' }: { locale?: Locale }) {
@@ -53,9 +74,9 @@ export default function UmbrellaSeries({ locale = 'tr' }: { locale?: Locale }) {
   const id = `umbrella-heading-${locale}`
 
   return (
-    <section aria-labelledby={id} className="space-y-10" lang={locale}>
+    <section aria-labelledby={id} className="space-y-10" lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
       <div className="space-y-3">
-        <p className="text-xs font-medium uppercase tracking-[0.25em] text-accent-gold">
+        <p className="text-xs font-medium uppercase tracking-[0.25em] rtl:normal-case rtl:tracking-normal text-accent-gold">
           {c.eyebrow}
         </p>
         <h2 id={id} className="text-3xl font-light text-foreground">

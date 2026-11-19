@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import B2BLeadForm from '@/components/b2b/B2BLeadForm'
+import DealerFilm from '@/components/b2b/DealerFilm'
 import { MapPin, Package, ShieldCheck, ChevronDown } from 'lucide-react'
 
 export const metadata = {
@@ -64,6 +65,10 @@ export default function ArWholesalePage() {
         <p className="text-foreground/70 leading-relaxed text-lg">
           نُنتج ونُصدّر عطورًا فاخرة بديلة من مصنعنا الخاص في سيليفري، إسطنبول، تركيا. تعاونوا معنا في التوزيع بالجملة — أسعار تنافسية، كتالوج جاهز واسع، ودعم لوجستي لمنطقتكم.
         </p>
+      </div>
+
+      <div className="mb-16">
+        <DealerFilm locale="ar" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-16">

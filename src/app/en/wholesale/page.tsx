@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import B2BLeadForm from '@/components/b2b/B2BLeadForm'
+import DealerFilm from '@/components/b2b/DealerFilm'
 import { MapPin, Package, ShieldCheck, ChevronDown } from 'lucide-react'
 
 export const metadata = {
@@ -64,6 +65,10 @@ export default function WholesalePage() {
         <p className="text-foreground/70 leading-relaxed text-lg">
           We produce and export designer-alternative fragrances from our facility in Silivri, İstanbul, Turkey. Partner with us for wholesale distribution — competitive pricing, a large ready-made catalog, and logistics support for your region.
         </p>
+      </div>
+
+      <div className="mb-16">
+        <DealerFilm locale="en" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-16">

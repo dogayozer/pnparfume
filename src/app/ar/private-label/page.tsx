@@ -1,17 +1,23 @@
 import Link from 'next/link'
 import B2BLeadForm from '@/components/b2b/B2BLeadForm'
+import BrandPartnership from '@/components/b2b/BrandPartnership'
 import { Lightbulb, TestTube, Factory, PackageCheck, Truck, ChevronDown } from 'lucide-react'
 
 export const metadata = {
   title: 'تصنيع عطور خاص (Private Label) في تركيا | أنشئ علامتك | PN Parfüm',
-  description: 'أنشئ علامتك التجارية الخاصة للعطور مع PN Parfüm — مُصنّع تركي يعمل بنظام العلامة الخاصة (Private Label) والتصنيع بالعقد (Contract Manufacturing). من الفكرة إلى العينة إلى الإنتاج إلى الرف.',
+  description: 'ننتج منذ عام 2002. أنشئ علامتك التجارية الخاصة للعطور مع PN Parfüm: 400 خيار عطري، إرشاد في تسجيل العلامة التجارية، وتصميم الشعار والزجاجة والعلبة والملصق، والتصنيع الخاص (Private Label) في تركيا.',
   keywords: [
+    'تصميم شعار عطور', 'تصميم ملصق عطور', 'تصميم علبة عطور', 'تسجيل علامة عطور تجارية',
     'تصنيع عطور خاص', 'إنشاء علامة عطور خاصة', 'تصنيع بالعقد عطور', 'private label عطور تركيا',
     'مصنع عطور تركيا', 'فاصون عطور', 'OEM عطور تركيا', 'شركة تصنيع عطور بالعقد'
   ],
   alternates: {
     canonical: 'https://pnparfume.com/ar/private-label',
-    languages: { 'en': 'https://pnparfume.com/en/private-label', 'ar': 'https://pnparfume.com/ar/private-label' }
+    languages: {
+      'en': 'https://pnparfume.com/en/private-label',
+      'ar': 'https://pnparfume.com/ar/private-label',
+      'tr': 'https://pnparfume.com/kurumsal/girisimcilere-ozel',
+    }
   },
   openGraph: {
     title: 'تصنيع عطور خاص (Private Label) في تركيا | PN Parfüm',
@@ -30,7 +36,19 @@ const faqs = [
   },
   {
     q: 'هل يمكنني استخدام تركيبة خاصة بي، أم يجب الاختيار من كتالوجكم؟',
-    a: 'كلا الخيارين متاحان — يمكنكم البدء من مكتبتنا التي تضم أكثر من 338 عطرًا لتوفير الوقت، أو طلب تركيبة مخصصة بالكامل بناءً على بريف عطري خاص بعلامتكم.'
+    a: 'كلا الخيارين متاحان — يمكنكم الاختيار من بين 400 خيار عطري مختلف لتوفير الوقت والتكلفة، أو طلب تركيبة مخصصة بالكامل بناءً على بريف عطري خاص بعلامتكم.'
+  },
+  {
+    q: 'هل تساعدون في تسجيل العلامة التجارية وتصميم الشعار والملصق؟',
+    a: 'نعم. نرشدكم خطوة بخطوة في تسجيل العلامة التجارية، من التقديم إلى المتابعة، ونصمم معكم الشعار والهوية اللونية وملصقات الزجاجات. نتيجة طلب تسجيل العلامة تعتمد على الجهة المختصة.'
+  },
+  {
+    q: 'هل يمكنكم مساعدتي في اختيار الزجاجات والعلب؟',
+    a: 'نعم. عبر شركائنا من مصنّعي الزجاجات نقدم تشكيلة واسعة من الطرازات ونستشيركم في الأحجام المناسبة لاتجاهات السوق، وعبر مطابعنا المتعاقد معها نساعدكم في الحصول على أنسب سعر لتصميم علبتكم.'
+  },
+  {
+    q: 'منذ متى تُنتج PN Parfüm العطور؟',
+    a: 'تُنتج PN Parfüm (Pien Parfum) العطور منذ عام 2002. بخبرة 24 عامًا وعلاماتنا القائمة، نُسهّل العديد من خطوات التسجيل عند بناء مجموعتكم تحت علامتكم الخاصة.'
   },
   {
     q: 'ما هو الحد الأدنى لكمية الطلب لإنتاج Private Label؟',
@@ -52,6 +70,22 @@ const faqJsonLd = {
   }))
 }
 
+const serviceJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  serviceType: 'Private label perfume manufacturing and brand building',
+  name: 'أنشئ علامتك التجارية الخاصة للعطور',
+  inLanguage: 'ar',
+  areaServed: 'Worldwide',
+  provider: {
+    '@type': 'Organization',
+    name: 'PN Parfüm',
+    alternateName: 'Pien Parfum',
+    url: 'https://pnparfume.com',
+    foundingDate: '2002',
+  },
+}
+
 const steps = [
   { icon: Lightbulb, title: 'الفكرة', desc: 'أخبرونا برؤية علامتكم — عائلة العطر، الطابع، والجمهور المستهدف.' },
   { icon: TestTube, title: 'العينة', desc: 'نُجهّز عينات بناءً على مكتبتنا العطرية الحالية أو حسب طلب مخصص.' },
@@ -67,6 +101,10 @@ export default function ArPrivateLabelPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceJsonLd) }}
+      />
 
       <div className="max-w-2xl mb-16">
         <span className="text-xs font-medium uppercase tracking-widest text-accent-gold">Private Label</span>
@@ -76,6 +114,10 @@ export default function ArPrivateLabelPage() {
         <p className="text-foreground/70 leading-relaxed text-lg">
           تُنتج PN Parfüm العطور في مصنعها الخاص بسيليفري، إسطنبول، تركيا. من خلال برنامج التصنيع الخاص (Private Label) والتصنيع بالعقد (Contract Manufacturing)، تُقدّمون العلامة التجارية — ونتولى نحن التركيب والإنتاج والتغليف.
         </p>
+      </div>
+
+      <div className="mb-16">
+        <BrandPartnership locale="ar" />
       </div>
 
       <div className="mb-16">

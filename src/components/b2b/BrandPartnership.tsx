@@ -1,6 +1,6 @@
 import Image from 'next/image'
 
-type Locale = 'tr' | 'en'
+type Locale = 'tr' | 'en' | 'ar'
 
 const IMAGES = [
   { src: '/kurumsal/koku-tasarimi.jpg' },
@@ -120,6 +120,60 @@ const CONTENT = {
     ],
     note: 'Scope, timing and terms are agreed per project. Use the form below to get in touch.',
   },
+  ar: {
+    eyebrow: 'ننتج منذ عام 2002',
+    heading: 'نبني علامتك معك',
+    intro:
+      'بخبرة 24 عامًا وعلاماتنا القائمة، نُسهّل العديد من خطوات التسجيل وندعمك في كل مرحلة من بناء مجموعتك الخاصة: العطر، تسجيل العلامة التجارية، الشعار، الزجاجة، العلبة والملصق.',
+    stepsLabel: 'مراحل بناء العلامة',
+    steps: [
+      { title: 'العطر والشخصية', sub: 'عطر يخصّك' },
+      { title: 'العلامة والشعار', sub: 'التسجيل والهوية' },
+      { title: 'اختيار الزجاجة', sub: 'الطرازات والأحجام' },
+      { title: 'العلبة والملصق', sub: 'التصميم والطباعة' },
+      { title: 'التسجيل والوثائق', sub: 'عملية أسهل' },
+      { title: 'مجموعتك الخاصة', sub: 'تحت اسمك' },
+    ],
+    lab: {
+      kicker: 'المختبر',
+      title: '400 خيار عطري مختلف',
+      text: 'في مختبرنا يمكنك الاختيار من بين 400 خيار عطري مختلف. نحدد مفهوم عطرك معًا من هذه المجموعة الواسعة، ونصوغ طابعًا فريدًا لعلامتك مع فريق تصميم العطور لدينا.',
+      alt: 'مكتبة عطور في مختبر العطور تضم مئات زجاجات العطر الكهرمانية',
+    },
+    pillars: [
+      {
+        title: 'العطر والشخصية',
+        alt: 'خبير عطور يمزج خلاصة عطرية في المختبر بين الورد والفانيلا والخشب والعنبر',
+        text: 'إلى جانب عائلات العطور التقليدية، ننطلق من طابع عطري محبوب في السوق ونمنحه شخصية مميزة، لنساعدك في تصميم منتجات تنافسية خاصة بك فعلًا.',
+      },
+      {
+        title: 'تسجيل العلامة التجارية',
+        alt: 'ملف تسجيل علامة تجارية وختم وعدسة مكبرة',
+        text: 'نرشدك خطوة بخطوة في مسار تسجيل العلامة التجارية، من التقديم إلى المتابعة، وندعمك في قرارات مهمة مثل اختيار الاسم والفئة.',
+      },
+      {
+        title: 'تصميم الشعار',
+        alt: 'عمل تصميم شعار: رسومات أولية وعينات ألوان ورقائق',
+        text: 'نصمم شعارك وهويتك اللونية معك، من أول رسم أولي حتى الشكل النهائي.',
+      },
+      {
+        title: 'اختيار الزجاجة',
+        alt: 'زجاجات عطر فارغة بأشكال وأحجام مختلفة',
+        text: 'عبر شركائنا من مصنّعي الزجاجات نقدم تشكيلة واسعة من الطرازات، ونستشيرك في الأحجام التي تناسب اتجاهات السوق.',
+      },
+      {
+        title: 'تصميم العلبة',
+        alt: 'عمل تصميم علبة عطر بعينات ألوان وورق',
+        text: 'عبر مطابعنا المتعاقد معها، نساعدك في الحصول على أنسب سعر لتصميم علبتك.',
+      },
+      {
+        title: 'تصميم الملصق',
+        alt: 'تصميم ملصق وتفاصيل رقائق لزجاجات العطر',
+        text: 'نصمم شكل الملصق وخامته وتفاصيل طباعته بما يناسب زجاجتك، مع مراعاة متطلبات الملصقات القانونية.',
+      },
+    ],
+    note: 'يتم الاتفاق على النطاق والمدة والشروط حسب المشروع. يمكنك استخدام النموذج أدناه للتواصل معنا.',
+  },
 } as const
 
 export default function BrandPartnership({ locale = 'tr' }: { locale?: Locale }) {
@@ -127,9 +181,9 @@ export default function BrandPartnership({ locale = 'tr' }: { locale?: Locale })
   const headingId = `brand-partnership-heading-${locale}`
 
   return (
-    <section aria-labelledby={headingId} className="space-y-10" lang={locale}>
+    <section aria-labelledby={headingId} className="space-y-10" lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
       <div className="space-y-3">
-        <p className="text-xs font-medium uppercase tracking-[0.25em] text-accent-gold">
+        <p className="text-xs font-medium uppercase tracking-[0.25em] rtl:normal-case rtl:tracking-normal text-accent-gold">
           {c.eyebrow}
         </p>
         <h2 id={headingId} className="text-3xl font-light text-foreground">
@@ -176,7 +230,7 @@ export default function BrandPartnership({ locale = 'tr' }: { locale?: Locale })
           />
         </div>
         <div className="flex flex-col justify-center gap-3 p-6 md:p-8">
-          <p className="text-xs tracking-[0.2em] text-accent-gold">{c.lab.kicker}</p>
+          <p className="text-xs tracking-[0.2em] rtl:tracking-normal text-accent-gold">{c.lab.kicker}</p>
           <h3 className="text-2xl font-light text-foreground">{c.lab.title}</h3>
           <p className="text-sm leading-relaxed text-foreground/65">{c.lab.text}</p>
         </div>
@@ -199,7 +253,7 @@ export default function BrandPartnership({ locale = 'tr' }: { locale?: Locale })
               />
             </div>
             <div className="space-y-2 p-5">
-              <p className="text-xs tracking-[0.2em] text-accent-gold">
+              <p className="text-xs tracking-[0.2em] rtl:tracking-normal text-accent-gold">
                 {String(i + 1).padStart(2, '0')}
               </p>
               <h3 className="text-lg font-medium text-foreground">{p.title}</h3>
