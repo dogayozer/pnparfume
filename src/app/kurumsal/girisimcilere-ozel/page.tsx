@@ -49,11 +49,21 @@ const jsonLd = [
   {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: faqs.map((f) => ({
-      '@type': 'Question',
-      name: f.q,
-      acceptedAnswer: { '@type': 'Answer', text: f.a },
-    })),
+    mainEntity: [
+      ...faqs.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+      ...MEVZUAT_SSS.map((m) => ({
+        '@type': 'Question',
+        name: m.q,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: [m.intro, ...m.bolumler.map((b) => `${b.h}: ${b.items.join(' ')}`)].join(' '),
+        },
+      })),
+    ],
   },
   {
     '@context': 'https://schema.org',
@@ -76,6 +86,7 @@ import BrandPartnership from '@/components/b2b/BrandPartnership'
 import DealerFilm from '@/components/b2b/DealerFilm'
 import BrandRoadmapGuide from './BrandRoadmapGuide'
 import CorporateForm from './CorporateForm'
+import { MEVZUAT_SSS, MEVZUAT_NOTU } from './mevzuatSss'
 
 export default function GirisimcilereOzelPage() {
   return (
@@ -148,6 +159,25 @@ export default function GirisimcilereOzelPage() {
             <p className="mt-3 text-sm leading-relaxed text-foreground/65">{f.a}</p>
           </details>
         ))}
+        {MEVZUAT_SSS.map((m) => (
+          <details key={m.q} className="rounded-2xl border border-foreground/10 p-5">
+            <summary className="cursor-pointer font-medium">{m.q}</summary>
+            <div className="mt-3 space-y-4 text-sm leading-relaxed text-foreground/65">
+              <p>{m.intro}</p>
+              {m.bolumler.map((b) => (
+                <div key={b.h}>
+                  <h3 className="mb-1.5 font-medium text-foreground/80">{b.h}</h3>
+                  <ul className="list-disc space-y-1.5 pl-5">
+                    {b.items.map((it) => (
+                      <li key={it}>{it}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </details>
+        ))}
+        <p className="pt-1 text-xs leading-relaxed text-foreground/45">{MEVZUAT_NOTU}</p>
       </section>
 
       <CorporateForm />
