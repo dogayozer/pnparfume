@@ -83,7 +83,6 @@ const jsonLd = [
 ]
 
 import BrandPartnership from '@/components/b2b/BrandPartnership'
-import DealerFilm from '@/components/b2b/DealerFilm'
 import BrandRoadmapGuide from './BrandRoadmapGuide'
 import CorporateForm from './CorporateForm'
 import { MEVZUAT_SSS, MEVZUAT_NOTU } from './mevzuatSss'
@@ -116,7 +115,6 @@ export default function GirisimcilereOzelPage() {
         </p>
       </div>
 
-      <DealerFilm locale="tr" />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div className="p-6 border border-foreground/10 rounded-2xl bg-background">
