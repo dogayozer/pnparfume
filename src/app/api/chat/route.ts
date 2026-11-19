@@ -116,7 +116,11 @@ export async function POST(req: Request) {
 
           if (n8nRes.ok) {
             const data = await n8nRes.json().catch(() => null)
-            const answer = typeof data?.text === 'string' ? data.text.trim() : ''
+            // Web sohbeti düz metin gösterir: n8n'den gelen WhatsApp/markdown vurgularını (*...*, **...**) temizle.
+            const answer = (typeof data?.text === 'string' ? data.text : '')
+              .replace(/\*\*(.+?)\*\*/gs, '$1')
+              .replace(/(^|[\s(])\*([^*\n]+?)\*(?=[\s).,!?:;]|$)/g, '$1$2')
+              .trim()
             if (answer) {
               const totalMs = Date.now() - t0
               console.log(`[AURA n8n] ${totalMs}ms | handoff=${!!data?.handoffRequired}`)
