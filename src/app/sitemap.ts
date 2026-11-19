@@ -9,6 +9,7 @@ const SITE = 'https://pnparfume.com'
 const GROUPS: Record<string, { tr?: string; en: string; ar: string }> = {
   brands: { tr: '/kurumsal/markalarimiz', en: '/en/brands', ar: '/ar/brands' },
   distributor: { tr: '/kurumsal/distributorluk', en: '/en/distributor', ar: '/ar/distributor' },
+  dealership: { tr: '/kurumsal/bayilik', en: '/en/dealership', ar: '/ar/dealership' },
   entrepreneurs: { tr: '/kurumsal/girisimcilere-ozel', en: '/en/entrepreneurs', ar: '/ar/entrepreneurs' },
   about: { tr: '/kurumsal/kurumsal-kimlik', en: '/en/about', ar: '/ar/about' },
   contact: { tr: '/kurumsal/iletisim', en: '/en/contact', ar: '/ar/contact' },
@@ -74,6 +75,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/kurumsal/kurumsal-kimlik',
     '/kurumsal/markalarimiz',
     '/kurumsal/distributorluk',
+    '/kurumsal/bayilik',
     '/kendi-parfum-markani-yarat',
     '/mix/b2b',
     '/mix/discovery-set',
@@ -84,6 +86,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/en/brands',
     '/en/entrepreneurs',
     '/en/distributor',
+    '/en/dealership',
     '/en/about',
     '/en/contact',
     '/ar/wholesale',
@@ -91,6 +94,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/ar/brands',
     '/ar/entrepreneurs',
     '/ar/distributor',
+    '/ar/dealership',
     '/ar/about',
     '/ar/contact',
     '/ar/gulf-market-strategy'
