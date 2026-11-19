@@ -7,7 +7,7 @@ import { Sparkles, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
 import { useDealer } from '@/contexts/DealerContext'
 import Image from 'next/image'
-import { useT, useLang } from '@/lib/i18n'
+import { useT, useLang, useMoney } from '@/lib/i18n'
 import { translateVocab } from '@/lib/vocab'
 
 export interface ProductProps {
@@ -25,6 +25,7 @@ export interface ProductProps {
 export default function ProductCard({ product }: { product: ProductProps }) {
   const { addToCart } = useCart()
   const t = useT()
+  const money = useMoney()
   const lang = useLang()
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -123,9 +124,9 @@ export default function ProductCard({ product }: { product: ProductProps }) {
           <div className="mt-auto pt-3 md:pt-4 flex flex-col gap-2 md:gap-3">
             {shownPrice && shownPrice > 0 ? (
               <span className="flex items-baseline gap-2">
-                <span className="text-base md:text-lg font-bold text-foreground">{shownPrice.toLocaleString('tr-TR')} ₺</span>
+                <span className="text-base md:text-lg font-bold text-foreground">{money(shownPrice)}</span>
                 {hasDiscount && (
-                  <span className="text-xs md:text-sm text-foreground/40 line-through">{(strikePrice as number).toLocaleString('tr-TR')} ₺</span>
+                  <span className="text-xs md:text-sm text-foreground/40 line-through">{money(strikePrice as number)}</span>
                 )}
               </span>
             ) : (

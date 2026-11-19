@@ -158,7 +158,7 @@ export async function POST(req: Request) {
           <p><strong>Ülke:</strong> ${esc(customer.country)}</p>
           <p><strong>Adres:</strong><br>${esc(customer.address)}</p>
           <p><strong>Ürünler:</strong><br>${lines}</p>
-          <p><strong>Ürün toplamı (kargo hariç):</strong> ${esc(totalAmount)} TL</p>
+          <p><strong>Ürün toplamı (kargo hariç):</strong> ${esc(totalAmount)} TL (müşteriye gösterilen: ≈ $${Math.round(totalAmount / 50)}, kur 1 USD = 50 TL)</p>
           <p><strong>Yapılacak:</strong> kargo ücretini belirleyip müşteriye e-postayla havale bilgileriyle bildirin. Form dili: ${esc(locale)}</p>
         `,
       })

@@ -5,10 +5,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Minus, Plus, ShoppingBag, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import PerksBanner from '@/components/PerksBanner'
-import { useT } from '@/lib/i18n'
+import { useT, useMoney } from '@/lib/i18n'
 
 export default function CartModal() {
   const t = useT()
+  const money = useMoney()
   const { isCartOpen, setIsCartOpen, items, removeFromCart, addToCart, totalAmount, clearCart } = useCart()
   const [couponCode, setCouponCode] = useState('')
   const [discount, setDiscount] = useState(0)
@@ -97,7 +98,7 @@ export default function CartModal() {
                           <p className="text-sm text-foreground/50 line-clamp-1">{item.name}</p>
                         </div>
                         <div className="flex items-center justify-between mt-4">
-                          <span className="font-medium">₺{item.price * item.quantity}</span>
+                          <span className="font-medium">{money(item.price * item.quantity)}</span>
                           <div className="flex items-center gap-3 bg-foreground/5 rounded-full px-3 py-1">
                             <button 
                               onClick={() => {
@@ -149,17 +150,17 @@ export default function CartModal() {
                   <div className="space-y-2 mb-6">
                     <div className="flex justify-between text-foreground/60">
                       <span>{t("Ara Toplam", "Subtotal", "المجموع الفرعي")}</span>
-                      <span>₺{totalAmount}</span>
+                      <span>{money(totalAmount)}</span>
                     </div>
                     {discount > 0 && (
                       <div className="flex justify-between text-accent-rose font-medium">
                         <span>{t('İndirim', 'Discount', 'خصم')} (%{discount})</span>
-                        <span>-₺{(totalAmount * discount / 100).toFixed(2)}</span>
+                        <span>-{money(totalAmount * discount / 100)}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-lg font-medium pt-2 border-t border-foreground/10">
                       <span>{t("Toplam", "Total", "الإجمالي")}</span>
-                      <span>₺{finalAmount.toFixed(2)}</span>
+                      <span>{money(finalAmount)}</span>
                     </div>
                   </div>
 

@@ -7,12 +7,13 @@ import { ArrowLeft, Trash2, Tag, Truck, Info, Users, ShieldCheck, Check, Clock, 
 import { useCart } from '@/contexts/CartContext'
 import { useDealer } from '@/contexts/DealerContext'
 import { SECOND_ITEM_DISCOUNT } from '@/lib/pricingConstants'
-import { useT, useLang } from '@/lib/i18n'
+import { useT, useLang, useMoney, USD_RATE } from '@/lib/i18n'
 
 export default function CartPage() {
   const { items, removeFromCart, totalAmount, clearCart, syncRetailPrices } = useCart()
   const { isDealer } = useDealer()
   const t = useT()
+  const money = useMoney()
   const lang = useLang()
   const [intlOrderNo, setIntlOrderNo] = useState<string | null>(null)
   const [foreignMode, setForeignMode] = useState(false)
@@ -357,7 +358,7 @@ export default function CartPage() {
                   )}
                   
                   <div className="mt-auto pt-2">
-                    <span className="text-lg font-light text-foreground">{item.price * item.quantity} TL</span>
+                    <span className="text-lg font-light text-foreground">{money(item.price * item.quantity)}</span>
                     <span className="text-xs text-foreground/40 ml-2">({item.quantity} {t("Adet", "pcs", "قطعة")})</span>
                   </div>
                 </div>
@@ -395,20 +396,20 @@ export default function CartPage() {
               <div className="space-y-4 text-sm font-light text-foreground/80 mb-6 border-b border-foreground/10 pb-6">
                 <div className="flex justify-between">
                   <span>{t("Ara Toplam", "Subtotal", "المجموع الفرعي")}</span>
-                  <span>{subtotal} TL</span>
+                  <span>{money(subtotal)}</span>
                 </div>
                 
                 {multiItemDiscount > 0 && (
                   <div className="flex justify-between text-accent-rose font-medium animate-in fade-in">
                     <span className="flex items-center gap-2"><Tag size={14} /> {t("Çoklu Alım İndirimi (2. Ürün)", "Multi-item Discount (2nd item)", "خصم الشراء المتعدد (المنتج الثاني)")}</span>
-                    <span>-{multiItemDiscount} TL</span>
+                    <span>-{money(multiItemDiscount)}</span>
                   </div>
                 )}
                 
                 {couponDiscount > 0 && (
                   <div className="flex justify-between text-accent-rose font-medium animate-in fade-in">
                     <span className="flex items-center gap-2"><Tag size={14} /> {t("Kupon", "Coupon", "قسيمة")} ({appliedCoupon?.code})</span>
-                    <span>-{couponDiscount} TL</span>
+                    <span>-{money(couponDiscount)}</span>
                   </div>
                 )}
 
@@ -424,7 +425,7 @@ export default function CartPage() {
                         <Truck size={14} /> {t("ÜCRETSİZ", "FREE", "مجاني")}
                       </span>
                     ) : (
-                      <span>{shippingFee} TL</span>
+                      <span>{money(shippingFee)}</span>
                     )}
                   </div>
                   {shippingFee === 0 && dynamicShipping.freeShippingEligible && !shippingDiscountApplied && (
@@ -501,7 +502,7 @@ export default function CartPage() {
               <div className="flex justify-between items-end mb-8">
                 <span className="text-lg font-medium text-foreground">{t("Toplam", "Total", "الإجمالي")}</span>
                 <div className="text-right">
-                  <span className="text-4xl font-light text-foreground">{total} TL</span>
+                  <span className="text-4xl font-light text-foreground">{money(total)}</span>
                 </div>
               </div>
 
@@ -718,7 +719,7 @@ export default function CartPage() {
                     <div className="p-3.5 bg-accent-gold/10 border border-accent-gold/30 rounded-xl text-xs text-foreground/80 leading-relaxed space-y-1.5">
                       <p><strong>{t("Yurt dışı siparişi:", "International order:", "طلب دولي:")}</strong> {t("Ödeme havale ile yapılır.", "Payment is made by bank transfer.", "يتم الدفع بالتحويل البنكي.")}</p>
                       <p>{t("Yurt dışı gönderilerde kargo ücreti talebiniz üzerine belirlenir ve tarafınıza en kısa sürede e-posta gönderilir.", "For shipments abroad, the shipping cost is determined on request and we will email you as soon as possible.", "في الشحنات الدولية تُحدَّد تكلفة الشحن بناءً على طلبك وسنرسل لك بريدًا إلكترونيًا في أقرب وقت.")}</p>
-                      <p className="text-foreground/50">{t("Bu siparişlerde kupon kodu uygulanmaz. Fiyatlar Türk Lirası (TRY) cinsindendir.", "Coupon codes do not apply to these orders. Prices are in Turkish Lira (TRY).", "لا تُطبَّق رموز الخصم على هذه الطلبات. الأسعار بالليرة التركية (TRY).")}</p>
+                      <p className="text-foreground/50">{t("Bu siparişlerde kupon kodu uygulanmaz. Fiyatlar Türk Lirası (TRY) cinsindendir.", `Coupon codes do not apply to these orders. Prices are shown in US dollars (1 USD = ${USD_RATE} TL).`, `لا تُطبَّق رموز الخصم على هذه الطلبات. الأسعار بالدولار الأمريكي (1 دولار = ${USD_RATE} ليرة).`)}</p>
                     </div>
                   )}
 
@@ -752,7 +753,7 @@ export default function CartPage() {
                       disabled={isSubmitting}
                       className="w-full bg-accent-gold text-background py-4 uppercase tracking-widest text-sm font-medium rounded-lg hover:bg-accent-gold/90 transition-colors disabled:opacity-50"
                     >
-                      {isSubmitting ? t("Hazırlanıyor...", "Processing...", "جارٍ التحضير...") : isForeign ? t(`Siparişi Tamamla (${total} TL)`, `Place Order (${total} TRY)`, `إتمام الطلب (${total} ليرة)`) : t(`Ödemeye Geç (${total} TL)`, `Proceed to Payment (${total} TRY)`, `المتابعة إلى الدفع (${total} ليرة)`)}
+                      {isSubmitting ? t("Hazırlanıyor...", "Processing...", "جارٍ التحضير...") : isForeign ? t(`Siparişi Tamamla (${total} TL)`, `Place Order (${money(total)})`, `إتمام الطلب (${money(total)})`) : t(`Ödemeye Geç (${total} TL)`, `Proceed to Payment (${money(total)})`, `المتابعة إلى الدفع (${money(total)})`)}
                     </button>
                   </div>
                 </form>

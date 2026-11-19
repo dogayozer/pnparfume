@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { useT, useLang } from '@/lib/i18n'
+import { useT, useLang, Money } from '@/lib/i18n'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -200,8 +200,8 @@ export default function DiscoverySetPage() {
 
             <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
               <div className="text-right">
-                <div className="text-xs text-zinc-400 line-through">1.000 TL</div>
-                <div className="text-2xl font-serif font-bold text-amber-400">{BOX_PRICE} TL</div>
+                <div className="text-xs text-zinc-400 line-through"><Money tl={1000} /></div>
+                <div className="text-2xl font-serif font-bold text-amber-400"><Money tl={BOX_PRICE} /></div>
               </div>
 
               <button
@@ -349,7 +349,7 @@ export default function DiscoverySetPage() {
               {t("%100 Cashback Garantisi (Keşif Kutusu Aslında Bedava!)", "100% Cashback Guarantee (the Discovery Box is actually free!)", "ضمان استرداد 100% (صندوق الاكتشاف مجاني فعليًا!)")}
             </h4>
             <p className="text-xs md:text-sm text-zinc-300 leading-relaxed">
-              {lang === 'tr' ? (<>Keşif kutun teslim edildiğinde hesabına <b>690 TL değerinde VIP hediye kuponu</b> tanımlanır. Beğendiğin kokunun 50ml veya 100ml tam boyunu sipariş ederken bu kuponu kullanarak ödediğin tutarın tamamını fiyattan düşebilirsin.</>) : lang === 'ar' ? (<>عند تسليم صندوق الاكتشاف الخاص بك، تُضاف إلى حسابك <b>قسيمة هدية VIP بقيمة 690 ليرة</b>. يمكنك استخدامها عند طلب الحجم الكامل 50 مل أو 100 مل من العطر الذي أعجبك لخصم كامل المبلغ الذي دفعته من السعر.</>) : (<>When your discovery box is delivered, a <b>VIP gift coupon worth 690 TL</b> is added to your account. When you order the full 50 ml or 100 ml size of the scent you liked, you can use this coupon to deduct the entire amount you paid from the price.</>)}
+              {lang === 'tr' ? (<>Keşif kutun teslim edildiğinde hesabına <b>690 TL değerinde VIP hediye kuponu</b> tanımlanır. Beğendiğin kokunun 50ml veya 100ml tam boyunu sipariş ederken bu kuponu kullanarak ödediğin tutarın tamamını fiyattan düşebilirsin.</>) : lang === 'ar' ? (<>عند تسليم صندوق الاكتشاف الخاص بك، تُضاف إلى حسابك <b>قسيمة هدية VIP بقيمة <Money tl={690} /></b>. يمكنك استخدامها عند طلب الحجم الكامل 50 مل أو 100 مل من العطر الذي أعجبك لخصم كامل المبلغ الذي دفعته من السعر.</>) : (<>When your discovery box is delivered, a <b>VIP gift coupon worth <Money tl={690} /></b> is added to your account. When you order the full 50 ml or 100 ml size of the scent you liked, you can use this coupon to deduct the entire amount you paid from the price.</>)}
             </p>
           </div>
         </div>

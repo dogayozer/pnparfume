@@ -7,7 +7,7 @@ import ProductGallery from '@/components/ProductGallery'
 import ProductActions from '@/components/ProductActions'
 import ProductReviews from '@/components/ProductReviews'
 import ViewTracker from '@/components/ViewTracker'
-import { T } from '@/lib/i18n'
+import { T, Money } from '@/lib/i18n'
 import { V_, N_ } from '@/lib/vocab'
 import { LocalizedDescription } from '@/components/ProductI18n'
 
@@ -329,9 +329,9 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
                 <span className="uppercase"><V_ value={product.fragrance_family?.[0] || 'Özel Harman'} /></span>
               </span>
               <div className="flex items-center gap-3">
-                <span className="text-3xl md:text-4xl font-light text-foreground">{displayPrice.toLocaleString('tr-TR')} ₺</span>
+                <span className="text-3xl md:text-4xl font-light text-foreground"><Money tl={displayPrice} /></span>
                 {marketPrice && marketPrice > displayPrice && (
-                  <span className="text-lg md:text-xl text-foreground/40 line-through">{marketPrice.toLocaleString('tr-TR')} ₺</span>
+                  <span className="text-lg md:text-xl text-foreground/40 line-through"><Money tl={marketPrice} /></span>
                 )}
                 {displayPrice > 3000 && !isOutOfStock && (
                   <span className="text-xs md:text-sm bg-foreground/10 px-2 py-1 uppercase tracking-widest text-foreground/70"><T tr="Premium Kargo" en="Premium Shipping" ar="شحن مميز" /></span>

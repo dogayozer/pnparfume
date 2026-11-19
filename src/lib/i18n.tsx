@@ -73,3 +73,24 @@ export function T({ tr, en, ar }: { tr: string; en?: string; ar?: string }) {
   const t = useT()
   return <>{t(tr, en, ar)}</>
 }
+
+/** İngilizce/Arapça sitede gösterim kuru: 1 USD = 50 TL (yalnız gösterim; sipariş tutarı TL kalır). */
+export const USD_RATE = 50
+
+export function formatMoney(tl: number, lang: Lang): string {
+  if (lang === 'tr') return `${Number(tl).toLocaleString('tr-TR')} ₺`
+  const usd = Math.round(Number(tl) / USD_RATE)
+  return `$${usd.toLocaleString('en-US')}`
+}
+
+/** const money = useMoney(); money(599) → "599 ₺" (tr) / "$11.98" (en, ar) */
+export function useMoney() {
+  const lang = useLang()
+  return useCallback((tl: number) => formatMoney(tl, lang), [lang])
+}
+
+/** Sunucu bileşenlerinde: <Money tl={599} /> */
+export function Money({ tl }: { tl: number }) {
+  const money = useMoney()
+  return <>{money(tl)}</>
+}

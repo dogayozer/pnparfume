@@ -8,7 +8,7 @@ import { useCart } from '@/contexts/CartContext'
 import { useDealer } from '@/contexts/DealerContext'
 import { BOTTLE_OPTIONS, DEFAULT_BOTTLE_CODE, toSecureImageUrl } from '@/lib/bottleOptions'
 import { EXTRAIT_SURCHARGE } from '@/lib/pricingConstants'
-import { useT } from '@/lib/i18n'
+import { useT, useMoney } from '@/lib/i18n'
 
 interface ProductActionsProps {
   sku: string
@@ -26,6 +26,7 @@ const CUSTOMIZE_ENABLED = false
 export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfStock }: ProductActionsProps) {
   const router = useRouter()
   const t = useT()
+  const money = useMoney()
   const { addToCart, setIsCartOpen } = useCart()
   const { isDealer, dealerPrices } = useDealer()
   const dealerPrice = isDealer ? dealerPrices[sku] : undefined
@@ -96,7 +97,7 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
       {dealerPrice != null && (
         <div className="mb-4 flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border border-accent-gold/40 bg-accent-gold/10">
           <span className="text-xs font-bold uppercase tracking-widest text-accent-gold">{t('Bayi Fiyatınız', 'Your Dealer Price', 'سعر الوكيل الخاص بك')}</span>
-          <span className="text-2xl font-light text-foreground">{dealerPrice.toLocaleString('tr-TR')} ₺</span>
+          <span className="text-2xl font-light text-foreground">{money(dealerPrice)}</span>
         </div>
       )}
       <div className="flex flex-col sm:flex-row gap-4 relative mb-4">
@@ -187,7 +188,7 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
                         onClick={() => setConcentration('extrait')}
                         className={`flex items-center justify-between p-3 md:px-4 md:py-3 rounded-xl border text-sm md:text-base transition-colors ${concentration === 'extrait' ? 'border-accent-gold bg-accent-gold/10 text-foreground' : 'border-foreground/10 text-foreground/60 hover:border-foreground/30'}`}
                       >
-                        Esans (Extrait) +{EXTRAIT_SURCHARGE} ₺
+                        Esans (Extrait) +{money(EXTRAIT_SURCHARGE)}
                         {concentration === 'extrait' && <Check size={14} className="text-accent-gold" />}
                       </button>
                     </div>
@@ -205,7 +206,7 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
                         >
                           <img src={toSecureImageUrl(b.imageUrl)} alt={b.label} className="w-10 h-10 md:w-14 md:h-14 object-contain" />
                           <span className="text-xs md:text-sm font-medium text-foreground text-center leading-tight">{b.label}</span>
-                          <span className="text-[10px] md:text-xs text-foreground/50">{b.volumeMl}ml • {b.price} ₺</span>
+                          <span className="text-[10px] md:text-xs text-foreground/50">{b.volumeMl}ml • {money(b.price)}</span>
                           {bottleCode === b.code && <Check size={12} className="text-accent-gold mt-1" />}
                         </button>
                       ))}
@@ -216,7 +217,7 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
                   <div className="pt-4 border-t border-foreground/10 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                     <div className="flex-1">
                       <span className="text-xs text-foreground/50 uppercase tracking-widest block mb-1">Özel Konfigürasyon Fiyatı</span>
-                      <span className="text-2xl font-light text-foreground">{customPrice.toLocaleString('tr-TR')} ₺</span>
+                      <span className="text-2xl font-light text-foreground">{money(customPrice)}</span>
                     </div>
                     <button
                       onClick={handleAddCustomToCart}
@@ -238,11 +239,11 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
                           : 'border-foreground/10 text-foreground/30 cursor-not-allowed'
                       }`}
                     >
-                      <Wand2 size={16} /> Bu Ürünü Bana Mix&apos;le (+{300} TL&apos;den başlar)
+                      <Wand2 size={16} /> {t("Bu Ürünü Bana Mix'le", 'Mix This For Me', 'اخلط لي هذا العطر')} ({t("+300 TL'den başlar",`from +${money(300)}`, `ابتداءً من +${money(300)}`)})
                     </button>
                     {!canMix && (
                       <p className="text-xs text-foreground/40 mt-2 text-center">
-                        Mix seçeneği yalnızca &quot;Extrait&quot; konsantrasyonu seçildiğinde aktif olur.
+                        {t('Mix seçeneği yalnızca "Extrait" konsantrasyonu seçildiğinde aktif olur.', 'The Mix option is only available when the "Extrait" concentration is selected.', 'خيار الخلط متاح فقط عند اختيار تركيز "إكستريت".')}
                       </p>
                     )}
                   </div>
