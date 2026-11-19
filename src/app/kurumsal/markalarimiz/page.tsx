@@ -2,9 +2,9 @@ import BrandsShowcase, { BRANDS } from '@/components/brands/BrandsShowcase'
 import UmbrellaSeries from '@/components/brands/UmbrellaSeries'
 
 export const metadata = {
-  title: 'Markalarımız ve Ürün Serilerimiz: Pien, Pien Intense, Aşık, Pien Luxury, PN | PN Parfüm',
+  title: 'Markalarımız ve Ürün Serilerimiz: Pien, Pien Intense, Aşık, Pien Luxury, PN, PN Özel Seri | PN Parfüm',
   description:
-    '2002’den beri üretimdeyiz. Pien Serisi, Pien Intense, Aşık Parfüm, Pien Luxury ve PN: günlük kullanımdan davet ve lüks koleksiyonlara kadar parfüm markalarımız ve ürün serilerimiz.',
+    '2002’den beri üretimdeyiz. Pien Serisi, Pien Intense, Aşık Parfüm, Pien Luxury, PN ve PN Özel Seri: günlük kullanımdan davet ve lüks koleksiyonlara kadar parfüm markalarımız ve ürün serilerimiz.',
   alternates: {
     canonical: 'https://pnparfume.com/kurumsal/markalarimiz',
     languages: {
@@ -15,7 +15,7 @@ export const metadata = {
   openGraph: {
     title: 'Markalarımız ve Ürün Serilerimiz | PN Parfüm',
     description:
-      'Pien Serisi, Pien Intense, Aşık Parfüm, Pien Luxury ve PN: her ihtiyaca göre tasarlanmış beş parfüm markası ve serisi.',
+      'Pien Serisi, Pien Intense, Aşık Parfüm, Pien Luxury, PN ve PN Özel Seri: her ihtiyaca göre tasarlanmış altı parfüm markası ve serisi.',
     url: 'https://pnparfume.com/kurumsal/markalarimiz',
     siteName: 'PN Parfüm',
     locale: 'tr_TR',
@@ -26,7 +26,7 @@ export const metadata = {
 const faqs = [
   {
     q: 'PN Parfüm hangi markaları ve ürün serilerini üretiyor?',
-    a: 'Pien Serisi, Pien Intense, Aşık Parfüm, Pien Luxury ve PN olmak üzere beş marka ve ürün serisi üretiyoruz. Günlük kullanımdan davet ve özel günlere, ekonomik serilerden lüks koleksiyonlara kadar farklı ihtiyaçlara göre tasarlandılar.',
+    a: 'Pien Serisi, Pien Intense, Aşık Parfüm, Pien Luxury, PN ve PN Özel Seri olmak üzere altı marka ve ürün serisi üretiyoruz. Günlük kullanımdan davet ve özel günlere, ekonomik serilerden lüks koleksiyonlara kadar farklı ihtiyaçlara göre tasarlandılar.',
   },
   {
     q: 'Pien Serisi ile Pien Intense arasındaki fark nedir?',

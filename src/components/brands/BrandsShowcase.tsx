@@ -9,6 +9,7 @@ const IMAGES = [
   '/markalar/asik-parfum.jpg',
   '/markalar/pien-luxury.jpg',
   '/markalar/pn.jpg',
+  '/markalar/pn-ozel-seri.jpg',
 ] as const
 
 export const BRANDS = {
@@ -16,7 +17,7 @@ export const BRANDS = {
     eyebrow: "2002'den beri üretimdeyiz",
     heading: 'Markalarımız ve Ürün Serilerimiz',
     intro:
-      'Günlük kullanımdan davet ve özel günlere, ekonomik serilerden lüks koleksiyonlara kadar her ihtiyaca göre tasarladığımız beş marka ve seri.',
+      'Günlük kullanımdan davet ve özel günlere, ekonomik serilerden lüks koleksiyonlara kadar her ihtiyaca göre tasarladığımız altı marka ve seri.',
     cta: 'Koleksiyonu Keşfet',
     ctaHref: '/katalog',
     items: [
@@ -46,7 +47,7 @@ export const BRANDS = {
         tag: 'Lüks • 100 ml',
         chips: ['Çok yoğun esans', 'Özel esansiyel yağlar', '100 ml'],
         text: 'Çok yoğun esans ve çok özel esansiyel yağlarla üretilmiş, şık tasarımlı, 100 ml şişe hacmiyle lüks serisinde bir parfüm koleksiyonu.',
-        alt: 'Kırmızı ve altın Pien Luxury Perfume kutusu, gül yaprakları ve altın tozları arasında',
+        alt: 'Siyah ve altın Pien Luxury Perfume kutusu ile amber şişe, ud ağacı, baharatlar ve duman arasında',
       },
       {
         name: 'PN',
@@ -55,13 +56,20 @@ export const BRANDS = {
         text: 'Günlük kullanım için tasarlanmış, 1. sınıf esansa sahip; kendi içinde özel serileri ve özel tasarım serileri de olan bir koleksiyon.',
         alt: 'Pembe PN Parfume NUDE parfüm kutusu, gül yaprakları ve ipek kurdele arasında',
       },
+      {
+        name: 'PN Özel Seri',
+        tag: 'Özel Seri • 100 ml',
+        chips: ['Özel tasarım şişe', 'PN çatısı altında', '100 ml'],
+        text: 'PN çatısı altında, özel tasarlanmış amber şişesiyle sunulan, 100 ml hacimli özel seri bir parfüm koleksiyonu.',
+        alt: 'Altın kapaklı amber PN Parfume şişesi, ud ağacı parçaları, gül yaprakları ve duman arasında',
+      },
     ],
   },
   en: {
     eyebrow: 'Producing since 2002',
     heading: 'Our Brands and Product Lines',
     intro:
-      'Five brands and lines designed for every need, from everyday wear to evenings and special occasions, and from affordable lines to luxury collections.',
+      'Six brands and lines designed for every need, from everyday wear to evenings and special occasions, and from affordable lines to luxury collections.',
     cta: 'Wholesale & Private Label',
     ctaHref: '/en/private-label',
     items: [
@@ -91,7 +99,7 @@ export const BRANDS = {
         tag: 'Luxury • 100 ml',
         chips: ['Very high concentration', 'Special essential oils', '100 ml'],
         text: 'A luxury perfume collection in an elegant 100 ml bottle, made with a very high fragrance concentration and very special essential oils.',
-        alt: 'Red and gold Pien Luxury Perfume box among rose petals and gold dust',
+        alt: 'Black and gold Pien Luxury Perfume box with an amber bottle among oud wood, spices and smoke',
       },
       {
         name: 'PN',
@@ -99,6 +107,13 @@ export const BRANDS = {
         chips: ['First-class essence', 'Special series', 'Special design series'],
         text: 'A collection designed for everyday use with first-class essence, including its own special series and special design series.',
         alt: 'Pink PN Parfume NUDE perfume box among rose petals and silk ribbon',
+      },
+      {
+        name: 'PN Special Series',
+        tag: 'Special Series • 100 ml',
+        chips: ['Custom-designed bottle', 'Under the PN umbrella', '100 ml'],
+        text: 'A special-series perfume collection under the PN umbrella, presented in a custom-designed amber bottle with a 100 ml volume.',
+        alt: 'Amber PN Parfume bottle with a gold cap among oud wood pieces, rose petals and smoke',
       },
     ],
   },

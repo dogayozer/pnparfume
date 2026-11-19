@@ -3,9 +3,9 @@ import BrandsShowcase, { BRANDS } from '@/components/brands/BrandsShowcase'
 import UmbrellaSeries from '@/components/brands/UmbrellaSeries'
 
 export const metadata = {
-  title: 'Our Perfume Brands: Pien, Pien Intense, Aşık, Pien Luxury, PN | PN Parfüm',
+  title: 'Our Perfume Brands: Pien, Pien Intense, Aşık, Pien Luxury, PN, PN Special Series | PN Parfüm',
   description:
-    'Producing since 2002. Pien Series, Pien Intense, Aşık Parfüm, Pien Luxury and PN: perfume brands and product lines from everyday wear to special occasions and luxury collections.',
+    'Producing since 2002. Pien Series, Pien Intense, Aşık Parfüm, Pien Luxury, PN and PN Special Series: perfume brands and product lines from everyday wear to special occasions and luxury collections.',
   keywords: [
     'Turkish perfume brands', 'Pien perfume', 'Pien Intense', 'Pien Luxury', 'Aşık Parfüm', 'PN Parfüm',
     'perfume manufacturer Turkey', 'affordable perfume', 'luxury perfume 100 ml',
@@ -20,7 +20,7 @@ export const metadata = {
   openGraph: {
     title: 'Our Perfume Brands and Product Lines | PN Parfüm',
     description:
-      'Pien Series, Pien Intense, Aşık Parfüm, Pien Luxury and PN: five perfume brands and lines for every need.',
+      'Pien Series, Pien Intense, Aşık Parfüm, Pien Luxury, PN and PN Special Series: six perfume brands and lines for every need.',
     url: 'https://pnparfume.com/en/brands',
     siteName: 'PN Parfüm',
     locale: 'en_US',
@@ -31,7 +31,7 @@ export const metadata = {
 const faqs = [
   {
     q: 'Which perfume brands and product lines does PN Parfüm produce?',
-    a: 'We produce five brands and lines: Pien Series, Pien Intense, Aşık Parfüm, Pien Luxury and PN. They are designed for different needs, from everyday wear to evenings and special occasions, and from affordable lines to luxury collections.',
+    a: 'We produce six brands and lines: Pien Series, Pien Intense, Aşık Parfüm, Pien Luxury, PN and PN Special Series. They are designed for different needs, from everyday wear to evenings and special occasions, and from affordable lines to luxury collections.',
   },
   {
     q: 'What is the difference between Pien Series and Pien Intense?',
