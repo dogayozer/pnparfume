@@ -1,21 +1,27 @@
 import Link from 'next/link'
 import B2BLeadForm from '@/components/b2b/B2BLeadForm'
+import BrandPartnership from '@/components/b2b/BrandPartnership'
 import { Lightbulb, TestTube, Factory, PackageCheck, Truck, ChevronDown } from 'lucide-react'
 
 export const metadata = {
-  title: 'Private Label Perfume Manufacturer Turkey | PN Parfüm',
-  description: 'Create your own perfume brand with PN Parfüm — a Turkish private label fragrance manufacturer. From concept to sample to production to your shelf.',
+  title: 'Private Label Perfume Manufacturer Turkey | PN Parfüm (Pien Parfum)',
+  description: 'Producing since 2002. Create your own perfume brand with PN Parfüm: 400 fragrance options, trademark registration guidance, logo, bottle, box and label design, and private label manufacturing in Turkey.',
   keywords: [
     'private label perfume manufacturer', 'contract manufacturing perfume', 'create your own perfume brand',
-    'perfume OEM Turkey', 'fragrance contract manufacturer', 'custom perfume manufacturer Turkey', 'white label perfume'
+    'perfume OEM Turkey', 'fragrance contract manufacturer', 'custom perfume manufacturer Turkey', 'white label perfume',
+    'perfume logo design', 'perfume label design', 'perfume box design', 'perfume trademark registration'
   ],
   alternates: {
     canonical: 'https://pnparfume.com/en/private-label',
-    languages: { 'en': 'https://pnparfume.com/en/private-label', 'ar': 'https://pnparfume.com/ar/private-label' }
+    languages: {
+      'en': 'https://pnparfume.com/en/private-label',
+      'ar': 'https://pnparfume.com/ar/private-label',
+      'tr': 'https://pnparfume.com/kurumsal/girisimcilere-ozel',
+    }
   },
   openGraph: {
     title: 'Private Label Perfume Manufacturer Turkey | PN Parfüm',
-    description: 'Create your own perfume brand — a Turkish private label fragrance manufacturer.',
+    description: 'Create your own perfume brand: fragrance, trademark guidance, logo, bottle, box and label design, produced in Turkey since 2002.',
     url: 'https://pnparfume.com/en/private-label',
     siteName: 'PN Parfüm',
     locale: 'en_US',
@@ -30,7 +36,19 @@ const faqs = [
   },
   {
     q: 'Can I use my own custom formula, or must I choose from your catalog?',
-    a: 'Both options are available — start from our 338+ fragrance library to save time and cost, or commission a fully custom scent based on your brief.'
+    a: 'Both options are available — choose from our 400 different fragrance options to save time and cost, or commission a fully custom scent based on your brief.'
+  },
+  {
+    q: 'Do you help with trademark registration, logo and label design?',
+    a: 'Yes. We guide you step by step through trademark registration, from application to follow-up, and we design your logo, colour identity and bottle labels together with you. The outcome of a trademark application depends on the relevant authority.'
+  },
+  {
+    q: 'Can you help me choose bottles and boxes?',
+    a: 'Yes. Through our bottle manufacturer partners we offer a wide range of models and advise on volumes that fit market trends, and through our partner printers we help you get the most competitive price for your box design.'
+  },
+  {
+    q: 'How long has PN Parfüm been manufacturing perfume?',
+    a: 'PN Parfüm (Pien Parfum) has been producing perfume since 2002. With 24 years of experience and our own established brands, we help simplify many registration steps when you build a collection under your own brand.'
   },
   {
     q: 'What is the minimum order quantity for private label production?',
@@ -52,6 +70,22 @@ const faqJsonLd = {
   }))
 }
 
+const serviceJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  serviceType: 'Private label perfume manufacturing and brand building',
+  name: 'Create Your Own Perfume Brand',
+  inLanguage: 'en',
+  areaServed: 'Worldwide',
+  provider: {
+    '@type': 'Organization',
+    name: 'PN Parfüm',
+    alternateName: 'Pien Parfum',
+    url: 'https://pnparfume.com',
+    foundingDate: '2002',
+  },
+}
+
 const steps = [
   { icon: Lightbulb, title: 'Concept', desc: 'Tell us your brand vision — fragrance family, mood, target audience.' },
   { icon: TestTube, title: 'Sample', desc: 'We prepare samples based on our existing fragrance library or a custom brief.' },
@@ -67,6 +101,10 @@ export default function PrivateLabelPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceJsonLd) }}
+      />
 
       <div className="max-w-2xl mb-16">
         <span className="text-xs font-medium uppercase tracking-widest text-accent-gold">Private Label</span>
@@ -76,6 +114,10 @@ export default function PrivateLabelPage() {
         <p className="text-foreground/70 leading-relaxed text-lg">
           PN Parfüm produces fragrances at our own facility in Silivri, İstanbul, Turkey. Under our private label program, you bring the brand — we bring the formulation, production and packaging.
         </p>
+      </div>
+
+      <div className="mb-16">
+        <BrandPartnership locale="en" />
       </div>
 
       <div className="mb-16">
