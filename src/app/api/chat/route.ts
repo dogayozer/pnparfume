@@ -4,6 +4,7 @@ import { streamText, tool } from 'ai'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { requireCustomer } from '@/lib/customerAuth'
+import { createHash } from 'crypto'
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30
@@ -67,6 +68,73 @@ export async function POST(req: Request) {
         })
       } catch (e) {
         console.error('Customer lookup error:', e)
+      }
+    }
+
+    // 1.7 n8n Aura (WhatsApp hattıyla AYNI kurallar, AYNI bilgi bankası ve katalog).
+    // N8N_WEB_AURA_URL tanımlıysa son kullanıcı mesajı n8n'e gider; yanıt gelirse aynı
+    // NDJSON biçiminde (token + done) arayüze verilir. URL yoksa, zaman aşımı olursa
+    // veya yanıt başarısızsa AŞAĞIDAKİ yerel akış (streamText) aynen çalışır: site kesintisiz.
+    const n8nUrl = process.env.N8N_WEB_AURA_URL
+    if (n8nUrl) {
+      try {
+        const lastUser = [...(messages || [])].reverse().find((m: any) => m?.role === 'user')
+        const lastUserMsg = (typeof lastUser?.content === 'string'
+          ? lastUser.content
+          : Array.isArray(lastUser?.content)
+            ? lastUser.content.map((p: any) => p?.text || '').join(' ')
+            : ''
+        ).trim()
+
+        if (lastUserMsg) {
+          const ua = req.headers.get('user-agent') || ''
+          const anonId = 'anon_' + createHash('sha1').update(ip + '|' + ua).digest('hex').slice(0, 16)
+          const sessionId = customer && userId ? `cust_${userId}` : anonId
+
+          const n8nRes = await fetch(n8nUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sessionId,
+              text: lastUserMsg.slice(0, 2000),
+              senderName: customer?.name || 'Ziyaretçi',
+              // Yalnızca doğrulanmış girişte; e-posta/adres/telefon gönderilmez.
+              customer: customer
+                ? {
+                    name: customer.name,
+                    customer_type: customer.customer_type,
+                    is_dealer: customer.is_dealer,
+                    acquisition_source: customer.acquisition_source,
+                    referral_code: customer.referral_code,
+                    wallet_balance: customer.wallet_balance,
+                  }
+                : null,
+            }),
+            signal: AbortSignal.timeout(15000),
+          })
+
+          if (n8nRes.ok) {
+            const data = await n8nRes.json().catch(() => null)
+            const answer = typeof data?.text === 'string' ? data.text.trim() : ''
+            if (answer) {
+              const totalMs = Date.now() - t0
+              console.log(`[AURA n8n] ${totalMs}ms | handoff=${!!data?.handoffRequired}`)
+              const body =
+                JSON.stringify({ type: 'token', value: answer }) + '\n' +
+                JSON.stringify({ type: 'done', toolResults: [], timing: { configMs, ttftMs: totalMs, totalMs }, source: 'n8n' }) + '\n'
+              return new Response(body, {
+                headers: {
+                  'Content-Type': 'text/event-stream; charset=utf-8',
+                  'Cache-Control': 'no-cache, no-transform',
+                },
+              })
+            }
+          } else {
+            console.error('[AURA n8n] HTTP', n8nRes.status, '- yerel akışa dönülüyor')
+          }
+        }
+      } catch (e) {
+        console.error('[AURA n8n] hata/zaman aşımı - yerel akışa dönülüyor:', e)
       }
     }
 
