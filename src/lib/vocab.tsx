@@ -96,4 +96,16 @@ export function V_({ value }: { value: string | null | undefined }) {
   return <>{translateVocab(value, lang)}</>
 }
 
+/** Ürün başlığı: kelime kelime çevirir (sıra değiştirmez), tanınmayan sözcükler olduğu gibi kalır. */
+export function translateName(value: string | null | undefined, lang: Lang): string {
+  if (!value) return ''
+  if (lang === 'tr') return value
+  return value.split(' ').map((w) => translatePhrase(w, lang)).join(' ')
+}
+
+export function N_({ value }: { value: string | null | undefined }) {
+  const lang = useLang()
+  return <>{translateName(value, lang)}</>
+}
+
 export const Vocab = V_

@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useT } from '@/lib/i18n'
+import { useT, useLang } from '@/lib/i18n'
+import { translateName } from '@/lib/vocab'
 import { Star, MessageSquare, CheckCircle2, User, Send, ThumbsUp, Sparkles, X } from 'lucide-react'
 
 type ReviewItem = {
@@ -12,8 +13,10 @@ type ReviewItem = {
   createdAt: string
 }
 
-export default function ProductReviews({ sku, productName }: { sku: string; productName: string }) {
+export default function ProductReviews({ sku, productName: rawName }: { sku: string; productName: string }) {
   const t = useT()
+  const lang = useLang()
+  const productName = translateName(rawName, lang)
   const [reviews, setReviews] = useState<ReviewItem[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [avgRating, setAvgRating] = useState(5.0)
@@ -108,14 +111,14 @@ export default function ProductReviews({ sku, productName }: { sku: string; prod
               ))}
             </div>
             <span className="font-bold text-sm text-foreground">{avgRating} / 5</span>
-            <span className="text-sm text-foreground/40 font-light">({totalCount} Yorum)</span>
+            <span className="text-sm text-foreground/40 font-light">({totalCount} {t('Yorum','Reviews','تعليق')})</span>
           </div>
 
           <button
             onClick={() => setIsModalOpen(true)}
             className="px-5 py-2.5 bg-foreground text-background hover:bg-accent-gold transition-colors rounded-xl text-sm font-bold uppercase tracking-wider shadow-sm"
           >
-            + Yorum Yaz
+            {t('+ Yorum Yaz','+ Write a Review','+ اكتب تعليقًا')}
           </button>
         </div>
       </div>
@@ -134,7 +137,7 @@ export default function ProductReviews({ sku, productName }: { sku: string; prod
             onClick={() => setIsModalOpen(true)}
             className="px-6 py-2 bg-foreground text-background hover:bg-accent-gold transition-colors rounded-xl text-sm font-bold uppercase tracking-wider"
           >
-            Yorum Yap
+            {t('Yorum Yap','Write a Review','اكتب تعليقًا')}
           </button>
         </div>
       ) : (
@@ -246,7 +249,7 @@ export default function ProductReviews({ sku, productName }: { sku: string; prod
                 {/* Comment */}
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-foreground/70 mb-1">
-                    Yorumunuz & Deneyiminiz
+                    {t('Yorumunuz & Deneyiminiz','Your Review & Experience','تعليقك وتجربتك')}
                   </label>
                   <textarea
                     required

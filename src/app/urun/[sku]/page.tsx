@@ -8,7 +8,7 @@ import ProductActions from '@/components/ProductActions'
 import ProductReviews from '@/components/ProductReviews'
 import ViewTracker from '@/components/ViewTracker'
 import { T } from '@/lib/i18n'
-import { V_ } from '@/lib/vocab'
+import { V_, N_ } from '@/lib/vocab'
 import { LocalizedDescription } from '@/components/ProductI18n'
 
 export const revalidate = 86400 // Cache for 24 hours (super fast loading)
@@ -343,7 +343,7 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
             </h1>
             {product.seo_name && (
               <h2 className="text-lg md:text-xl text-foreground/70 mt-1 md:mt-2 font-medium leading-relaxed">
-                {product.seo_name}
+                <N_ value={product.seo_name} />
               </h2>
             )}
             <p className="text-xs md:text-sm text-foreground/40 mt-1 md:mt-2 uppercase tracking-widest">
