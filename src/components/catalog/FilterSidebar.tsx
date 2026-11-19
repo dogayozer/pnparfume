@@ -2,6 +2,8 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useT, useLang } from '@/lib/i18n'
+import { translateVocab } from '@/lib/vocab'
 
 const FILTERS = {
   seasons: ['Yaz', 'Kış / Sonbahar', 'Dört Mevsim'],
@@ -14,6 +16,8 @@ const FILTERS = {
 export default function FilterSidebar() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const t = useT()
+  const lang = useLang()
 
   // Bu sayfa server component olduğu için her filtre değişimi gerçek bir sunucu
   // round-trip'i gerektiriyor (Prisma sorgusu). O round-trip tamamlanana kadar hem
@@ -58,7 +62,7 @@ export default function FilterSidebar() {
 
     return (
       <div className="mb-6">
-        <h3 className="text-sm font-medium tracking-widest text-foreground/50 uppercase mb-3">{title}</h3>
+        <h3 className="text-sm font-medium tracking-widest rtl:tracking-normal text-foreground/50 uppercase mb-3">{title}</h3>
         <div className="space-y-2">
           {options.map((option) => (
             <label key={option} className="flex items-center space-x-3 cursor-pointer group">
@@ -69,7 +73,7 @@ export default function FilterSidebar() {
                 className="w-4 h-4 rounded border-foreground/20 text-accent-gold focus:ring-accent-gold focus:ring-offset-background bg-transparent"
               />
               <span className="text-sm text-foreground/80 group-hover:text-foreground transition-colors">
-                {option}
+                {translateVocab(option, lang)}
               </span>
             </label>
           ))}
@@ -81,19 +85,19 @@ export default function FilterSidebar() {
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-medium">Filtreler</h2>
+        <h2 className="text-lg font-medium">{t('Filtreler', 'Filters', 'التصفية')}</h2>
         {searchParams.toString() !== '' && (
           <button onClick={clearFilters} className="text-xs text-accent-rose hover:underline">
-            Temizle
+            {t('Temizle', 'Clear', 'مسح')}
           </button>
         )}
       </div>
 
-      {renderFilterGroup('Cinsiyet', 'gender', FILTERS.genders)}
-      {renderFilterGroup('Mevsim', 'season', FILTERS.seasons)}
-      {renderFilterGroup('Koku Ailesi', 'family', FILTERS.families)}
-      {renderFilterGroup('Karakter', 'persona', FILTERS.personas)}
-      {renderFilterGroup('Etkinlik Mekan', 'occasion', FILTERS.occasions)}
+      {renderFilterGroup(t('Cinsiyet', 'Gender', 'الجنس'), 'gender', FILTERS.genders)}
+      {renderFilterGroup(t('Mevsim', 'Season', 'الموسم'), 'season', FILTERS.seasons)}
+      {renderFilterGroup(t('Koku Ailesi', 'Fragrance Family', 'عائلة العطر'), 'family', FILTERS.families)}
+      {renderFilterGroup(t('Karakter', 'Character', 'الشخصية'), 'persona', FILTERS.personas)}
+      {renderFilterGroup(t('Etkinlik Mekan', 'Occasion', 'المناسبة'), 'occasion', FILTERS.occasions)}
       
     </div>
   )

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
+import { useLang } from '@/lib/i18n'
 
 const subMessages = [
   "Girdiğiniz odada bırakacağınız iz, sadece bir koku değil; karakterinizin, otoritenizin ve çekiciliğinizin sessiz bir manifestosudur.",
@@ -13,7 +14,24 @@ const subMessages = [
   "Sen farklısın. Neden parfümün aynı olsun?"
 ]
 
+const subMessagesEn = [
+  "The mark you leave in the room you enter is not just a scent; it is the silent manifesto of your character, authority and charm.",
+  "A fragrance speaks without saying a word. What remains after you leave the room is not your name, but the feeling you left behind.",
+  "Perfume is not an accessory, it is a stance. With every spray you declare not who you are, but who you have decided to become.",
+  "Some things are noticed without being seen. Your scent is the first thing people feel about you before they know you — quiet, yet unforgettable.",
+  "You are different. Why should your perfume be the same?"
+]
+const subMessagesAr = [
+  "الأثر الذي تتركه في الغرفة التي تدخلها ليس مجرد رائحة؛ بل هو بيان صامت عن شخصيتك وهيبتك وجاذبيتك.",
+  "العطر يتكلم دون أن ينطق بكلمة. ما يبقى بعد أن تغادر الغرفة ليس اسمك، بل الشعور الذي تركته.",
+  "العطر ليس إكسسوارًا، بل موقف. مع كل رشّة تعلن لا من أنت، بل من قررت أن تصبح.",
+  "بعض الأشياء تُلاحَظ دون أن تُرى. عطرك هو أول ما يشعر به الناس تجاهك قبل أن يعرفوك — هادئ لكنه لا يُنسى.",
+  "أنت مختلف. فلماذا يكون عطرك مثل غيره؟"
+]
+
 export default function HomeHero() {
+  const lang = useLang()
+  const messages = lang === 'en' ? subMessagesEn : lang === 'ar' ? subMessagesAr : subMessages
   const [messageIndex, setMessageIndex] = useState(0)
 
   useEffect(() => {
@@ -58,7 +76,7 @@ export default function HomeHero() {
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="text-4xl md:text-5xl font-light tracking-tight text-foreground"
           >
-            Kokunuz <span className="font-medium text-accent-rose">imzanızdır.</span>
+            {lang === 'en' ? <>Your scent is <span className="font-medium text-accent-rose">your signature.</span></> : lang === 'ar' ? <>عطرك هو <span className="font-medium text-accent-rose">توقيعك.</span></> : <>Kokunuz <span className="font-medium text-accent-rose">imzanızdır.</span></>}
           </motion.h1>
           
           <div className="min-h-[100px] sm:min-h-[80px] flex items-center justify-center">
@@ -71,7 +89,7 @@ export default function HomeHero() {
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="text-sm md:text-base text-foreground/70 font-light max-w-2xl mx-auto leading-relaxed"
               >
-                {subMessages[messageIndex]}
+                {messages[messageIndex]}
               </motion.p>
             </AnimatePresence>
           </div>

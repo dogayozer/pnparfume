@@ -1,64 +1,41 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { trToLang } from '@/lib/pagePairs'
 
-// B2B ihracat hedefi ilk-katman Balkan pazarları (bkz. claudeparfumithalat.md,
-// Bölüm 1.2 — Katman 1). Ülke kodu -> hedef sayfa. Şimdilik hepsi İngilizce
-// wholesale sayfasına gidiyor (yerel dil çevirisi henüz yok); bir ülkeye özel
-// çeviri hazır olduğunda burada sadece o ülkenin değerini değiştirmek yeterli
-// olacak şekilde tasarlandı.
-const TARGET_MARKET_REDIRECT: Record<string, string> = {
-  MK: '/en/wholesale', // Kuzey Makedonya
-  XK: '/en/wholesale', // Kosova (ISO'da resmi kod yok, Vercel/yaygın kullanım "XK")
-  AL: '/en/wholesale', // Arnavutluk
-  BA: '/en/wholesale', // Bosna Hersek
-  RS: '/en/wholesale', // Sırbistan
-  ME: '/en/wholesale', // Karadağ
-  // Körfez ülkeleri — Arapça distribütörlük sayfasına yönlendirilir.
-  SA: '/ar/wholesale', // Suudi Arabistan
-  AE: '/ar/wholesale', // Birleşik Arap Emirlikleri
-  QA: '/ar/wholesale', // Katar
-  KW: '/ar/wholesale', // Kuveyt
-  BH: '/ar/wholesale', // Bahreyn
-  OM: '/ar/wholesale', // Umman
-}
-
-const REDIRECT_COOKIE = 'pn_market_redirected'
+// Dil: mağaza adresleri değişmez, dil "pn_lang" çerezi ile seçilir (tr | en | ar).
+// Çerez yoksa ve ziyaretçi Türkiye dışındaysa (Vercel'in x-vercel-ip-country başlığı)
+// ilk girişte çerez "en" yazılır; kullanıcı dil menüsünden değiştirirse çerez onu hatırlar.
+// Türkçe kurumsal bir sayfa (örn. /kurumsal/bayilik) İngilizce/Arapça seçiliyken açılırsa,
+// o sayfanın /en veya /ar karşılığına yönlendirilir.
+// Arama motoru botlarına dokunulmaz (Türkçe içerik indekslenmeye devam eder).
+// Yerelde (Vercel dışı) ülke başlığı gelmez: varsayılan Türkçe kalır.
+const LANG_COOKIE = 'pn_lang'
+const LANGS = ['tr', 'en', 'ar'] as const
+type L = (typeof LANGS)[number]
 
 export function middleware(request: NextRequest) {
-  // Google/Bing gibi arama motoru botlarını hariç tut — bunlar genelde ABD
-  // merkezli IP'lerden tarar ama yanlışlıkla eşleşirse Türkçe ana sayfanın
-  // botlar için sürekli yönlendirmeye takılmasını istemiyoruz.
   const userAgent = request.headers.get('user-agent') || ''
-  if (/bot|crawl|spider|slurp/i.test(userAgent)) {
+  if (/bot|crawl|spider|slurp|facebookexternalhit|whatsapp/i.test(userAgent)) {
     return NextResponse.next()
   }
 
-  // Kullanıcı zaten bir kez yönlendirildiyse (veya bilerek Türkçe siteye geri
-  // döndüyse — bkz. /en/wholesale'daki "Türkçe mağaza" linki) tekrar zorlama.
-  if (request.cookies.has(REDIRECT_COOKIE)) {
-    return NextResponse.next()
-  }
-
-  // Vercel Edge, gelen isteğin IP'sinden çözdüğü ülke kodunu bu header'a otomatik
-  // ekliyor — ekstra bir paket/API çağrısı gerekmiyor. Yerelde (Vercel dışı)
-  // bu header hiç gelmez, bu durumda hiçbir yönlendirme yapılmaz (varsayılan:
-  // Türkçe ana sayfa).
+  const cookieLang = request.cookies.get(LANG_COOKIE)?.value
   const country = request.headers.get('x-vercel-ip-country')
-  const target = country ? TARGET_MARKET_REDIRECT[country] : undefined
+  const hasCookie = !!cookieLang && (LANGS as readonly string[]).includes(cookieLang)
+  const lang: L = hasCookie ? (cookieLang as L) : country && country !== 'TR' ? 'en' : 'tr'
 
-  if (target) {
-    const url = request.nextUrl.clone()
-    url.pathname = target
-    const response = NextResponse.redirect(url)
-    response.cookies.set(REDIRECT_COOKIE, '1', { maxAge: 60 * 60 * 24 * 30, path: '/' }) // 30 gün
-    return response
+  const target = trToLang(request.nextUrl.pathname, lang)
+  const response = target
+    ? NextResponse.redirect(new URL(target, request.url))
+    : NextResponse.next()
+
+  if (!hasCookie && lang !== 'tr') {
+    response.cookies.set(LANG_COOKIE, lang, { maxAge: 60 * 60 * 24 * 365, path: '/', sameSite: 'lax' })
   }
-
-  return NextResponse.next()
+  return response
 }
 
-// Sadece kök sayfa girişini hedefliyoruz — ürün/kategori sayfalarına, WhatsApp'tan
-// paylaşılan derin linklere veya admin/api rotalarına asla müdahale etmiyoruz.
+// Yalnızca sayfa isteklerinde çalışır: api, _next, admin ve dosya uzantılı yollar hariç.
 export const config = {
-  matcher: '/'
+  matcher: ['/((?!api|_next|admin|.*\\..*).*)'],
 }

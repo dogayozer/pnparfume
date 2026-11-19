@@ -9,8 +9,14 @@ import SearchModal from '@/components/SearchModal'
 import LanguageSwitcher from '@/components/layout/LanguageSwitcher'
 import { useCart } from '@/contexts/CartContext'
 import { useDealer } from '@/contexts/DealerContext'
+import { useT, useLang } from '@/lib/i18n'
+import { useSwitchLang } from '@/lib/useSwitchLang'
 
-const KURUMSAL_TEXTS = ['Kurumsal', 'İş Ortaklığı', 'Dijital Bayilik']
+const KURUMSAL_TEXTS = {
+  tr: ['Kurumsal', 'İş Ortaklığı', 'Dijital Bayilik'],
+  en: ['Corporate', 'Partnership', 'Digital Dealership'],
+  ar: ['الشركة', 'الشراكة', 'الوكالة الرقمية'],
+} as const
 
 export default function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
@@ -21,12 +27,16 @@ export default function Navbar() {
   const { isDealer } = useDealer()
   const [kurumsalIndex, setKurumsalIndex] = useState(0)
   const pathname = usePathname()
+  const t = useT()
+  const lang = useLang()
+  const switchLang = useSwitchLang()
+  const kurumsalTexts = KURUMSAL_TEXTS[lang]
   
   const cartItemCount = items.reduce((acc, item) => acc + item.quantity, 0)
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setKurumsalIndex((prev) => (prev + 1) % KURUMSAL_TEXTS.length)
+      setKurumsalIndex((prev) => (prev + 1) % 3)
     }, 3000)
     return () => clearInterval(interval)
   }, [])
@@ -72,17 +82,17 @@ export default function Navbar() {
         
         <div className="hidden md:flex items-center space-x-8">
           <Link href="/katalog" className="text-sm tracking-wide text-foreground hover:text-accent-gold transition-colors">
-            Parfüm Koleksiyonu
+            {t('Parfüm Koleksiyonu', 'Perfume Collection', 'مجموعة العطور')}
           </Link>
           <Link href="/mix/discovery-set" className="text-sm tracking-wide text-amber-500 font-medium hover:text-amber-400 transition-colors flex items-center gap-1.5 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
             <Gift size={14} />
-            5'li Keşif Kutusu
+            {t("5'li Keşif Kutusu", 'Discovery Box (5 pcs)', 'صندوق الاكتشاف (5 قطع)')}
           </Link>
           <Link href="/kesfet" className="text-sm tracking-wide text-foreground hover:text-accent-gold transition-colors flex items-center gap-1">
             <Sparkles size={14} className="text-accent-gold" />
-            Koku Rehberi
+            {t('Koku Rehberi', 'Fragrance Guide', 'دليل العطور')}
           </Link>
-          <Link href={KURUMSAL_TEXTS[kurumsalIndex] === 'Dijital Bayilik' ? '/kurumsal/bayilik/dijital' : '/kurumsal/girisimcilere-ozel'} className="text-sm tracking-wide text-foreground hover:text-accent-gold transition-colors relative flex items-center justify-center w-[110px] h-6 overflow-hidden">
+          <Link href={kurumsalIndex === 2 ? '/kurumsal/bayilik/dijital' : '/kurumsal/girisimcilere-ozel'} className="text-sm tracking-wide text-foreground hover:text-accent-gold transition-colors relative flex items-center justify-center w-[110px] h-6 overflow-hidden">
             <AnimatePresence mode="popLayout">
               <motion.span
                 key={kurumsalIndex}
@@ -92,26 +102,26 @@ export default function Navbar() {
                 transition={{ duration: 0.4 }}
                 className="absolute whitespace-nowrap"
               >
-                {KURUMSAL_TEXTS[kurumsalIndex]}
+                {kurumsalTexts[kurumsalIndex]}
               </motion.span>
             </AnimatePresence>
           </Link>
           <Link href="/kurumsal/iletisim" className="text-sm tracking-wide text-foreground hover:text-accent-gold transition-colors">
-            İletişim
+            {t('İletişim', 'Contact', 'اتصل بنا')}
           </Link>
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">
 
           {isDealer ? (
-            <Link href="/katalog" title="Bayi fiyatları aktif" className="hidden lg:inline-flex shrink-0 ml-3 items-center gap-1.5 whitespace-nowrap text-[11px] font-bold tracking-widest text-accent-gold">
+            <Link href="/katalog" title={t('Bayi fiyatları aktif', 'Dealer prices active', 'أسعار الوكلاء مفعّلة')} className="hidden lg:inline-flex shrink-0 ml-3 items-center gap-1.5 whitespace-nowrap text-[11px] font-bold tracking-widest text-accent-gold">
               <Store size={18} />
-              BAYİ
+              {t('BAYİ', 'DEALER', 'وكيل')}
             </Link>
           ) : (
-            <Link href="/bayi-girisi" title="Bayi Girişi" className="hidden lg:inline-flex shrink-0 ml-3 items-center gap-1.5 whitespace-nowrap text-[11px] tracking-wide text-foreground/80 hover:text-accent-gold transition-colors">
+            <Link href="/bayi-girisi" title={t('Bayi Girişi', 'Dealer Login', 'دخول الوكلاء')} className="hidden lg:inline-flex shrink-0 ml-3 items-center gap-1.5 whitespace-nowrap text-[11px] tracking-wide text-foreground/80 hover:text-accent-gold transition-colors">
               <Store size={18} />
-              Bayi Girişi
+              {t('Bayi Girişi', 'Dealer Login', 'دخول الوكلاء')}
             </Link>
           )}
 
@@ -181,42 +191,42 @@ export default function Navbar() {
 
           <nav className="flex flex-col gap-6 text-2xl font-light mt-8">
             <Link href="/katalog" className="border-b border-foreground/10 pb-4">
-              Parfüm Koleksiyonu
+              {t('Parfüm Koleksiyonu', 'Perfume Collection', 'مجموعة العطور')}
             </Link>
             <Link href="/mix/discovery-set" className="border-b border-foreground/10 pb-4 text-amber-500 font-normal flex items-center justify-between">
-              <span>5'li Keşif Kutusu</span>
-              <span className="text-xs bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">Özel Set</span>
+              <span>{t("5'li Keşif Kutusu", 'Discovery Box (5 pcs)', 'صندوق الاكتشاف (5 قطع)')}</span>
+              <span className="text-xs bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">{t('Özel Set', 'Special Set', 'مجموعة خاصة')}</span>
             </Link>
             <Link href="/kesfet" className="border-b border-foreground/10 pb-4 flex items-center gap-3">
               <Sparkles size={24} className="text-accent-gold" />
-              Koku Rehberi
+              {t('Koku Rehberi', 'Fragrance Guide', 'دليل العطور')}
             </Link>
             <Link href="/kurumsal/girisimcilere-ozel" className="border-b border-foreground/10 pb-4">
-              Kurumsal & Bayilik
+              {t('Kurumsal & Bayilik', 'Corporate & Dealership', 'الشركة والوكالة')}
             </Link>
             <Link href={isDealer ? '/katalog' : '/bayi-girisi'} className="border-b border-foreground/10 pb-4">
-              {isDealer ? 'Bayi Fiyatları Aktif' : 'Bayi Girişi'}
+              {isDealer ? t('Bayi Fiyatları Aktif', 'Dealer Prices Active', 'أسعار الوكلاء مفعّلة') : t('Bayi Girişi', 'Dealer Login', 'دخول الوكلاء')}
             </Link>
             {user ? (
               <Link href="/profil" className="border-b border-foreground/10 pb-4 flex items-center gap-3">
                 <User size={24} />
-                {user.name} (Profil)
+                {user.name} ({t('Profil', 'Profile', 'الملف الشخصي')})
               </Link>
             ) : (
               <Link href="/hesap" className="border-b border-foreground/10 pb-4 flex items-center gap-3">
                 <User size={24} />
-                Hesabım
+                {t('Hesabım', 'My Account', 'حسابي')}
               </Link>
             )}
           </nav>
 
           <div className="mt-auto pt-12 flex flex-col gap-4">
             <div className="flex items-center gap-4 text-sm text-foreground/60">
-              <Link href="/" className="hover:text-accent-gold transition-colors">Türkçe</Link>
+              <button onClick={() => switchLang('tr')} className={`hover:text-accent-gold transition-colors ${lang === 'tr' ? 'text-accent-gold' : ''}`}>Türkçe</button>
               <span className="text-foreground/20">/</span>
-              <Link href="/en/wholesale" className="hover:text-accent-gold transition-colors">English</Link>
+              <button onClick={() => switchLang('en')} className={`hover:text-accent-gold transition-colors ${lang === 'en' ? 'text-accent-gold' : ''}`}>English</button>
               <span className="text-foreground/20">/</span>
-              <Link href="/ar/wholesale" className="hover:text-accent-gold transition-colors">العربية</Link>
+              <button onClick={() => switchLang('ar')} className={`hover:text-accent-gold transition-colors ${lang === 'ar' ? 'text-accent-gold' : ''}`}>العربية</button>
             </div>
           </div>
         </motion.div>

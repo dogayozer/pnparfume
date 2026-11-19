@@ -5,15 +5,17 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronDown } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import FilterSidebar from './FilterSidebar'
+import { useT } from '@/lib/i18n'
 
 const SORT_OPTIONS = [
-  { label: 'Çok Satanlar', value: 'best_sellers' },
-  { label: 'Artan Fiyatlar', value: 'price_asc' },
-  { label: 'Yeni Gelenler', value: 'newest' },
-  { label: 'İndirime Göre', value: 'discount' }
+  { label: 'Çok Satanlar', en: 'Best Sellers', ar: 'الأكثر مبيعًا', value: 'best_sellers' },
+  { label: 'Artan Fiyatlar', en: 'Price: Low to High', ar: 'السعر: من الأقل', value: 'price_asc' },
+  { label: 'Yeni Gelenler', en: 'New Arrivals', ar: 'وصل حديثًا', value: 'newest' },
+  { label: 'İndirime Göre', en: 'By Discount', ar: 'حسب الخصم', value: 'discount' }
 ]
 
 export default function MobileFilterSort() {
+  const t = useT()
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [isSortOpen, setIsSortOpen] = useState(false)
   
@@ -21,7 +23,8 @@ export default function MobileFilterSort() {
   const searchParams = useSearchParams()
   
   const currentSort = searchParams.get('sort') || 'best_sellers'
-  const currentSortLabel = SORT_OPTIONS.find(o => o.value === currentSort)?.label || 'Çok Satanlar'
+  const currentOpt = SORT_OPTIONS.find(o => o.value === currentSort) || SORT_OPTIONS[0]
+  const currentSortLabel = t(currentOpt.label, currentOpt.en, currentOpt.ar)
 
   const handleSort = (value: string) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -41,7 +44,7 @@ export default function MobileFilterSort() {
           onClick={() => setIsFilterOpen(true)}
           className="flex-1 flex items-center justify-between border border-foreground/20 rounded px-4 py-2.5 text-[13px] font-bold bg-background"
         >
-          Filtrele
+          {t('Filtrele', 'Filter', 'تصفية')}
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
         </button>
         
@@ -68,7 +71,7 @@ export default function MobileFilterSort() {
                     onClick={() => handleSort(option.value)}
                     className={`w-full text-left px-4 py-3 text-sm font-medium hover:bg-foreground/5 transition-colors ${currentSort === option.value ? 'text-accent-gold bg-foreground/[0.02]' : 'text-foreground/80'}`}
                   >
-                    {option.label}
+                    {t(option.label, option.en, option.ar)}
                   </button>
                 ))}
               </motion.div>
@@ -115,7 +118,7 @@ export default function MobileFilterSort() {
                   onClick={() => setIsFilterOpen(false)}
                   className="w-full bg-foreground text-background py-3 rounded-full text-sm font-bold hover:bg-accent-gold transition-colors"
                 >
-                  Sonuçları Göster
+                  {t('Sonuçları Göster', 'Show Results', 'عرض النتائج')}
                 </button>
               </div>
             </motion.div>

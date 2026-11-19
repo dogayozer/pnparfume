@@ -1,23 +1,29 @@
+'use client'
+
 import Link from 'next/link'
 import { ShoppingBag, Users, Share2 } from 'lucide-react'
+import { useLang } from '@/lib/i18n'
 
 // Ana sayfada ve sepette görünen, göze batmayan ama fark edilir "3 adım" şeridi.
 // Üçü de mevcut kupon/referans altyapısını tanıtıyor — yeni bir sistem değil,
 // var olanı görünür kılıyor. /profil'e yönlendiriyor (Kuponlarım + Marka Elçisi).
 const PERKS = [
-  { icon: ShoppingBag, title: 'Al, Kazan', text: 'Her siparişte sonraki alışverişine özel indirim kuponu' },
-  { icon: Users, title: 'Öner, Kazan', text: 'Arkadaşın alışveriş yapsın, cüzdanına komisyon eklensin' },
-  { icon: Share2, title: 'Paylaş, Kazan', text: 'Kendi kodunu paylaş, her kullanımda kazanmaya devam et' }
+  { icon: ShoppingBag, title: 'Al, Kazan', en: ['Buy, Earn', 'A discount coupon for your next purchase with every order'], ar: ['اشترِ واربح', 'قسيمة خصم لمشترياتك القادمة مع كل طلب'], text: 'Her siparişte sonraki alışverişine özel indirim kuponu' },
+  { icon: Users, title: 'Öner, Kazan', en: ['Refer, Earn', 'Your friend shops, commission is added to your wallet'], ar: ['رشّح واربح', 'يتسوّق صديقك وتُضاف العمولة إلى محفظتك'], text: 'Arkadaşın alışveriş yapsın, cüzdanına komisyon eklensin' },
+  { icon: Share2, title: 'Paylaş, Kazan', en: ['Share, Earn', 'Share your own code and keep earning with every use'], ar: ['شارك واربح', 'شارك رمزك واستمر في الربح مع كل استخدام'], text: 'Kendi kodunu paylaş, her kullanımda kazanmaya devam et' }
 ]
 
 export default function PerksBanner({ compact = false }: { compact?: boolean }) {
+  const lang = useLang()
   return (
     <Link
       href="/profil"
       className={`block group ${compact ? '' : 'max-w-7xl mx-auto px-4 md:px-12'}`}
     >
       <div className={`flex items-center justify-between gap-2 md:gap-6 border border-foreground/10 rounded-2xl bg-foreground/[0.02] hover:border-accent-gold/40 transition-colors ${compact ? 'px-3 py-2.5' : 'px-4 py-3 md:px-8 md:py-4'}`}>
-        {PERKS.map(({ icon: Icon, title, text }, i) => (
+        {PERKS.map(({ icon: Icon, title: trTitle, text: trText, en, ar }, i) => {
+          const [title, text] = lang === 'en' ? en : lang === 'ar' ? ar : [trTitle, trText]
+          return (
           <div
             key={title}
             className={`perk-item flex items-center gap-2 md:gap-3 min-w-0 flex-1 rounded-xl ${compact ? 'px-1.5 py-1' : 'px-2 py-1.5 md:px-3'}`}
@@ -31,7 +37,7 @@ export default function PerksBanner({ compact = false }: { compact?: boolean }) 
               )}
             </div>
           </div>
-        ))}
+        )})}
       </div>
     </Link>
   )

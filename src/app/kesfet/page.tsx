@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { T } from '@/lib/i18n'
 import { articles } from '@/data/articles'
 import { ArrowRight } from 'lucide-react'
 
@@ -11,9 +12,9 @@ export default function KesfetPage() {
   return (
     <div className="min-h-screen px-6 py-12 md:px-12 max-w-7xl mx-auto">
       <div className="mb-16">
-        <h1 className="text-4xl md:text-5xl font-light mb-4">Koku Rehberi</h1>
+        <h1 className="text-4xl md:text-5xl font-light mb-4"><T tr="Koku Rehberi" en="Fragrance Guide" ar="دليل العطور" /></h1>
         <p className="text-foreground/60 max-w-2xl text-lg">
-          Koku alma duyusu, beynimizin duygular ve hafıza ile ilgilenen kısmına doğrudan bağlı olan tek duyudur. Parfüm sanatının ardındaki bilimi ve koku bilimi sırlarını keşfedin.
+          <T tr="Koku alma duyusu, beynimizin duygular ve hafıza ile ilgilenen kısmına doğrudan bağlı olan tek duyudur. Parfüm sanatının ardındaki bilimi ve koku bilimi sırlarını keşfedin." en="The sense of smell is the only sense directly linked to the part of our brain that handles emotion and memory. Discover the science behind the art of perfume." ar="حاسة الشم هي الحاسة الوحيدة المرتبطة مباشرة بالجزء المسؤول عن المشاعر والذاكرة في الدماغ. اكتشف العلم وراء فن العطور." />
         </p>
       </div>
 

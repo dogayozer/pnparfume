@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useT } from '@/lib/i18n'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Sparkles, ArrowRight, Check } from 'lucide-react'
@@ -35,7 +36,11 @@ const questions = [
   }
 ]
 
+const D: Record<string, [string, string]> = {"Bugün kendini nasıl hissetmek istiyorsun?": ["How do you want to feel today?", "كيف تريد أن تشعر اليوم؟"], "Enerjik & Özgür": ["Energetic & Free", "نشيط وحر"], "Gizemli & Derin": ["Mysterious & Deep", "غامض وعميق"], "Zarif & Klasik": ["Elegant & Classic", "أنيق وكلاسيكي"], "Hangi ortam sana daha çok hitap ediyor?": ["Which setting appeals to you more?", "أي أجواء تروق لك أكثر؟"], "Yağmur Sonrası Orman": ["Forest After Rain", "غابة بعد المطر"], "Loş Bir Jazz Bar": ["A Dimly Lit Jazz Bar", "حانة جاز خافتة الإضاءة"], "Güneşli Bir Sahil": ["A Sunny Beach", "شاطئ مشمس"], "Hangi notalar ruhuna dokunur?": ["Which notes touch your soul?", "أي النوتات تلامس روحك؟"], "Odunsu & Baharatlı": ["Woody & Spicy", "خشبي وتوابل"], "Taze & Çiçeksi": ["Fresh & Floral", "منعش وزهري"], "Tatlı & Oryantal": ["Sweet & Oriental", "حلو وشرقي"]}
+
 export default function QuizPage() {
+  const t = useT()
+  const tq = (x: string) => (D[x] ? t(x, D[x][0], D[x][1]) : x)
   const [currentStep, setCurrentStep] = useState(0)
   const [answers, setAnswers] = useState<Record<number, string>>({})
   const [email, setEmail] = useState('')
@@ -71,7 +76,7 @@ export default function QuizPage() {
         {!resultReady && (
           <div className="mb-12">
             <div className="flex justify-between text-xs uppercase tracking-widest text-foreground/40 mb-2">
-              <span>Ruh Haline Göre Koku Bul</span>
+              <span>{t("Ruh Haline Göre Koku Bul", "Find a Fragrance by Mood", "اعثر على عطرك حسب مزاجك")}</span>
               <span>{Math.min(currentStep + 1, questions.length)} / {questions.length}</span>
             </div>
             <div className="h-1 bg-foreground/10 rounded-full overflow-hidden">
@@ -87,7 +92,7 @@ export default function QuizPage() {
         {currentStep < questions.length && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h1 className="text-3xl lg:text-4xl font-light text-center text-foreground mb-12">
-              {questions[currentStep].title}
+              {tq(questions[currentStep].title)}
             </h1>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -102,11 +107,11 @@ export default function QuizPage() {
                     }`}
                   >
                     <div className="aspect-[4/5] relative bg-foreground/5">
-                      <Image src={option.image} alt={option.label} fill className="object-cover mix-blend-multiply opacity-80 group-hover:scale-105 transition-transform duration-700" />
+                      <Image src={option.image} alt={tq(option.label)} fill className="object-cover mix-blend-multiply opacity-80 group-hover:scale-105 transition-transform duration-700" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                       
                       <div className="absolute bottom-0 left-0 right-0 p-6 flex justify-between items-end">
-                        <span className="text-white font-medium text-lg">{option.label}</span>
+                        <span className="text-white font-medium text-lg">{tq(option.label)}</span>
                         <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'border-accent-gold bg-accent-gold text-background' : 'border-white/50 text-transparent'}`}>
                           <Check size={14} />
                         </div>
@@ -125,9 +130,9 @@ export default function QuizPage() {
             <div className="w-16 h-16 bg-accent-gold/10 rounded-full flex items-center justify-center mx-auto mb-6 text-accent-gold">
               <Sparkles size={32} />
             </div>
-            <h2 className="text-3xl font-light text-foreground mb-4">Profiliniz Analiz Ediliyor</h2>
+            <h2 className="text-3xl font-light text-foreground mb-4">{t("Profiliniz Analiz Ediliyor", "Analyzing Your Profile", "جارٍ تحليل ملفك")}</h2>
             <p className="text-foreground/60 mb-8 font-light leading-relaxed">
-              Verdiğiniz cevaplara göre yapay zeka destekli koku eşleştirme algoritmamız sizin için en kusursuz "İmza Kokuyu" buldu. Sonucu görmek ve size özel %15 indirimi almak için e-posta adresinizi girin.
+              {t("Verdiğiniz cevaplara göre yapay zeka destekli koku eşleştirme algoritmamız sizin için en kusursuz \"İmza Kokuyu\" buldu. Sonucu görmek ve size özel %15 indirimi almak için e-posta adresinizi girin.", "Based on your answers, our AI-powered fragrance matching algorithm found your most perfect \"Signature Scent\". Enter your email to see the result and get your exclusive 15% discount.", "بناءً على إجاباتك، وجدت خوارزمية مطابقة العطور بالذكاء الاصطناعي \"عطرك المميز\" الأمثل. أدخل بريدك الإلكتروني لرؤية النتيجة والحصول على خصم 15% الخاص بك.")}
             </p>
             
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -136,7 +141,7 @@ export default function QuizPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="E-posta adresiniz"
+                placeholder={t("E-posta adresiniz", "Your email address", "بريدك الإلكتروني")}
                 className="w-full bg-background border border-foreground/20 rounded-md py-4 px-4 text-center focus:outline-none focus:border-accent-gold text-foreground placeholder:text-foreground/30"
               />
               <button 
@@ -144,10 +149,10 @@ export default function QuizPage() {
                 disabled={isSubmitting}
                 className="w-full bg-foreground text-background py-4 uppercase tracking-widest text-sm font-medium hover:bg-accent-gold transition-colors disabled:opacity-70 flex justify-center items-center gap-2"
               >
-                {isSubmitting ? 'Analiz Ediliyor...' : 'Sonucumu Göster'} <ArrowRight size={16} />
+                {isSubmitting ? t("Analiz Ediliyor...", "Analyzing...", "جارٍ التحليل...") : t("Sonucumu Göster", "Show My Result", "اعرض نتيجتي")} <ArrowRight size={16} />
               </button>
               <p className="text-xs text-foreground/40 mt-4">
-                Söz veriyoruz, spam göndermeyeceğiz. Sadece ruhunuza hitap eden notalar.
+                {t("Söz veriyoruz, spam göndermeyeceğiz. Sadece ruhunuza hitap eden notalar.", "We promise no spam. Only notes that speak to your soul.", "نعدك بعدم إرسال رسائل مزعجة. فقط نوتات تخاطب روحك.")}
               </p>
             </form>
           </div>
@@ -157,10 +162,10 @@ export default function QuizPage() {
         {resultReady && (
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 pt-8">
             <div className="text-center mb-12">
-              <span className="text-accent-gold text-sm font-medium tracking-widest uppercase mb-4 block">Eşleşme Oranı: %94</span>
-              <h2 className="text-4xl lg:text-5xl font-light text-foreground mb-4">Sizin İmza Kokunuz: Pera Leather & Amber</h2>
+              <span className="text-accent-gold text-sm font-medium tracking-widest uppercase mb-4 block">{t("Eşleşme Oranı: %94", "Match Rate: 94%", "نسبة التطابق: 94%")}</span>
+              <h2 className="text-4xl lg:text-5xl font-light text-foreground mb-4">{t("Sizin İmza Kokunuz: Pera Leather & Amber", "Your Signature Scent: Pera Leather & Amber", "عطرك المميز: Pera Leather & Amber")}</h2>
               <p className="text-foreground/60 max-w-2xl mx-auto font-light text-lg">
-                Seçimleriniz derin, karizmatik ve iz bırakan bir ruha sahip olduğunuzu gösteriyor. Derinin asi duruşuyla amberin sıcaklığını birleştiren bu koku tam size göre.
+                {t("Seçimleriniz derin, karizmatik ve iz bırakan bir ruha sahip olduğunuzu gösteriyor. Derinin asi duruşuyla amberin sıcaklığını birleştiren bu koku tam size göre.", "Your choices show a deep, charismatic soul that leaves a mark. This scent, combining the rebellious stance of leather with the warmth of amber, is made for you.", "تُظهر اختياراتك روحًا عميقة وجذابة تترك أثرًا. هذا العطر الذي يجمع تمرّد الجلد مع دفء العنبر مصنوع لك.")}
               </p>
             </div>
 
@@ -172,25 +177,25 @@ export default function QuizPage() {
                 <div>
                   <h3 className="text-2xl font-medium text-foreground mb-2">Pera Leather & Amber</h3>
                   <div className="flex gap-2">
-                    <span className="text-xs bg-foreground/10 px-2 py-1 rounded text-foreground/70 uppercase">Odunsu</span>
-                    <span className="text-xs bg-foreground/10 px-2 py-1 rounded text-foreground/70 uppercase">Deri</span>
-                    <span className="text-xs bg-foreground/10 px-2 py-1 rounded text-foreground/70 uppercase">Sıcak Baharat</span>
+                    <span className="text-xs bg-foreground/10 px-2 py-1 rounded text-foreground/70 uppercase">{t("Odunsu", "Woody", "خشبي")}</span>
+                    <span className="text-xs bg-foreground/10 px-2 py-1 rounded text-foreground/70 uppercase">{t("Deri", "Leather", "جلد")}</span>
+                    <span className="text-xs bg-foreground/10 px-2 py-1 rounded text-foreground/70 uppercase">{t("Sıcak Baharat", "Warm Spice", "توابل دافئة")}</span>
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <div className="p-4 bg-accent-gold/10 border border-accent-gold/20 rounded-lg">
-                    <p className="text-sm text-accent-gold font-medium mb-1">Hoş Geldin Hediyesi</p>
-                    <p className="text-xs text-accent-gold/80">QUIZ15 kodunu sepette kullanarak bu ürüne %15 indirimle sahip olabilirsiniz.</p>
+                    <p className="text-sm text-accent-gold font-medium mb-1">{t("Hoş Geldin Hediyesi", "Welcome Gift", "هدية الترحيب")}</p>
+                    <p className="text-xs text-accent-gold/80">{t("QUIZ15 kodunu sepette kullanarak bu ürüne %15 indirimle sahip olabilirsiniz.", "Use code QUIZ15 in your cart to get 15% off this product.", "استخدم الرمز QUIZ15 في السلة للحصول على خصم 15% على هذا المنتج.")}</p>
                   </div>
                 </div>
 
                 <Link href="/urun/pera-leather-amber" className="inline-block w-full text-center bg-foreground text-background py-4 uppercase tracking-widest text-sm font-medium hover:bg-accent-gold transition-colors">
-                  Ürünü İncele
+                  {t("Ürünü İncele", "View Product", "عرض المنتج")}
                 </Link>
                 
                 <button className="w-full text-center py-4 uppercase tracking-widest text-sm font-medium text-foreground/60 hover:text-foreground transition-colors border border-foreground/20 hover:border-foreground">
-                  Sonucu Paylaş
+                  {t("Sonucu Paylaş", "Share Result", "مشاركة النتيجة")}
                 </button>
               </div>
             </div>

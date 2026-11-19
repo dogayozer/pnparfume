@@ -1,10 +1,12 @@
 'use client'
 
 import Link from 'next/link'
+import { useT } from '@/lib/i18n'
 import { motion } from 'framer-motion'
 import { AlertCircle, ShoppingBag, RefreshCw, ArrowLeft } from 'lucide-react'
 
 export default function BasarisizPage() {
+  const t = useT()
   return (
     <main className="min-h-screen bg-background text-foreground pt-32 pb-20 px-4 sm:px-6 relative overflow-hidden flex items-center justify-center">
       {/* Ambient background glow */}
@@ -26,7 +28,7 @@ export default function BasarisizPage() {
           transition={{ delay: 0.2 }}
           className="text-xs uppercase tracking-[0.3em] text-rose-400 font-semibold block mb-3"
         >
-          Ödeme Tamamlanamadı
+          {t("Ödeme Tamamlanamadı", "Payment Not Completed", "لم يكتمل الدفع")}
         </motion.span>
 
         <motion.h1
@@ -35,7 +37,7 @@ export default function BasarisizPage() {
           transition={{ delay: 0.3 }}
           className="text-3xl sm:text-4xl font-extralight tracking-wide text-foreground mb-4"
         >
-          İşlem <span className="font-serif italic font-normal text-rose-400">Onaylanmadı</span>
+          {t("İşlem", "Transaction", "العملية")} <span className="font-serif italic font-normal text-rose-400">{t("Onaylanmadı", "Not Approved", "لم تتم الموافقة")}</span>
         </motion.h1>
 
         <motion.p
@@ -44,7 +46,7 @@ export default function BasarisizPage() {
           transition={{ delay: 0.4 }}
           className="text-sm text-foreground/70 font-light max-w-md mx-auto leading-relaxed mb-8"
         >
-          Kart limitiniz, 3D Secure onay süresi veya bankanızın güvenlik politikası nedeniyle işlem tamamlanamadı. Kartınızdan herhangi bir çekim yapılmamıştır.
+          {t("Kart limitiniz, 3D Secure onay süresi veya bankanızın güvenlik politikası nedeniyle işlem tamamlanamadı. Kartınızdan herhangi bir çekim yapılmamıştır.", "The transaction could not be completed due to your card limit, the 3D Secure approval time or your bank's security policy. No amount has been charged to your card.", "تعذّر إتمام العملية بسبب حد البطاقة أو مهلة تأكيد 3D Secure أو سياسة الأمان لدى البنك. لم يتم سحب أي مبلغ من بطاقتك.")}
         </motion.p>
 
         {/* Action Buttons */}
@@ -58,7 +60,7 @@ export default function BasarisizPage() {
             href="/sepet"
             className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-foreground text-background font-medium text-xs tracking-wider uppercase hover:bg-accent-gold transition-all duration-300 shadow-xl flex items-center justify-center gap-2"
           >
-            <RefreshCw size={16} /> Sepete Dön ve Tekrar Dene
+            <RefreshCw size={16} /> {t("Sepete Dön ve Tekrar Dene", "Return to Cart and Try Again", "العودة إلى السلة والمحاولة مجددًا")}
           </Link>
         </motion.div>
       </div>

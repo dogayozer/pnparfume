@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useT } from '@/lib/i18n'
 import { Star, MessageSquare, CheckCircle2, User, Send, ThumbsUp, Sparkles, X } from 'lucide-react'
 
 type ReviewItem = {
@@ -12,6 +13,7 @@ type ReviewItem = {
 }
 
 export default function ProductReviews({ sku, productName }: { sku: string; productName: string }) {
+  const t = useT()
   const [reviews, setReviews] = useState<ReviewItem[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [avgRating, setAvgRating] = useState(5.0)
@@ -63,7 +65,7 @@ export default function ProductReviews({ sku, productName }: { sku: string; prod
       })
       const data = await res.json()
       if (res.ok) {
-        setSuccessMessage('Değerlendirmeniz için teşekkür ederiz! Yorumunuz incelendikten sonra yayınlanacaktır.')
+        setSuccessMessage(t("Değerlendirmeniz için teşekkür ederiz! Yorumunuz incelendikten sonra yayınlanacaktır.", "Thank you for your review! It will be published after it is reviewed.", "شكرًا لتقييمك! سيتم نشر تعليقك بعد مراجعته."))
         setTimeout(() => {
           setIsModalOpen(false)
           setSuccessMessage('')
@@ -72,10 +74,10 @@ export default function ProductReviews({ sku, productName }: { sku: string; prod
           setRating(5)
         }, 2500)
       } else {
-        alert(data.error || 'Yorum gönderilemedi')
+        alert(data.error || t("Yorum gönderilemedi", "The review could not be submitted", "تعذّر إرسال التعليق"))
       }
     } catch (err) {
-      alert('Bir hata oluştu. Lütfen tekrar deneyin.')
+      alert(t("Bir hata oluştu. Lütfen tekrar deneyin.", "An error occurred. Please try again.", "حدث خطأ. يرجى المحاولة مرة أخرى."))
     } finally {
       setSubmitting(false)
     }
@@ -87,10 +89,10 @@ export default function ProductReviews({ sku, productName }: { sku: string; prod
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
         <div>
           <h2 className="text-2xl md:text-3xl font-serif font-light text-foreground mb-2 flex items-center gap-2">
-            <MessageSquare className="text-accent-gold" size={24} /> Müşteri Yorumları & Deneyimleri
+            <MessageSquare className="text-accent-gold" size={24} /> {t("Müşteri Yorumları & Deneyimleri", "Customer Reviews & Experiences", "تعليقات العملاء وتجاربهم")}
           </h2>
           <p className="text-base text-foreground/60">
-            {productName} hakkında gerçek kullanıcı değerlendirmeleri ve koku deneyimleri.
+            {t(`${productName} hakkında gerçek kullanıcı değerlendirmeleri ve koku deneyimleri.`, `Real user reviews and fragrance experiences about ${productName}.`, `تقييمات حقيقية للمستخدمين وتجارب العطر حول ${productName}.`)}
           </p>
         </div>
 
@@ -120,13 +122,13 @@ export default function ProductReviews({ sku, productName }: { sku: string; prod
 
       {/* Reviews List */}
       {loading ? (
-        <div className="py-12 text-center text-foreground/40 text-sm">Yorumlar yükleniyor...</div>
+        <div className="py-12 text-center text-foreground/40 text-sm">{t("Yorumlar yükleniyor...", "Loading reviews...", "جارٍ تحميل التعليقات...")}</div>
       ) : reviews.length === 0 ? (
         <div className="py-12 px-6 bg-foreground/[0.02] border border-foreground/10 rounded-2xl text-center">
           <Sparkles className="mx-auto text-accent-gold mb-2" size={24} />
-          <h3 className="font-medium text-foreground text-sm mb-1">İlk Değerlendiren Siz Olun!</h3>
+          <h3 className="font-medium text-foreground text-sm mb-1">{t("İlk Değerlendiren Siz Olun!", "Be the First to Review!", "كن أول من يقيّم!")}</h3>
           <p className="text-xs text-foreground/60 max-w-md mx-auto mb-4">
-            Bu koku hakkındaki ilk izlenimlerinizi paylaşarak koku meraklılarına ilham verin.
+            {t("Bu koku hakkındaki ilk izlenimlerinizi paylaşarak koku meraklılarına ilham verin.", "Inspire fragrance lovers by sharing your first impressions of this scent.", "ألهم محبي العطور بمشاركة انطباعاتك الأولى عن هذا العطر.")}
           </p>
           <button
             onClick={() => setIsModalOpen(true)}
@@ -149,7 +151,7 @@ export default function ProductReviews({ sku, productName }: { sku: string; prod
                       <div className="text-sm font-medium text-foreground flex items-center gap-1.5">
                         {rev.customerName}
                         <span className="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5 bg-emerald-500/10 px-1.5 py-0.5 rounded font-normal">
-                          <CheckCircle2 size={10} /> Doğrulanmış
+                          <CheckCircle2 size={10} /> {t("Doğrulanmış", "Verified", "موثّق")}
                         </span>
                       </div>
                       <div className="text-[10px] text-foreground/40">
@@ -186,10 +188,10 @@ export default function ProductReviews({ sku, productName }: { sku: string; prod
             </button>
 
             <h3 className="text-xl font-serif font-light text-foreground mb-1">
-              {productName} Değerlendirmesi
+              {t(`${productName} Değerlendirmesi`, `${productName} Review`, `تقييم ${productName}`)}
             </h3>
             <p className="text-xs text-foreground/60 mb-6">
-              Koku yayılımı, kalıcılık ve hissettirdiği duyguları puanlayın.
+              {t("Koku yayılımı, kalıcılık ve hissettirdiği duyguları puanlayın.", "Rate the projection, longevity and the feelings the scent gives.", "قيّم انتشار العطر وثباته والمشاعر التي يمنحها.")}
             </p>
 
             {successMessage ? (
@@ -202,7 +204,7 @@ export default function ProductReviews({ sku, productName }: { sku: string; prod
                 {/* Rating Stars */}
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-foreground/70 mb-2">
-                    Puanınız
+                    {t("Puanınız", "Your Rating", "تقييمك")}
                   </label>
                   <div className="flex items-center gap-2">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -221,7 +223,7 @@ export default function ProductReviews({ sku, productName }: { sku: string; prod
                       </button>
                     ))}
                     <span className="text-xs font-bold text-foreground/60 ml-2">
-                      {rating === 5 ? 'Mükemmel' : rating === 4 ? 'Çok İyi' : rating === 3 ? 'İyi' : rating === 2 ? 'Orta' : 'Geliştirilmeli'}
+                      {rating === 5 ? t("Mükemmel", "Excellent", "ممتاز") : rating === 4 ? t("Çok İyi", "Very Good", "جيد جدًا") : rating === 3 ? t("İyi", "Good", "جيد") : rating === 2 ? t("Orta", "Fair", "متوسط") : t("Geliştirilmeli", "Needs Improvement", "يحتاج إلى تحسين")}
                     </span>
                   </div>
                 </div>
@@ -229,14 +231,14 @@ export default function ProductReviews({ sku, productName }: { sku: string; prod
                 {/* Name */}
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-foreground/70 mb-1">
-                    Adınız Soyadınız
+                    {t("Adınız Soyadınız", "Your Full Name", "الاسم الكامل")}
                   </label>
                   <input
                     type="text"
                     required
                     value={customerName}
                     onChange={e => setCustomerName(e.target.value)}
-                    placeholder="Örn: Caner D."
+                    placeholder={t("Örn: Caner D.", "e.g. John D.", "مثال: أحمد د.")}
                     className="w-full px-4 py-2.5 bg-foreground/[0.03] border border-foreground/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-gold"
                   />
                 </div>
@@ -251,7 +253,7 @@ export default function ProductReviews({ sku, productName }: { sku: string; prod
                     rows={4}
                     value={comment}
                     onChange={e => setComment(e.target.value)}
-                    placeholder="Kalıcılığı nasıl buldunuz? Hangi ortamlara yakışıyor? Detaylı anlatın..."
+                    placeholder={t("Kalıcılığı nasıl buldunuz? Hangi ortamlara yakışıyor? Detaylı anlatın...", "How was the longevity? What occasions does it suit? Please describe in detail...", "كيف وجدت الثبات؟ لأي مناسبات يناسب؟ اشرح بالتفصيل...")}
                     className="w-full px-4 py-2.5 bg-foreground/[0.03] border border-foreground/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-gold resize-none"
                   />
                 </div>
@@ -261,7 +263,7 @@ export default function ProductReviews({ sku, productName }: { sku: string; prod
                   disabled={submitting}
                   className="w-full py-3.5 bg-foreground text-background hover:bg-accent-gold transition-colors rounded-xl text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2"
                 >
-                  {submitting ? 'Gönderiliyor...' : 'Yorumu Yayınlanmak Üzere Gönder'}
+                  {submitting ? t("Gönderiliyor...", "Submitting...", "جارٍ الإرسال...") : t("Yorumu Yayınlanmak Üzere Gönder", "Submit Review for Publication", "أرسل التعليق للنشر")}
                 </button>
               </form>
             )}

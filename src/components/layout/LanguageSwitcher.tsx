@@ -2,20 +2,20 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Globe } from 'lucide-react'
-import Link from 'next/link'
+import { useLang } from '@/lib/i18n'
+import { useSwitchLang } from '@/lib/useSwitchLang'
 
-// Sitenin ana kataloğu/sepeti/checkout'u sadece Türkçe — bu yüzden EN/AR seçimleri
-// tüm mağazayı çevirmiyor, doğrudan o dildeki distribütörlük/private-label
-// sayfalarına götürüyor (middleware.ts'in ülke bazlı yönlendirdiği aynı sayfalar).
 const LANGUAGES = [
-  { code: 'tr', label: 'Türkçe', href: '/' },
-  { code: 'en', label: 'English', href: '/en/wholesale' },
-  { code: 'ar', label: 'العربية', href: '/ar/wholesale' },
-]
+  { code: 'tr', label: 'Türkçe' },
+  { code: 'en', label: 'English' },
+  { code: 'ar', label: 'العربية' },
+] as const
 
 export default function LanguageSwitcher() {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const lang = useLang()
+  const switchLang = useSwitchLang()
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -37,14 +37,13 @@ export default function LanguageSwitcher() {
       {open && (
         <div className="absolute right-0 mt-2 w-40 bg-background border border-foreground/10 rounded-xl shadow-lg py-2 z-50">
           {LANGUAGES.map(l => (
-            <Link
+            <button
               key={l.code}
-              href={l.href}
-              onClick={() => setOpen(false)}
-              className="block px-4 py-2 text-sm text-foreground/80 hover:text-accent-gold hover:bg-foreground/5 transition-colors"
+              onClick={() => { switchLang(l.code); setOpen(false) }}
+              className={`block w-full text-left rtl:text-right px-4 py-2 text-sm hover:text-accent-gold hover:bg-foreground/5 transition-colors ${lang === l.code ? 'text-accent-gold' : 'text-foreground/80'}`}
             >
               {l.label}
-            </Link>
+            </button>
           ))}
         </div>
       )}

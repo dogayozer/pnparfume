@@ -34,6 +34,7 @@ const websiteJsonLd = {
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { CartProvider } from '@/contexts/CartContext'
+import { LocaleProvider } from '@/lib/i18n'
 import { DealerProvider } from '@/contexts/DealerContext'
 import CartModal from '@/components/cart/CartModal'
 import ChatWidget from '@/components/layout/ChatWidget'
@@ -137,6 +138,7 @@ export default function RootLayout({
             gtag('config', '${GA_MEASUREMENT_ID}');
           `}
         </Script>
+        <LocaleProvider>
         <DealerProvider>
         <CartProvider>
           <Navbar />
@@ -151,6 +153,7 @@ export default function RootLayout({
           <WhatsAppButton />
         </CartProvider>
         </DealerProvider>
+        </LocaleProvider>
       </body>
     </html>
   )

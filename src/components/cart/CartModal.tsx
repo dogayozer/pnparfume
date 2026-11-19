@@ -5,8 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Minus, Plus, ShoppingBag, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import PerksBanner from '@/components/PerksBanner'
+import { useT } from '@/lib/i18n'
 
 export default function CartModal() {
+  const t = useT()
   const { isCartOpen, setIsCartOpen, items, removeFromCart, addToCart, totalAmount, clearCart } = useCart()
   const [couponCode, setCouponCode] = useState('')
   const [discount, setDiscount] = useState(0)
@@ -28,7 +30,7 @@ export default function CartModal() {
         setError(data.error)
       }
     } catch (e) {
-      setError('Bir hata oluştu')
+      setError(t('Bir hata oluştu', 'Something went wrong', 'حدث خطأ'))
     }
   }
 
@@ -74,7 +76,7 @@ export default function CartModal() {
             {items.length === 0 ? (
               <div className="flex-1 p-6 flex flex-col items-center justify-center text-foreground/40">
                 <ShoppingBag size={48} className="mb-4 opacity-50" />
-                <p>Sepetiniz şu an boş.</p>
+                <p>{t("Sepetiniz şu an boş.", "Your cart is empty.", "سلتك فارغة.")}</p>
               </div>
             ) : (
               <>
@@ -126,7 +128,7 @@ export default function CartModal() {
                   <div className="flex gap-2 mb-6">
                     <input 
                       type="text" 
-                      placeholder="İndirim Kodu (Yapay Zeka vb.)" 
+                      placeholder={t('İndirim Kodu (Yapay Zeka vb.)', 'Discount code', 'رمز الخصم')} 
                       value={couponCode}
                       onChange={e => setCouponCode(e.target.value)}
                       className="flex-1 bg-background border border-foreground/10 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-accent-gold"
@@ -135,7 +137,7 @@ export default function CartModal() {
                       onClick={applyCoupon}
                       className="px-4 py-2 bg-foreground text-background text-sm font-medium rounded-lg hover:bg-accent-gold transition-colors"
                     >
-                      Uygula
+                      {t("Uygula", "Apply", "تطبيق")}
                     </button>
                   </div>
                   {error && <p className="text-accent-rose text-xs mt-[-16px] mb-4">{error}</p>}
@@ -146,17 +148,17 @@ export default function CartModal() {
 
                   <div className="space-y-2 mb-6">
                     <div className="flex justify-between text-foreground/60">
-                      <span>Ara Toplam</span>
+                      <span>{t("Ara Toplam", "Subtotal", "المجموع الفرعي")}</span>
                       <span>₺{totalAmount}</span>
                     </div>
                     {discount > 0 && (
                       <div className="flex justify-between text-accent-rose font-medium">
-                        <span>İndirim (%{discount})</span>
+                        <span>{t('İndirim', 'Discount', 'خصم')} (%{discount})</span>
                         <span>-₺{(totalAmount * discount / 100).toFixed(2)}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-lg font-medium pt-2 border-t border-foreground/10">
-                      <span>Toplam</span>
+                      <span>{t("Toplam", "Total", "الإجمالي")}</span>
                       <span>₺{finalAmount.toFixed(2)}</span>
                     </div>
                   </div>
@@ -165,7 +167,7 @@ export default function CartModal() {
                     onClick={checkout}
                     className="w-full py-4 bg-foreground text-background rounded-full font-medium tracking-wide hover:bg-accent-gold transition-colors flex items-center justify-center gap-2"
                   >
-                    Sepete Git ve Ödemeye Geç
+                    {t("Sepete Git ve Ödemeye Geç", "Go to Cart & Checkout", "انتقل إلى السلة والدفع")}
                   </button>
                 </div>
               </>

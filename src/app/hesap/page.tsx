@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useT, useLang } from '@/lib/i18n'
 import { ArrowLeft, Eye, EyeOff, Copy, Check } from 'lucide-react'
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
@@ -17,6 +18,8 @@ export default function AccountPage() {
 }
 
 function AccountPageInner() {
+  const t = useT()
+  const lang = useLang()
   // Login State
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
@@ -77,7 +80,7 @@ function AccountPageInner() {
     setLoginError('')
     
     if (!loginEmail || !loginPassword) {
-      setLoginError('Lütfen e-posta ve şifrenizi girin.')
+      setLoginError(t("Lütfen e-posta ve şifrenizi girin.", "Please enter your email and password.", "يرجى إدخال البريد الإلكتروني وكلمة المرور."))
       return
     }
 
@@ -92,7 +95,7 @@ function AccountPageInner() {
       const data = await res.json()
       
       if (!res.ok) {
-        throw new Error(data.error || 'Giriş yapılamadı.')
+        throw new Error(data.error || t("Giriş yapılamadı.", "Could not sign in.", "تعذّر تسجيل الدخول."))
       }
       
       localStorage.setItem('user', JSON.stringify(data.user))
@@ -112,22 +115,22 @@ function AccountPageInner() {
     setError('')
     
     if (!firstName || !lastName || !email || !password || !passwordConfirm || !birthYear) {
-      setError('Lütfen tüm zorunlu alanları (Doğum Yılı dahil) doldurun.')
+      setError(t("Lütfen tüm zorunlu alanları (Doğum Yılı dahil) doldurun.", "Please fill in all required fields (including Birth Year).", "يرجى ملء جميع الحقول المطلوبة (بما في ذلك سنة الميلاد)."))
       return
     }
     
     if (password !== passwordConfirm) {
-      setError('Şifreler birbiriyle eşleşmiyor.')
+      setError(t("Şifreler birbiriyle eşleşmiyor.", "Passwords do not match.", "كلمتا المرور غير متطابقتين."))
       return
     }
 
     if (password.length < 6) {
-      setError('Şifre en az 6 karakter olmalıdır.')
+      setError(t("Şifre en az 6 karakter olmalıdır.", "Password must be at least 6 characters.", "يجب ألا تقل كلمة المرور عن 6 أحرف."))
       return
     }
 
     if (!termsConsent) {
-      setError('Üyelik Koşulları ve Kişisel Verilerimin Korunması metinlerini onaylamanız gerekmektedir.')
+      setError(t("Üyelik Koşulları ve Kişisel Verilerimin Korunması metinlerini onaylamanız gerekmektedir.", "You must accept the Membership Terms and the Personal Data Protection text.", "يجب الموافقة على شروط العضوية ونص حماية البيانات الشخصية."))
       return
     }
 
@@ -150,7 +153,7 @@ function AccountPageInner() {
       const data = await res.json()
 
       if (!res.ok) {
-        throw new Error(data.error || 'Kayıt sırasında bir hata oluştu.')
+        throw new Error(data.error || t("Kayıt sırasında bir hata oluştu.", "An error occurred during registration.", "حدث خطأ أثناء التسجيل."))
       }
 
       // Auto login after register
@@ -187,7 +190,7 @@ function AccountPageInner() {
           
           {/* Giriş Yap */}
           <div className="flex flex-col">
-            <h1 className="text-3xl font-light tracking-wide mb-10">Giriş Yap</h1>
+            <h1 className="text-3xl font-light tracking-wide mb-10">{t("Giriş Yap", "Sign In", "تسجيل الدخول")}</h1>
             
             <form onSubmit={handleLogin} className="space-y-8 flex-1 flex flex-col">
               {loginError && (
@@ -196,7 +199,7 @@ function AccountPageInner() {
                 </div>
               )}
               <div className="flex flex-col">
-                <label htmlFor="loginEmail" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">E-posta adresi</label>
+                <label htmlFor="loginEmail" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">{t("E-posta adresi", "Email address", "البريد الإلكتروني")}</label>
                 <input 
                   id="loginEmail"
                   name="email"
@@ -210,7 +213,7 @@ function AccountPageInner() {
               </div>
               
               <div className="flex flex-col">
-                <label htmlFor="loginPassword" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Şifre</label>
+                <label htmlFor="loginPassword" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">{t("Şifre", "Password", "كلمة المرور")}</label>
                 <div className="relative">
                   <input 
                     id="loginPassword"
@@ -229,12 +232,12 @@ function AccountPageInner() {
               </div>
               
               <div className="flex justify-start">
-                <a href="#" className="text-xs underline text-foreground/60 hover:text-accent-rose transition-colors">Şifreni mi unuttun?</a>
+                <a href="#" className="text-xs underline text-foreground/60 hover:text-accent-rose transition-colors">{t("Şifreni mi unuttun?", "Forgot your password?", "هل نسيت كلمة المرور؟")}</a>
               </div>
               
               <div className="pt-6 mt-auto">
                 <button type="submit" disabled={loginLoading} className="w-full bg-foreground text-background py-4 uppercase tracking-widest text-sm font-medium hover:bg-accent-gold transition-colors disabled:opacity-50">
-                  {loginLoading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
+                  {loginLoading ? t("Giriş Yapılıyor...", "Signing in...", "جارٍ تسجيل الدخول...") : t("Giriş Yap", "Sign In", "تسجيل الدخول")}
                 </button>
               </div>
             </form>
@@ -245,49 +248,49 @@ function AccountPageInner() {
           
           {/* Üye Ol */}
           <div className="flex flex-col h-full">
-            <h1 className="text-3xl font-light tracking-wide mb-10">Üye Ol</h1>
+            <h1 className="text-3xl font-light tracking-wide mb-10">{t("Üye Ol", "Create Account", "إنشاء حساب")}</h1>
             
             {success ? (
               <div className="flex-1 flex flex-col justify-center items-center text-center space-y-6">
                 <div className="w-16 h-16 rounded-full bg-accent-gold/20 flex items-center justify-center text-accent-gold mb-4">
                   <Check size={32} />
                 </div>
-                <h2 className="text-2xl font-light">Aramıza Hoş Geldiniz!</h2>
+                <h2 className="text-2xl font-light">{t("Aramıza Hoş Geldiniz!", "Welcome to the Club!", "أهلًا بك بيننا!")}</h2>
                 <p className="text-foreground/70 leading-relaxed max-w-sm">
-                  Üyeliğiniz başarıyla oluşturuldu ve sisteme giriş yapıldı. PN Parfüm ayrıcalıklarını keşfetmeye başlayabilirsiniz.
+                  {t("Üyeliğiniz başarıyla oluşturuldu ve sisteme giriş yapıldı. PN Parfüm ayrıcalıklarını keşfetmeye başlayabilirsiniz.", "Your account has been created and you are signed in. You can start exploring PN Parfüm privileges.", "تم إنشاء حسابك وتسجيل دخولك. يمكنك البدء باكتشاف مزايا PN Parfüm.")}
                 </p>
                 <div className="bg-foreground/5 p-6 rounded-2xl border border-foreground/10 w-full mt-4">
-                  <p className="text-sm uppercase tracking-widest text-foreground/60 mb-2">İlk Üyeliğe Özel Kuponunuz</p>
+                  <p className="text-sm uppercase tracking-widest text-foreground/60 mb-2">{t("İlk Üyeliğe Özel Kuponunuz", "Your First-Membership Coupon", "قسيمتك الخاصة بأول عضوية")}</p>
                   
                   <div className="flex items-center justify-center gap-4 mt-2">
                     <p className="text-3xl font-medium tracking-wider text-accent-gold">{couponCode}</p>
                     <button 
                       onClick={copyCode}
                       className="w-10 h-10 bg-foreground/10 text-foreground rounded-lg flex items-center justify-center hover:bg-accent-gold hover:text-white transition-colors"
-                      title="Kodu Kopyala"
+                      title={t("Kodu Kopyala", "Copy code", "نسخ الرمز")}
                     >
                       {copied ? <Check size={18} /> : <Copy size={18} />}
                     </button>
                   </div>
-                  {copied && <p className="text-xs text-accent-gold mt-2">Kopyalandı!</p>}
+                  {copied && <p className="text-xs text-accent-gold mt-2">{t("Kopyalandı!", "Copied!", "تم النسخ!")}</p>}
                 </div>
 
                 {referralBonusApplied && (
                   <div className="bg-accent-gold/10 border border-accent-gold/20 p-4 rounded-2xl w-full text-sm text-foreground/80">
-                    🎁 Referans kodu kullanıldı — sizi davet eden üye de bir indirim kuponu kazandı, size özel ek bir kupon da hesabınıza tanımlandı. İkisini de <Link href="/profil" className="underline underline-offset-4 text-accent-gold">Profilim</Link> sayfasından görebilirsiniz.
+                    🎁 {t("Referans kodu kullanıldı — sizi davet eden üye de bir indirim kuponu kazandı, size özel ek bir kupon da hesabınıza tanımlandı. İkisini de", "Referral code used — the member who invited you earned a discount coupon, and an extra coupon was added to your account. You can see both on your", "تم استخدام رمز الإحالة — ربح العضو الذي دعاك قسيمة خصم، وأُضيفت قسيمة إضافية إلى حسابك. يمكنك رؤية الاثنتين في")} <Link href="/profil" className="underline underline-offset-4 text-accent-gold">{t("Profilim", "Profile", "ملفي الشخصي")}</Link> {t("sayfasından görebilirsiniz.", "page.", "صفحة.")}
                   </div>
                 )}
 
                 {ownReferralCode && (
                   <div className="bg-foreground/5 p-5 rounded-2xl border border-foreground/10 w-full">
-                    <p className="text-xs uppercase tracking-widest text-foreground/60 mb-1">Kendi Referans Kodunuz</p>
+                    <p className="text-xs uppercase tracking-widest text-foreground/60 mb-1">{t("Kendi Referans Kodunuz", "Your Own Referral Code", "رمز الإحالة الخاص بك")}</p>
                     <p className="text-lg font-medium tracking-wider text-accent-gold font-mono">{ownReferralCode}</p>
-                    <p className="text-[11px] text-foreground/50 mt-1">Arkadaşlarınıza bu kodu verin, ikiniz de kazanın.</p>
+                    <p className="text-[11px] text-foreground/50 mt-1">{t("Arkadaşlarınıza bu kodu verin, ikiniz de kazanın.", "Give this code to your friends, you both win.", "أعطِ هذا الرمز لأصدقائك، وستربحان معًا.")}</p>
                   </div>
                 )}
 
                 <Link href="/profil" className="mt-8 border border-foreground text-foreground px-8 py-3 uppercase tracking-widest text-sm font-medium hover:bg-foreground hover:text-background transition-colors inline-block">
-                  Profilime Git
+                  {t("Profilime Git", "Go to My Profile", "انتقل إلى ملفي الشخصي")}
                 </Link>
               </div>
             ) : (
@@ -299,7 +302,7 @@ function AccountPageInner() {
               )}
               <div className="grid grid-cols-2 gap-6">
                 <div className="flex flex-col">
-                  <label htmlFor="firstName" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Ad</label>
+                  <label htmlFor="firstName" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">{t("Ad", "First name", "الاسم")}</label>
                   <input 
                     id="firstName"
                     name="firstName"
@@ -311,7 +314,7 @@ function AccountPageInner() {
                   />
                 </div>
                 <div className="flex flex-col">
-                  <label htmlFor="lastName" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Soyad</label>
+                  <label htmlFor="lastName" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">{t("Soyad", "Last name", "اللقب")}</label>
                   <input 
                     id="lastName"
                     name="lastName"
@@ -338,7 +341,7 @@ function AccountPageInner() {
               </div>
               
               <div className="flex flex-col">
-                <label htmlFor="registerPhone" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Telefon Numarası</label>
+                <label htmlFor="registerPhone" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">{t("Telefon Numarası", "Phone number", "رقم الهاتف")}</label>
                 <input 
                   id="registerPhone"
                   name="registerPhone"
@@ -347,7 +350,7 @@ function AccountPageInner() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="w-full bg-transparent border-b border-foreground/20 py-2 focus:outline-none focus:border-accent-gold transition-colors"
-                  placeholder="0 (5XX) XXX XX XX"
+                  placeholder={t("0 (5XX) XXX XX XX", "+XX XXX XXX XXXX", "+XX XXX XXX XXXX")}
                 />
               </div>
 
@@ -362,7 +365,7 @@ function AccountPageInner() {
 
               <div className="flex flex-col">
                 <label htmlFor="referralCode" className="text-xs uppercase tracking-widest text-foreground/60 mb-2 flex items-center justify-between">
-                  Referans Kodu veya Telefon Numarası <span className="text-[10px] text-foreground/40 normal-case tracking-normal">Opsiyonel</span>
+                  {t("Referans Kodu veya Telefon Numarası", "Referral Code or Phone Number", "رمز الإحالة أو رقم الهاتف")} <span className="text-[10px] text-foreground/40 normal-case tracking-normal">{t("Opsiyonel", "Optional", "اختياري")}</span>
                 </label>
                 <input
                   id="referralCode"
@@ -371,14 +374,14 @@ function AccountPageInner() {
                   value={referralCodeInput}
                   onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
                   className="w-full bg-transparent border-b border-foreground/20 py-2 focus:outline-none focus:border-accent-gold transition-colors font-mono tracking-wider"
-                  placeholder="Örn: 0532 123 45 67 veya PN-AYSE123"
+                  placeholder={t("Örn: 0532 123 45 67 veya PN-AYSE123", "e.g. +90 532 123 45 67 or PN-AYSE123", "مثال: 0532 123 45 67 أو PN-AYSE123")}
                 />
-                <p className="text-[10px] text-foreground/50 mt-1 leading-tight">Sizi tavsiye eden bir arkadaşınızın telefon numarasını ya da bir elçimizin kodunu girin — ikiniz de hediye kazanır.</p>
+                <p className="text-[10px] text-foreground/50 mt-1 leading-tight">{t("Sizi tavsiye eden bir arkadaşınızın telefon numarasını ya da bir elçimizin kodunu girin — ikiniz de hediye kazanır.", "Enter the phone number of the friend who referred you or an ambassador's code — you both win a gift.", "أدخل رقم هاتف صديق رشّحك أو رمز أحد سفرائنا — وستربحان هدية معًا.")}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-6">
                 <div className="flex flex-col">
-                  <label htmlFor="birthYear" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Doğum Yılı *</label>
+                  <label htmlFor="birthYear" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">{t("Doğum Yılı *", "Birth year *", "سنة الميلاد *")}</label>
                   <input 
                     id="birthYear"
                     name="bday-year"
@@ -392,7 +395,7 @@ function AccountPageInner() {
                 </div>
                 <div className="flex flex-col">
                   <label htmlFor="birthMonthDay" className="text-xs uppercase tracking-widest text-foreground/60 mb-2 flex items-center justify-between">
-                    Doğum Günü <span className="text-[10px] text-foreground/40 normal-case tracking-normal">Opsiyonel</span>
+                    {t("Doğum Günü", "Birthday", "عيد الميلاد")} <span className="text-[10px] text-foreground/40 normal-case tracking-normal">{t("Opsiyonel", "Optional", "اختياري")}</span>
                   </label>
                   <input 
                     id="birthMonthDay"
@@ -401,15 +404,15 @@ function AccountPageInner() {
                     value={birthMonthDay}
                     onChange={(e) => setBirthMonthDay(e.target.value)}
                     className="w-full bg-transparent border-b border-foreground/20 py-2 focus:outline-none focus:border-accent-gold transition-colors"
-                    placeholder="GG/AA"
+                    placeholder={t("GG/AA", "DD/MM", "يوم/شهر")}
                   />
-                  <p className="text-[10px] text-foreground/50 mt-1 leading-tight">Size özel sürpriz doğum günü ayrıcalıkları için.</p>
+                  <p className="text-[10px] text-foreground/50 mt-1 leading-tight">{t("Size özel sürpriz doğum günü ayrıcalıkları için.", "For special birthday surprises.", "لمفاجآت عيد ميلاد خاصة بك.")}</p>
                 </div>
               </div>
 
               <div className="flex flex-col">
                 <label htmlFor="profession" className="text-xs uppercase tracking-widest text-foreground/60 mb-2 flex items-center justify-between">
-                  Meslek <span className="text-[10px] text-foreground/40 normal-case tracking-normal">Opsiyonel</span>
+                  {t("Meslek", "Occupation", "المهنة")} <span className="text-[10px] text-foreground/40 normal-case tracking-normal">{t("Opsiyonel", "Optional", "اختياري")}</span>
                 </label>
                 <input 
                   id="profession"
@@ -418,9 +421,9 @@ function AccountPageInner() {
                   value={profession}
                   onChange={(e) => setProfession(e.target.value)}
                   className="w-full bg-transparent border-b border-foreground/20 py-2 focus:outline-none focus:border-accent-gold transition-colors"
-                  placeholder="Mimar, Avukat, Tasarımcı vb."
+                  placeholder={t("Mimar, Avukat, Tasarımcı vb.", "Architect, Lawyer, Designer, etc.", "مهندس معماري، محامٍ، مصمم، إلخ.")}
                 />
-                <p className="text-[10px] text-foreground/50 mt-1 leading-tight">Yaşam tarzınıza ve mesleğinize en uygun koku profillerini size önerebilmemiz için.</p>
+                <p className="text-[10px] text-foreground/50 mt-1 leading-tight">{t("Yaşam tarzınıza ve mesleğinize en uygun koku profillerini size önerebilmemiz için.", "So we can recommend the fragrance profiles that best suit your lifestyle and profession.", "لنتمكن من اقتراح ملفات العطور الأنسب لأسلوب حياتك ومهنتك.")}</p>
               </div>
               
               <div className="grid grid-cols-2 gap-6">
@@ -442,7 +445,7 @@ function AccountPageInner() {
                   </div>
                 </div>
                 <div className="flex flex-col">
-                  <label htmlFor="registerPasswordConfirm" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">Şifre Tekrar</label>
+                  <label htmlFor="registerPasswordConfirm" className="text-xs uppercase tracking-widest text-foreground/60 mb-2">{t("Şifre Tekrar", "Confirm password", "تأكيد كلمة المرور")}</label>
                    <div className="relative">
                      <input 
                        id="registerPasswordConfirm"
@@ -464,25 +467,25 @@ function AccountPageInner() {
                 <label className="flex items-start gap-3 cursor-pointer group">
                   <input type="checkbox" checked={termsConsent} onChange={(e) => setTermsConsent(e.target.checked)} className="mt-0.5 w-4 h-4 rounded border-foreground/30 text-accent-gold focus:ring-accent-gold bg-transparent cursor-pointer" />
                   <span className="text-xs text-foreground/80 group-hover:text-foreground transition-colors leading-relaxed">
-                    <a href="#" className="underline hover:text-accent-gold transition-colors">Üyelik Koşulları</a>'nı ve <a href="#" className="underline hover:text-accent-gold transition-colors">Kişisel Verilerimin Korunması</a>'nı kabul ediyorum.
+                    {lang === 'tr' ? (<><a href="#" className="underline hover:text-accent-gold transition-colors">Üyelik Koşulları</a>'nı ve <a href="#" className="underline hover:text-accent-gold transition-colors">Kişisel Verilerimin Korunması</a>'nı kabul ediyorum.</>) : lang === 'ar' ? (<>أوافق على <a href="#" className="underline hover:text-accent-gold transition-colors">شروط العضوية</a> و<a href="#" className="underline hover:text-accent-gold transition-colors">حماية بياناتي الشخصية</a>.</>) : (<>I accept the <a href="#" className="underline hover:text-accent-gold transition-colors">Membership Terms</a> and the <a href="#" className="underline hover:text-accent-gold transition-colors">Personal Data Protection</a> notice.</>)}
                   </span>
                 </label>
                 <label className="flex items-start gap-3 cursor-pointer group">
                   <input type="checkbox" checked={emailConsent} onChange={(e) => setEmailConsent(e.target.checked)} className="mt-0.5 w-4 h-4 rounded border-foreground/30 text-accent-gold focus:ring-accent-gold bg-transparent cursor-pointer" />
                   <span className="text-xs text-foreground/80 group-hover:text-foreground transition-colors leading-relaxed">
-                    Kampanya, duyuru, bilgilendirmelerden <strong>e-posta</strong> ile haberdar olmak istiyorum.
+                    {t("Kampanya, duyuru, bilgilendirmelerden", "I would like to be informed about campaigns and announcements by", "أرغب في تلقّي الحملات والإعلانات عبر")} <strong>{t("e-posta", "email", "البريد الإلكتروني")}</strong>{lang === 'tr' ? ' ile haberdar olmak istiyorum.' : '.'}
                   </span>
                 </label>
                 <label className="flex items-start gap-3 cursor-pointer group">
                   <input type="checkbox" checked={smsConsent} onChange={(e) => setSmsConsent(e.target.checked)} className="mt-0.5 w-4 h-4 rounded border-foreground/30 text-accent-gold focus:ring-accent-gold bg-transparent cursor-pointer" />
                   <span className="text-xs text-foreground/80 group-hover:text-foreground transition-colors leading-relaxed">
-                    Kampanya, duyuru, bilgilendirmelerden <strong>sms</strong> ile haberdar olmak istiyorum.
+                    {t("Kampanya, duyuru, bilgilendirmelerden", "I would like to be informed about campaigns and announcements by", "أرغب في تلقّي الحملات والإعلانات عبر")} <strong>{t("sms", "SMS", "رسالة نصية")}</strong>{lang === 'tr' ? ' ile haberdar olmak istiyorum.' : '.'}
                   </span>
                 </label>
                 <label className="flex items-start gap-3 cursor-pointer group bg-accent-gold/5 border border-accent-gold/15 rounded-xl px-3 py-2.5 -mx-3">
                   <input type="checkbox" checked={wantsSalesRep} onChange={(e) => setWantsSalesRep(e.target.checked)} className="mt-0.5 w-4 h-4 rounded border-foreground/30 text-accent-gold focus:ring-accent-gold bg-transparent cursor-pointer" />
                   <span className="text-xs text-foreground/80 group-hover:text-foreground transition-colors leading-relaxed">
-                    <strong>Satış Temsilcisi olmak istiyorum</strong> — sizinle iletişime geçelim.
+                    <strong>{t("Satış Temsilcisi olmak istiyorum", "I want to become a Sales Representative", "أرغب في أن أصبح مندوب مبيعات")}</strong> — {t("sizinle iletişime geçelim.", "we'll get in touch with you.", "سنتواصل معك.")}
                   </span>
                 </label>
               </div>
@@ -493,10 +496,10 @@ function AccountPageInner() {
                   disabled={loading}
                   className="w-full border border-foreground text-foreground py-4 uppercase tracking-widest text-sm font-medium hover:bg-foreground hover:text-background transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'İşleniyor...' : 'Üye Ol'}
+                  {loading ? t("İşleniyor...", "Processing...", "جارٍ المعالجة...") : t("Üye Ol", "Create Account", "إنشاء حساب")}
                 </button>
                 <p className="text-center text-xs text-foreground/60 mt-4 leading-relaxed">
-                  İlk üyelerimize özel <span className="uppercase underline font-bold text-foreground">İNDİRİM KUPONU</span> kodunuz kayıt sonrası ekranda verilecektir.
+                  {t("İlk üyelerimize özel", "Your exclusive", "رمز")} <span className="uppercase underline font-bold text-foreground">{t("İNDİRİM KUPONU", "DISCOUNT COUPON", "قسيمة الخصم")}</span> {t("kodunuz kayıt sonrası ekranda verilecektir.", "code will be shown on screen after registration.", "الخاصة بأوائل الأعضاء ستظهر على الشاشة بعد التسجيل.")}
                 </p>
               </div>
             </form>

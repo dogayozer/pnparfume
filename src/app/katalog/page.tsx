@@ -4,6 +4,7 @@ import ProductCard from '@/components/ProductCard'
 import FilterSidebar from '@/components/catalog/FilterSidebar'
 import MobileFilterSort from '@/components/catalog/MobileFilterSort'
 import Pagination from '@/components/catalog/Pagination'
+import { T } from '@/lib/i18n'
 
 // Bu sayfa `searchParams` okuduğu için Next.js'i her ziyarette sıfırdan (hiç
 // önbelleksiz) render etmeye zorluyordu — muhtemelen sitenin en çok ziyaret
@@ -123,9 +124,9 @@ export default async function KatalogPage({
   return (
     <div className="min-h-screen px-6 py-12 md:px-12 max-w-7xl mx-auto">
       <div className="mb-12">
-        <h1 className="text-4xl md:text-5xl font-light mb-4">Tüm Parfümler</h1>
+        <h1 className="text-4xl md:text-5xl font-light mb-4"><T tr="Tüm Parfümler" en="All Perfumes" ar="جميع العطور" /></h1>
         <p className="text-foreground/60 max-w-2xl">
-          yapay zeka analiz algoritmamızla analiz edilmiş, teninize en uygun koku profilini bulabileceğiniz koleksiyonumuz.
+          <T tr="yapay zeka analiz algoritmamızla analiz edilmiş, teninize en uygun koku profilini bulabileceğiniz koleksiyonumuz." en="Our collection, analyzed by our AI algorithm, where you can find the fragrance profile that best suits your skin." ar="مجموعتنا التي حلّلتها خوارزميات الذكاء الاصطناعي لديك لتجد ملف العطر الأنسب لبشرتك." />
         </p>
       </div>
 
@@ -139,7 +140,7 @@ export default async function KatalogPage({
 
         <main className="flex-1">
           <div className="mb-6 flex justify-between items-center">
-            <span className="text-sm text-foreground/50">{products.length} ürün bulundu</span>
+            <span className="text-sm text-foreground/50"><T tr={`${products.length} ürün bulundu`} en={`${products.length} products found`} ar={`تم العثور على ${products.length} منتج`} /></span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -163,8 +164,8 @@ export default async function KatalogPage({
 
           {products.length === 0 && (
             <div className="text-center py-20 bg-foreground/[0.02] rounded-2xl border border-foreground/5">
-              <h3 className="text-lg font-medium mb-2">Ürün Bulunamadı</h3>
-              <p className="text-foreground/50">Seçtiğiniz filtrelere uygun parfüm bulunmuyor. Lütfen filtreleri esnetmeyi deneyin.</p>
+              <h3 className="text-lg font-medium mb-2"><T tr="Ürün Bulunamadı" en="No Products Found" ar="لم يتم العثور على منتجات" /></h3>
+              <p className="text-foreground/50"><T tr="Seçtiğiniz filtrelere uygun parfüm bulunmuyor. Lütfen filtreleri esnetmeyi deneyin." en="No perfumes match your filters. Please try relaxing the filters." ar="لا توجد عطور تطابق عوامل التصفية. حاول تخفيف عوامل التصفية." /></p>
             </div>
           )}
 

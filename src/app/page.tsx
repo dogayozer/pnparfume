@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { T } from '@/lib/i18n'
 import HomeHero from '@/components/home/HomeHero'
 import HomeHighlights from '@/components/home/HomeHighlights'
 import ProductCard from '@/components/ProductCard'
@@ -94,13 +95,13 @@ export default async function Home({
       <section className="pt-8 pb-20 px-4 md:px-12 max-w-7xl mx-auto w-full">
         <div className="flex justify-between items-end mb-4 md:mb-12">
           <div>
-            <h2 className="text-lg md:text-4xl font-medium md:font-light mb-2 md:mb-4">Çok Satanlar</h2>
+            <h2 className="text-lg md:text-4xl font-medium md:font-light mb-2 md:mb-4"><T tr="Çok Satanlar" en="Best Sellers" ar="الأكثر مبيعًا" /></h2>
             <p className="text-foreground/60 max-w-xl hidden md:block">
-              Müşterilerimiz tarafından beğenilen, teninizle en iyi uyumu yakalayacak özel harmanlar.
+              <T tr="Müşterilerimiz tarafından beğenilen, teninizle en iyi uyumu yakalayacak özel harmanlar." en="Signature blends loved by our customers, made to harmonize best with your skin." ar="مزيجات خاصة أحبها عملاؤنا، تنسجم تمامًا مع بشرتك." />
             </p>
           </div>
           <Link href="/katalog" className="text-[11px] md:text-sm font-medium hover:text-accent-rose transition-colors pb-2 md:pb-0 underline underline-offset-4">
-            Tüm Ürünler &rarr;
+            <T tr="Tüm Ürünler" en="All Products" ar="جميع المنتجات" /> &rarr;
           </Link>
         </div>
 
@@ -127,16 +128,16 @@ export default async function Home({
           </div>
         ) : (
           <div className="text-center py-16 bg-foreground/[0.02] rounded-2xl border border-foreground/5">
-            <p className="text-foreground/50 mb-3">Seçtiğin filtrelerle eşleşen ürün bulunamadı.</p>
+            <p className="text-foreground/50 mb-3"><T tr="Seçtiğin filtrelerle eşleşen ürün bulunamadı." en="No products match your filters." ar="لا توجد منتجات تطابق عوامل التصفية." /></p>
             <Link href="/katalog" className="text-sm font-medium underline underline-offset-4 hover:text-accent-rose">
-              Tüm koleksiyonu incele
+              <T tr="Tüm koleksiyonu incele" en="Browse the full collection" ar="تصفح المجموعة الكاملة" />
             </Link>
           </div>
         )}
 
         <div className="mt-12 text-center md:hidden">
            <Link href="/katalog" className="inline-block border border-foreground text-foreground px-8 py-3 rounded-full text-sm font-medium hover:bg-foreground hover:text-background transition-colors">
-             Tümünü Gör
+             <T tr="Tümünü Gör" en="View All" ar="عرض الكل" />
            </Link>
         </div>
       </section>

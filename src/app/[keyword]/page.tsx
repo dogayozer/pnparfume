@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { T } from '@/lib/i18n'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import ProductCard from '@/components/ProductCard'
@@ -114,12 +115,12 @@ export default async function SeoKeywordPage({
       </div>
 
       <div className="mb-6 flex items-center justify-between">
-        <span className="text-sm text-foreground/50">{processed.length} ürün bulundu</span>
+        <span className="text-sm text-foreground/50"><T tr={`${processed.length} ürün bulundu`} en={`${processed.length} products found`} ar={`تم العثور على ${processed.length} منتج`} /></span>
         <Link
           href={`/katalog${page.katalogQuery ? `?${page.katalogQuery}` : ''}`}
           className="text-xs md:text-sm font-medium hover:text-accent-rose transition-colors underline underline-offset-4"
         >
-          Tüm Filtrelerle İncele &rarr;
+          <T tr="Tüm Filtrelerle İncele" en="Browse with All Filters" ar="تصفح بكل عوامل التصفية" /> &rarr;
         </Link>
       </div>
 
@@ -144,9 +145,9 @@ export default async function SeoKeywordPage({
 
       {processed.length === 0 && (
         <div className="text-center py-20 bg-foreground/[0.02] rounded-2xl border border-foreground/5">
-          <h3 className="text-lg font-medium mb-2">Şu an bu kritere uygun ürün yok</h3>
+          <h3 className="text-lg font-medium mb-2"><T tr="Şu an bu kritere uygun ürün yok" en="No products match this criterion right now" ar="لا توجد منتجات تطابق هذا المعيار حاليًا" /></h3>
           <p className="text-foreground/50">
-            <Link href="/katalog" className="underline underline-offset-4 hover:text-accent-rose">Tüm koleksiyonu</Link> inceleyebilirsiniz.
+            <Link href="/katalog" className="underline underline-offset-4 hover:text-accent-rose"><T tr="Tüm koleksiyonu" en="The full collection" ar="المجموعة الكاملة" /></Link> <T tr="inceleyebilirsiniz." en="is available to browse." ar="متاحة للتصفح." />
           </p>
         </div>
       )}

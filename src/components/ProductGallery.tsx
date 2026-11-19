@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useT } from '@/lib/i18n'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -13,6 +14,7 @@ interface ProductGalleryProps {
 }
 
 export default function ProductGallery({ images, title, isOutOfStock, sku }: ProductGalleryProps) {
+  const t = useT()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
 
@@ -135,7 +137,7 @@ export default function ProductGallery({ images, title, isOutOfStock, sku }: Pro
             ) : (
               <Image
                 src={toSecureUrl(currentMedia)}
-                alt={`${title} - Görsel ${currentIndex + 1}`}
+                alt={t(`${title} - Görsel ${currentIndex + 1}`, `${title} - Image ${currentIndex + 1}`, `${title} - صورة ${currentIndex + 1}`)}
                 fill
                 priority={currentIndex === 0}
                 sizes="(max-width: 768px) 100vw, 50vw"
@@ -152,14 +154,14 @@ export default function ProductGallery({ images, title, isOutOfStock, sku }: Pro
             <button 
               onClick={(e) => { e.stopPropagation(); handlePrev(); }}
               className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-md border border-foreground/10 flex items-center justify-center text-foreground hover:bg-foreground hover:text-background transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-0 z-20"
-              aria-label="Önceki Görsel"
+              aria-label={t("Önceki Görsel", "Previous image", "الصورة السابقة")}
             >
               <ChevronLeft size={20} />
             </button>
             <button 
               onClick={(e) => { e.stopPropagation(); handleNext(); }}
               className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-md border border-foreground/10 flex items-center justify-center text-foreground hover:bg-foreground hover:text-background transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-0 z-20"
-              aria-label="Sonraki Görsel"
+              aria-label={t("Sonraki Görsel", "Next image", "الصورة التالية")}
             >
               <ChevronRight size={20} />
             </button>
@@ -199,7 +201,7 @@ export default function ProductGallery({ images, title, isOutOfStock, sku }: Pro
                 ) : (
                   <Image
                     src={toSecureUrl(img)}
-                    alt={`${title} - Küçük Görsel ${idx + 1}`}
+                    alt={t(`${title} - Küçük Görsel ${idx + 1}`, `${title} - Thumbnail ${idx + 1}`, `${title} - صورة مصغّرة ${idx + 1}`)}
                     fill
                     sizes="80px"
                     onError={() => setFailedImages(prev => ({ ...prev, [idx]: true }))}

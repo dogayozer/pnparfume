@@ -8,6 +8,7 @@ import { useCart } from '@/contexts/CartContext'
 import { useDealer } from '@/contexts/DealerContext'
 import { BOTTLE_OPTIONS, DEFAULT_BOTTLE_CODE, toSecureImageUrl } from '@/lib/bottleOptions'
 import { EXTRAIT_SURCHARGE } from '@/lib/pricingConstants'
+import { useT } from '@/lib/i18n'
 
 interface ProductActionsProps {
   sku: string
@@ -24,6 +25,7 @@ const CUSTOMIZE_ENABLED = false
 
 export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfStock }: ProductActionsProps) {
   const router = useRouter()
+  const t = useT()
   const { addToCart, setIsCartOpen } = useCart()
   const { isDealer, dealerPrices } = useDealer()
   const dealerPrice = isDealer ? dealerPrices[sku] : undefined
@@ -93,7 +95,7 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
     <>
       {dealerPrice != null && (
         <div className="mb-4 flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border border-accent-gold/40 bg-accent-gold/10">
-          <span className="text-xs font-bold uppercase tracking-widest text-accent-gold">Bayi Fiyatınız</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-accent-gold">{t('Bayi Fiyatınız', 'Your Dealer Price', 'سعر الوكيل الخاص بك')}</span>
           <span className="text-2xl font-light text-foreground">{dealerPrice.toLocaleString('tr-TR')} ₺</span>
         </div>
       )}
@@ -108,11 +110,11 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
             }`}
           >
             <ShoppingCart size={16} />
-            Sepete Ekle
+            {t('Sepete Ekle', 'Add to Cart', 'أضف إلى السلة')}
           </button>
         ) : (
           <button disabled className="flex-1 flex items-center justify-center gap-3 px-8 py-4 bg-foreground/5 text-foreground/50 font-medium uppercase tracking-widest text-sm rounded-full cursor-not-allowed border border-foreground/10">
-            Tükendi
+            {t('Tükendi', 'Out of Stock', 'نفد من المخزون')}
           </button>
         )}
       </div>
@@ -137,7 +139,7 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
           className="flex items-center justify-center gap-2 px-6 py-3 mb-6 rounded-full border border-[#f27a1a] text-[#f27a1a] text-sm font-medium uppercase tracking-widest hover:bg-[#f27a1a] hover:text-white transition-colors"
         >
           <ExternalLink size={16} />
-          Trendyol&apos;dan Satın Al
+          {t("Trendyol'dan Satın Al", 'Buy on Trendyol (Turkey)', 'اشترِ من Trendyol (تركيا)')}
         </a>
       )}
 

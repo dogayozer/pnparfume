@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { useT, useLang } from '@/lib/i18n'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -53,7 +54,16 @@ const CURATED_PACKS = [
   }
 ]
 
+const PACK_I18N: Record<string, { en: [string, string]; ar: [string, string] }> = {
+  bestsellers: { en: ["🏆 Top 5 Signature Bestsellers", "The 5 most-loved iconic scents of PN Parfüm"], ar: ["🏆 أفضل 5 عطور مميزة مبيعًا", "أكثر 5 عطور أيقونية محبوبة من PN Parfüm"] },
+  charismatic: { en: ["💼 Charismatic & Office", "Fresh citrus and sophisticated woody compositions"], ar: ["💼 جذّاب ومكتبي", "تركيبات حمضية منعشة وخشبية راقية"] },
+  night_allure: { en: ["🌙 Night & Special Occasion", "Lasting amber, vanilla and seductive spicy scents"], ar: ["🌙 الليل والمناسبات الخاصة", "عنبر ثابت وفانيليا وروائح توابل مغرية"] },
+  floral_elegance: { en: ["🌸 Elegant Floral & Powder", "The romantic dance of rose, jasmine and white musk"], ar: ["🌸 زهري أنيق وبودري", "الرقصة الرومانسية للورد والياسمين والمسك الأبيض"] },
+}
+
 export default function DiscoverySetPage() {
+  const t = useT()
+  const lang = useLang()
   const { addToCart, setIsCartOpen } = useCart()
   const [products, setProducts] = useState<PerfumeItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -165,13 +175,13 @@ export default function DiscoverySetPage() {
         {/* Header Title */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold uppercase tracking-widest mb-4">
-            <Sparkles size={14} /> Kendi Kutunu Tasarla
+            <Sparkles size={14} /> {t("Kendi Kutunu Tasarla", "Design Your Own Box", "صمّم صندوقك الخاص")}
           </div>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-light tracking-tight mb-4">
-            5'li Keşif Kutusu <span className="text-amber-400 italic">(10 ml Cam Şişe)</span>
+            {t("5'li Keşif Kutusu", 'Discovery Box (5 pcs)', 'صندوق الاكتشاف (5 قطع)')} <span className="text-amber-400 italic">{t('(10 ml Cam Şişe)', '(10 ml Glass Bottles)', '(زجاجات 10 مل)')}</span>
           </h1>
           <p className="text-zinc-400 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
-            338 farklı lüks parfümümüz arasından kendi setini oluştur. İster aşağıdaki katalogdan beğendiğin kokuları seç, ister nasıl kokular sevdiğini (mekan, tarz, marka vb.) bize yaz; uzmanlarımız senin için hazırlasın.
+            {t("338 farklı lüks parfümümüz arasından kendi setini oluştur. İster aşağıdaki katalogdan beğendiğin kokuları seç, ister nasıl kokular sevdiğini (mekan, tarz, marka vb.) bize yaz; uzmanlarımız senin için hazırlasın.", "Create your own set from among our 338 luxury perfumes. Either pick the scents you like from the catalog below, or tell us what kind of scents you love (setting, style, etc.) and our experts will prepare it for you.", "أنشئ مجموعتك الخاصة من بين 338 عطرًا فاخرًا لدينا. اختر العطور التي تعجبك من الكتالوج أدناه، أو أخبرنا بنوع العطور التي تحبها (المكان، الأسلوب، إلخ) وسيجهّزها خبراؤنا لك.")}
           </p>
         </div>
 
@@ -180,12 +190,12 @@ export default function DiscoverySetPage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-4 border-b border-zinc-800">
             <div>
               <div className="flex items-center gap-3">
-                <h3 className="text-lg font-serif font-semibold text-white">Lüks Keşif Kutun</h3>
+                <h3 className="text-lg font-serif font-semibold text-white">{t("Lüks Keşif Kutun", "Your Luxury Discovery Box", "صندوق الاكتشاف الفاخر الخاص بك")}</h3>
                 <span className="bg-amber-500/20 text-amber-300 font-mono text-xs px-2.5 py-0.5 rounded-full border border-amber-500/40 font-bold">
-                  {selectedScents.length} / 5 Seçildi
+                  {selectedScents.length} / 5 {t('Seçildi', 'Selected', 'مختار')}
                 </span>
               </div>
-              <p className="text-xs text-zinc-400 mt-0.5">Kutunu tamamlamak için aşağıdaki katalogdan beğendiğin kokuları ekle.</p>
+              <p className="text-xs text-zinc-400 mt-0.5">{t("Kutunu tamamlamak için aşağıdaki katalogdan beğendiğin kokuları ekle.", "Add the scents you like from the catalog below to complete your box.", "أضف العطور التي تعجبك من الكتالوج أدناه لإكمال صندوقك.")}</p>
             </div>
 
             <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
@@ -205,10 +215,10 @@ export default function DiscoverySetPage() {
               >
                 {isCartReady ? (
                   <>
-                    <ShoppingCart size={16} /> Kutuyu Sepete Ekle
+                    <ShoppingCart size={16} /> {t("Kutuyu Sepete Ekle", "Add Box to Cart", "أضف الصندوق إلى السلة")}
                   </>
                 ) : (
-                  '5 Koku Seç veya Not Yaz'
+                  t("5 Koku Seç veya Not Yaz", "Choose 5 Scents or Write a Note", "اختر 5 عطور أو اكتب ملاحظة")
                 )}
               </button>
             </div>
@@ -238,7 +248,7 @@ export default function DiscoverySetPage() {
                         <button
                           onClick={() => handleRemoveSlot(scent.sku)}
                           className="w-5 h-5 rounded-full bg-zinc-700 hover:bg-rose-600 text-zinc-300 hover:text-white flex items-center justify-center transition-colors"
-                          title="Kaldır"
+                          title={t("Kaldır", "Remove", "إزالة")}
                         >
                           <X size={12} />
                         </button>
@@ -251,7 +261,7 @@ export default function DiscoverySetPage() {
 
                       <div className="flex items-center justify-between text-[10px] text-zinc-500 font-mono pt-1 border-t border-zinc-700/50">
                         <span>10ml Sprey</span>
-                        <span className="text-amber-400 font-bold">✓ Hazır</span>
+                        <span className="text-amber-400 font-bold">✓ {t("Hazır", "Ready", "جاهز")}</span>
                       </div>
                     </>
                   ) : (
@@ -259,7 +269,7 @@ export default function DiscoverySetPage() {
                       <div className="w-8 h-8 rounded-full bg-zinc-800/80 text-zinc-500 flex items-center justify-center mb-1">
                         <Plus size={16} />
                       </div>
-                      <span className="text-[11px] text-zinc-500 font-medium">{slotIdx + 1}. Şişe Boş</span>
+                      <span className="text-[11px] text-zinc-500 font-medium">{slotIdx + 1}. {t('Şişe Boş', 'Empty Bottle', 'زجاجة فارغة')}</span>
                     </div>
                   )}
                 </div>
@@ -268,9 +278,9 @@ export default function DiscoverySetPage() {
           </div>
 
           <div className="mt-6 pt-6 border-t border-zinc-800">
-            <h4 className="text-sm font-bold text-amber-400 mb-2">Kararsız mısın? Tarzını Bize Yaz</h4>
+            <h4 className="text-sm font-bold text-amber-400 mb-2">{t("Kararsız mısın? Tarzını Bize Yaz", "Undecided? Tell Us Your Style", "متردد؟ أخبرنا بأسلوبك")}</h4>
             <p className="text-xs text-zinc-400 mb-3">
-              Kutuyu katalogdan doldurmak yerine sevdiğin koku ailelerini, kullanacağın mekanları veya benzerini istediğin popüler parfümleri yaz, uzmanlarımız senin için seçsin.
+              {t("Kutuyu katalogdan doldurmak yerine sevdiğin koku ailelerini, kullanacağın mekanları veya benzerini istediğin popüler parfümleri yaz, uzmanlarımız senin için seçsin.", "Instead of filling the box from the catalog, write the fragrance families you like, the places you will use it or the popular perfumes you want something similar to, and our experts will choose for you.", "بدلًا من ملء الصندوق من الكتالوج، اكتب عائلات العطور التي تحبها أو الأماكن التي ستستخدمه فيها أو العطور الشهيرة التي تريد ما يشبهها، وسيختار لك خبراؤنا.")}
             </p>
             
             {/* Clickable Tags */}
@@ -289,12 +299,12 @@ export default function DiscoverySetPage() {
             <textarea
               value={customNote}
               onChange={e => setCustomNote(e.target.value)}
-              placeholder="Örn: 2 tane ofis için ferah koku, 1 tane odunsu gece kokusu, diğerleri Tom Ford tarzı olsun..."
+              placeholder={t("Örn: 2 tane ofis için ferah koku, 1 tane odunsu gece kokusu, diğerleri Tom Ford tarzı olsun...", "e.g. 2 fresh scents for the office, 1 woody night scent, the rest in a bold luxury style...", "مثال: عطران منعشان للمكتب، وعطر خشبي واحد للسهرة، والباقي بأسلوب فاخر جريء...")}
               className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-sm text-zinc-200 focus:outline-none focus:border-amber-500 h-20 resize-none"
             />
             
             <p className="text-[10px] text-zinc-500 mt-2 italic">
-              * PN koku kütüphanemizdeki koku notalarına en yakın ürünler numune olarak gönderilecektir.
+              {t("* PN koku kütüphanemizdeki koku notalarına en yakın ürünler numune olarak gönderilecektir.", "* The products closest to the scent notes in our PN fragrance library will be sent as samples.", "* ستُرسل كعيّنات المنتجات الأقرب إلى نوتات العطور في مكتبة PN لدينا.")}
             </p>
           </div>
         </div>
@@ -305,7 +315,7 @@ export default function DiscoverySetPage() {
           <div className="flex items-center gap-2 mb-4">
             <Flame size={18} className="text-amber-400" />
             <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-300">
-              Vaktin Yok mu? Tek Tıkla Hazır Paket Doldur:
+              {t("Vaktin Yok mu? Tek Tıkla Hazır Paket Doldur:", "No time? Fill a Ready-Made Pack with One Click:", "ليس لديك وقت؟ املأ باقة جاهزة بنقرة واحدة:")}
             </h3>
           </div>
 
@@ -317,11 +327,11 @@ export default function DiscoverySetPage() {
                 className="bg-zinc-900/60 hover:bg-zinc-800 border border-zinc-800 hover:border-amber-500/40 rounded-2xl p-4 cursor-pointer transition-all hover:scale-[1.02] flex flex-col justify-between"
               >
                 <div>
-                  <h4 className="font-bold text-sm text-zinc-100 mb-1">{pack.name}</h4>
-                  <p className="text-xs text-zinc-400 line-clamp-2 mb-3">{pack.desc}</p>
+                  <h4 className="font-bold text-sm text-zinc-100 mb-1">{lang === 'tr' ? pack.name : PACK_I18N[pack.id][lang][0]}</h4>
+                  <p className="text-xs text-zinc-400 line-clamp-2 mb-3">{lang === 'tr' ? pack.desc : PACK_I18N[pack.id][lang][1]}</p>
                 </div>
                 <div className="flex items-center justify-between text-xs font-semibold text-amber-400 pt-2 border-t border-zinc-800/80">
-                  <span>Kutuyu Doldur</span>
+                  <span>{t("Kutuyu Doldur", "Fill the Box", "املأ الصندوق")}</span>
                   <ArrowRight size={14} />
                 </div>
               </div>
@@ -336,10 +346,10 @@ export default function DiscoverySetPage() {
           </div>
           <div>
             <h4 className="text-lg font-serif font-bold text-amber-300 mb-1">
-              %100 Cashback Garantisi (Keşif Kutusu Aslında Bedava!)
+              {t("%100 Cashback Garantisi (Keşif Kutusu Aslında Bedava!)", "100% Cashback Guarantee (the Discovery Box is actually free!)", "ضمان استرداد 100% (صندوق الاكتشاف مجاني فعليًا!)")}
             </h4>
             <p className="text-xs md:text-sm text-zinc-300 leading-relaxed">
-              Keşif kutun teslim edildiğinde hesabına <b>690 TL değerinde VIP hediye kuponu</b> tanımlanır. Beğendiğin kokunun 50ml veya 100ml tam boyunu sipariş ederken bu kuponu kullanarak ödediğin tutarın tamamını fiyattan düşebilirsin.
+              {lang === 'tr' ? (<>Keşif kutun teslim edildiğinde hesabına <b>690 TL değerinde VIP hediye kuponu</b> tanımlanır. Beğendiğin kokunun 50ml veya 100ml tam boyunu sipariş ederken bu kuponu kullanarak ödediğin tutarın tamamını fiyattan düşebilirsin.</>) : lang === 'ar' ? (<>عند تسليم صندوق الاكتشاف الخاص بك، تُضاف إلى حسابك <b>قسيمة هدية VIP بقيمة 690 ليرة</b>. يمكنك استخدامها عند طلب الحجم الكامل 50 مل أو 100 مل من العطر الذي أعجبك لخصم كامل المبلغ الذي دفعته من السعر.</>) : (<>When your discovery box is delivered, a <b>VIP gift coupon worth 690 TL</b> is added to your account. When you order the full 50 ml or 100 ml size of the scent you liked, you can use this coupon to deduct the entire amount you paid from the price.</>)}
             </p>
           </div>
         </div>
@@ -352,7 +362,7 @@ export default function DiscoverySetPage() {
               <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
               <input
                 type="text"
-                placeholder="Parfüm adı, SKU kodu veya nota ara (Örn: vanilya, bergamot)..."
+                placeholder={t("Parfüm adı, SKU kodu veya nota ara (Örn: vanilya, bergamot)...", "Search perfume name, SKU or note (e.g. vanilla, bergamot)...", "ابحث باسم العطر أو الرمز أو النوتة (مثال: فانيليا، برغموت)...")}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -370,9 +380,9 @@ export default function DiscoverySetPage() {
                 onChange={e => setGenderFilter(e.target.value)}
                 className="bg-zinc-950 border border-zinc-800 text-zinc-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
               >
-                <option value="all">Tüm Cinsiyetler</option>
+                <option value="all">{t("Tüm Cinsiyetler", "All Genders", "جميع الأجناس")}</option>
                 <option value="Erkek">Erkek</option>
-                <option value="Kadın">Kadın</option>
+                <option value="Kadın">{t("Kadın", "Women", "نسائي")}</option>
                 <option value="Unisex">Unisex</option>
               </select>
 
@@ -381,13 +391,13 @@ export default function DiscoverySetPage() {
                 onChange={e => setFamilyFilter(e.target.value)}
                 className="bg-zinc-950 border border-zinc-800 text-zinc-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
               >
-                <option value="all">Tüm Koku Aileleri</option>
+                <option value="all">{t("Tüm Koku Aileleri", "All Fragrance Families", "جميع عائلات العطور")}</option>
                 <option value="Odunsu">Odunsu</option>
-                <option value="Çiçeksi">Çiçeksi</option>
+                <option value="Çiçeksi">{t("Çiçeksi", "Floral", "زهري")}</option>
                 <option value="Ferah">Ferah / Su</option>
-                <option value="Baharatlı">Baharatlı</option>
+                <option value="Baharatlı">{t("Baharatlı", "Spicy", "توابل")}</option>
                 <option value="Oryantal">Oryantal</option>
-                <option value="Gurme">Gurme / Tatlı</option>
+                <option value="Gurme">{t("Gurme / Tatlı", "Gourmand / Sweet", "غورماند / حلو")}</option>
               </select>
             </div>
           </div>
@@ -396,11 +406,11 @@ export default function DiscoverySetPage() {
           {loading ? (
             <div className="py-24 text-center text-zinc-500">
               <RefreshCw className="animate-spin mx-auto mb-3" size={28} />
-              Katalog yükleniyor...
+              {t("Katalog yükleniyor...", "Loading catalog...", "جارٍ تحميل الكتالوج...")}
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="py-20 text-center text-zinc-500 bg-zinc-900/40 rounded-3xl border border-zinc-800">
-              Aradığınız kriterlere uygun parfüm bulunamadı.
+              {t("Aradığınız kriterlere uygun parfüm bulunamadı.", "No perfumes match your criteria.", "لم يتم العثور على عطور تطابق معاييرك.")}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -455,7 +465,7 @@ export default function DiscoverySetPage() {
                     >
                       {isSelected ? (
                         <>
-                          <Check size={14} /> Kutudan Çıkar
+                          <Check size={14} /> {t("Kutudan Çıkar", "Remove from Box", "إزالة من الصندوق")}
                         </>
                       ) : isFull ? (
                         'Kutu Dolu (5/5)'

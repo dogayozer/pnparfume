@@ -7,6 +7,8 @@ import { Sparkles, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
 import { useDealer } from '@/contexts/DealerContext'
 import Image from 'next/image'
+import { useT, useLang } from '@/lib/i18n'
+import { translateVocab } from '@/lib/vocab'
 
 export interface ProductProps {
   sku: string;
@@ -22,6 +24,8 @@ export interface ProductProps {
 
 export default function ProductCard({ product }: { product: ProductProps }) {
   const { addToCart } = useCart()
+  const t = useT()
+  const lang = useLang()
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault() // Prevent Link navigation
@@ -89,12 +93,12 @@ export default function ProductCard({ product }: { product: ProductProps }) {
           )}
           {isOutOfStock && (
              <div className="absolute top-4 left-4 text-[10px] font-medium tracking-wider px-2 py-1 bg-accent-rose text-white rounded-full z-10 shadow-sm">
-               STOKTA YOK
+               {t('STOKTA YOK', 'OUT OF STOCK', 'نفد المخزون')}
              </div>
           )}
           {!isOutOfStock && hasDiscount && (
              <div className="absolute top-4 left-4 text-[10px] font-bold tracking-wider px-2 py-1 bg-accent-gold text-background rounded-full z-10 shadow-sm">
-               {dealerPrice != null ? 'BAYİ FİYATI' : `%${discountPercent} İNDİRİM`}
+               {dealerPrice != null ? t('BAYİ FİYATI', 'DEALER PRICE', 'سعر الوكيل') : t(`%${discountPercent} İNDİRİM`, `${discountPercent}% OFF`, `خصم ${discountPercent}%`)}
              </div>
           )}
         </div>
@@ -105,7 +109,7 @@ export default function ProductCard({ product }: { product: ProductProps }) {
               PN {product.sku}
             </span>
             <span className="text-[10px] md:text-[11px] font-bold text-accent-gold uppercase tracking-widest line-clamp-1 text-right ml-1 md:ml-2">
-              {product.families?.[0] || 'ÖZEL'}
+              {translateVocab(product.families?.[0] || 'Özel', lang).toLocaleUpperCase(lang === 'tr' ? 'tr-TR' : 'en-US')}
             </span>
           </div>
           
@@ -113,7 +117,7 @@ export default function ProductCard({ product }: { product: ProductProps }) {
             {title}
           </h3>
           <p className="hidden md:block text-xs text-foreground/50 mb-4 line-clamp-1 font-medium tracking-wide">
-            {product.families?.join(' • ') || 'Gizli Formül'}
+            {translateVocab(product.families?.join(' • ') || 'Gizli Formül', lang)}
           </p>
           
           <div className="mt-auto pt-3 md:pt-4 flex flex-col gap-2 md:gap-3">
@@ -125,18 +129,18 @@ export default function ProductCard({ product }: { product: ProductProps }) {
                 )}
               </span>
             ) : (
-              <span className="text-base md:text-lg font-bold text-foreground">Fiyat Belirlenmedi</span>
+              <span className="text-base md:text-lg font-bold text-foreground">{t('Fiyat Belirlenmedi', 'Price not set', 'السعر غير محدد')}</span>
             )}
             {!isOutOfStock && product.price && product.price > 0 ? (
               <button 
                 onClick={handleAddToCart}
                 className="w-full py-2 md:py-2.5 rounded border border-foreground text-foreground text-xs md:text-sm font-bold flex items-center justify-center hover:bg-foreground hover:text-background transition-colors"
               >
-                Sepete Ekle
+                {t('Sepete Ekle', 'Add to Cart', 'أضف إلى السلة')}
               </button>
             ) : (
               <button disabled className="w-full py-2 md:py-2.5 rounded bg-foreground/10 text-foreground/50 text-xs md:text-sm font-bold cursor-not-allowed">
-                {isOutOfStock ? 'Tükendi' : 'Satışa Kapalı'}
+                {isOutOfStock ? t('Tükendi', 'Out of Stock', 'نفد من المخزون') : t('Satışa Kapalı', 'Not for sale', 'غير متاح للبيع')}
               </button>
             )}
           </div>

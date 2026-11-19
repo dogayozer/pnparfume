@@ -1,4 +1,5 @@
 import { articles } from '@/data/articles'
+import { T } from '@/lib/i18n'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
@@ -76,7 +77,7 @@ export default async function ArticleDetailPage({ params }: { params: Promise<{ 
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 mt-12 md:mt-20">
         <Link href="/kesfet" className="inline-flex items-center text-sm font-medium text-accent-gold hover:text-accent-rose transition-colors mb-10">
-          <ArrowLeft size={16} className="mr-2" /> Rehbere Dön
+          <ArrowLeft size={16} className="mr-2 rtl:ml-2 rtl:mr-0" /> <T tr="Rehbere Dön" en="Back to the Guide" ar="العودة إلى الدليل" />
         </Link>
         
         <div className="mb-10 w-full aspect-video md:h-[450px] relative rounded-2xl overflow-hidden shadow-2xl border border-foreground/10">
@@ -93,12 +94,12 @@ export default async function ArticleDetailPage({ params }: { params: Promise<{ 
         
         {/* Author Bio / CTA */}
         <div className="mt-20 pt-10 border-t border-foreground/10 text-center">
-          <h4 className="text-lg font-medium mb-3">PN Koku Uzmanları Ekibi</h4>
+          <h4 className="text-lg font-medium mb-3"><T tr="PN Koku Uzmanları Ekibi" en="The PN Fragrance Experts Team" ar="فريق خبراء العطور في PN" /></h4>
           <p className="text-foreground/60 text-sm mb-6 max-w-lg mx-auto">
-            İnsan psikolojisi ve koku kimyasını birleştirerek sizin için en doğru algıyı yaratacak formülleri geliştiriyoruz.
+            <T tr="İnsan psikolojisi ve koku kimyasını birleştirerek sizin için en doğru algıyı yaratacak formülleri geliştiriyoruz." en="We combine human psychology and fragrance chemistry to develop formulas that create the right impression for you." ar="ندمج علم نفس الإنسان وكيمياء العطور لنطوّر تركيبات تصنع الانطباع الأنسب لك." />
           </p>
           <Link href="/katalog" className="inline-flex h-12 items-center justify-center rounded-full bg-foreground px-8 text-sm font-medium text-background hover:bg-accent-gold transition-colors">
-            Koleksiyonumuzu Keşfedin
+            <T tr="Koleksiyonumuzu Keşfedin" en="Explore Our Collection" ar="اكتشف مجموعتنا" />
           </Link>
         </div>
       </div>

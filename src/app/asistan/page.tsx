@@ -2,12 +2,14 @@
 'use client'
 
 import { useChat } from '@ai-sdk/react'
+import { useT } from '@/lib/i18n'
 import { motion } from 'framer-motion'
 import { Send, Sparkles, User, Bot } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useRef } from 'react'
 
 export default function AsistanPage() {
+  const t = useT()
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat()
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -21,8 +23,8 @@ export default function AsistanPage() {
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-foreground/5 mb-4 border border-foreground/10">
           <Sparkles className="text-accent-gold" size={28} />
         </div>
-        <h1 className="text-3xl font-light">Kişisel Koku Asistanınız</h1>
-        <p className="text-foreground/50 mt-2">Bildiğiniz veya aradığınız bir parfümün ismini yazın, size en uygun PN imzasını bulalım.</p>
+        <h1 className="text-3xl font-light">{t("Kişisel Koku Asistanınız", "Your Personal Fragrance Assistant", "مساعدك الشخصي للعطور")}</h1>
+        <p className="text-foreground/50 mt-2">{t("Bildiğiniz veya aradığınız bir parfümün ismini yazın, size en uygun PN imzasını bulalım.", "Type the name of a perfume you know or are looking for and we will find the PN signature that suits you best.", "اكتب اسم عطر تعرفه أو تبحث عنه وسنجد لك أنسب توقيع من PN.")}</p>
       </div>
 
       <div className="flex-1 bg-foreground/[0.02] border border-foreground/5 rounded-3xl overflow-hidden flex flex-col shadow-2xl relative">
@@ -35,7 +37,7 @@ export default function AsistanPage() {
           {messages.length === 0 && (
             <div className="text-center text-foreground/40 mt-12 flex flex-col items-center">
               <Bot size={32} className="mb-4 opacity-50" />
-              <p>Örneğin: "Baccarat Rouge 540 benzeri bir koku arıyorum, ne önerirsiniz?"</p>
+              <p>{t("Örneğin: \"Baccarat Rouge 540 benzeri bir koku arıyorum, ne önerirsiniz?\"", "For example: \"I am looking for a scent similar to Baccarat Rouge 540, what do you recommend?\"", "مثال: \"أبحث عن عطر مشابه لـ Baccarat Rouge 540، ماذا تقترح؟\"")}</p>
             </div>
           )}
           
@@ -60,7 +62,7 @@ export default function AsistanPage() {
                     if (toolName === 'searchProducts') {
                       return (
                         <div key={toolCallId} className="mt-4 p-4 bg-foreground/5 rounded-xl border border-foreground/10">
-                          <p className="text-xs font-medium text-accent-gold mb-2 tracking-widest uppercase">Bulunan Eşleşmeler</p>
+                          <p className="text-xs font-medium text-accent-gold mb-2 tracking-widest uppercase">{t("Bulunan Eşleşmeler", "Matches Found", "التطابقات التي وُجدت")}</p>
                           <div className="space-y-2">
                             {/* @ts-ignore */}
                             {toolInvocation.result.map ? toolInvocation.result.map((prod: any) => (
@@ -68,7 +70,7 @@ export default function AsistanPage() {
                                 <div className="font-medium">PN {prod.sku}</div>
                                 <div className="text-xs text-foreground/60">{prod.mood_tag}</div>
                               </Link>
-                            )) : <div className="text-sm text-foreground/60">Ürün bulunamadı.</div>}
+                            )) : <div className="text-sm text-foreground/60">{t("Ürün bulunamadı.", "No products found.", "لم يتم العثور على منتجات.")}</div>}
                           </div>
                         </div>
                       )
@@ -76,11 +78,11 @@ export default function AsistanPage() {
                     if (toolName === 'generateDiscount') {
                       return (
                         <div key={toolCallId} className="mt-4 p-4 bg-accent-rose/10 rounded-xl border border-accent-rose/20 text-center">
-                           <div className="text-xs font-medium text-accent-rose mb-2 uppercase tracking-widest">Size Özel İndirim Tanımlandı</div>
+                           <div className="text-xs font-medium text-accent-rose mb-2 uppercase tracking-widest">{t("Size Özel İndirim Tanımlandı", "A Special Discount Has Been Created for You", "تم إنشاء خصم خاص لك")}</div>
                            {/* @ts-ignore */}
                            <div className="text-2xl font-bold tracking-widest">{toolInvocation.result.code}</div>
                            {/* @ts-ignore */}
-                           <div className="text-sm mt-1 opacity-80">%{toolInvocation.result.discountPercentage} İndirim</div>
+                           <div className="text-sm mt-1 opacity-80">{t('%', '', '')}{toolInvocation.result.discountPercentage}{t(' İndirim', '% discount', '% خصم')}</div>
                         </div>
                       )
                     }
@@ -88,7 +90,7 @@ export default function AsistanPage() {
                     return (
                       <div key={toolCallId} className="mt-2 text-xs text-foreground/40 italic flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-accent-gold animate-pulse"></span>
-                        {toolName === 'searchProducts' ? 'Koleksiyon taranıyor...' : 'İndirim hesaplanıyor...'}
+                        {toolName === 'searchProducts' ? t("Koleksiyon taranıyor...", "Searching the collection...", "جارٍ البحث في المجموعة...") : t("İndirim hesaplanıyor...", "Calculating discount...", "جارٍ حساب الخصم...")}
                       </div>
                     )
                   }
@@ -117,7 +119,7 @@ export default function AsistanPage() {
               type="text"
               value={input}
               onChange={handleInputChange}
-              placeholder="Bildiğiniz/aradığınız bir koku ismini yazın..."
+              placeholder={t("Bildiğiniz/aradığınız bir koku ismini yazın...", "Type the name of a scent you know or are looking for...", "اكتب اسم عطر تعرفه أو تبحث عنه...")}
               className="flex-1 bg-foreground/5 border border-foreground/10 rounded-full px-6 py-4 focus:outline-none focus:border-accent-rose/50 transition-colors"
             />
             <button 

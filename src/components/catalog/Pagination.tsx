@@ -2,10 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
+import { useT } from '@/lib/i18n'
 
 export default function Pagination({ totalPages, currentPage }: { totalPages: number, currentPage: number }) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const t = useT()
 
   const createPageUrl = (pageNumber: number) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -25,12 +27,12 @@ export default function Pagination({ totalPages, currentPage }: { totalPages: nu
           href={createPageUrl(currentPage - 1)}
           className="px-4 py-2 text-sm border border-foreground/10 rounded-md hover:bg-foreground/5 transition-colors"
         >
-          Önceki
+          {t('Önceki', 'Previous', 'السابق')}
         </Link>
       )}
       
       <span className="text-sm font-medium px-4">
-        Sayfa {currentPage} / {totalPages}
+        {t('Sayfa','Page','صفحة')} {currentPage} / {totalPages}
       </span>
 
       {currentPage < totalPages && (
@@ -38,7 +40,7 @@ export default function Pagination({ totalPages, currentPage }: { totalPages: nu
           href={createPageUrl(currentPage + 1)}
           className="px-4 py-2 text-sm border border-foreground/10 rounded-md hover:bg-foreground/5 transition-colors"
         >
-          Sonraki
+          {t('Sonraki', 'Next', 'التالي')}
         </Link>
       )}
     </div>

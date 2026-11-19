@@ -2,6 +2,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
+import { useT, useLang } from '@/lib/i18n'
 import { Send, Sparkles, User, X, MessageSquare, Plus, ArrowRight, ShoppingBag, Check, Copy, Tag } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -22,6 +23,8 @@ const genId = () => `${Date.now()}-${msgIdCounter++}`
 const REFINEMENT_MIN_RESULTS = 3
 
 export default function ChatWidget() {
+  const t = useT()
+  const lang = useLang()
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState('')
@@ -490,8 +493,8 @@ export default function ChatWidget() {
                   <img src="/aura-avatar.jpg" alt="Aura AI" className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-sm">Aura Parfüm Danışmanınız</h3>
-                  <p className="text-[10px] text-background/60">Aktif, size yardımcı olmaya hazır.</p>
+                  <h3 className="font-medium text-sm">{t("Aura Parfüm Danışmanınız", "Your Aura Perfume Consultant", "مستشارة العطور Aura")}</h3>
+                  <p className="text-[10px] text-background/60">{t("Aktif, size yardımcı olmaya hazır.", "Online and ready to help you.", "متصلة وجاهزة لمساعدتك.")}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -499,7 +502,7 @@ export default function ChatWidget() {
                   onClick={resetChat}
                   className="text-[10px] uppercase tracking-widest px-2 py-1 rounded bg-background/20 hover:bg-background/30 transition-colors"
                 >
-                  Sıfırla
+                  {t("Sıfırla", "Reset", "إعادة ضبط")}
                 </button>
                 <button 
                   onClick={() => setIsOpen(false)}
@@ -519,11 +522,12 @@ export default function ChatWidget() {
                       <img src="/aura-avatar.jpg" alt="Aura AI" className="w-full h-full object-cover" />
                     </div>
                     <div className="bg-background border border-foreground/10 shadow-sm rounded-2xl rounded-tl-sm p-3 text-sm">
-                      Merhaba! Ben Aura. Sizin için en uygun parfümü bulmak üzere buradayım. Nasıl ilerlemek istersiniz?
+                      {t("Merhaba! Ben Aura. Sizin için en uygun parfümü bulmak üzere buradayım. Nasıl ilerlemek istersiniz?", "Hello! I am Aura. I am here to find the perfect perfume for you. How would you like to proceed?", "مرحبًا! أنا Aura. أنا هنا لأجد لك العطر الأنسب. كيف تودّ المتابعة؟")}
                     </div>
                   </div>
                   
                   <div className="flex flex-col gap-2 mt-4">
+                    {lang === 'tr' && (
                     <button 
                       onClick={() => handleInitialAction('Adım Adım Parfüm Öner')}
                       className="w-full text-left px-4 py-3 bg-background border border-foreground/10 rounded-xl text-sm font-medium hover:border-accent-gold transition-colors flex items-center justify-between group"
@@ -531,11 +535,12 @@ export default function ChatWidget() {
                       <span>Adım Adım Parfüm Öner</span>
                       <ArrowRight size={14} className="text-foreground/40 group-hover:text-accent-gold transition-colors" />
                     </button>
+                    )}
                     <button 
                       onClick={() => handleInitialAction('Benzer Bir Koku Arıyorum')}
                       className="w-full text-left px-4 py-3 bg-background border border-foreground/10 rounded-xl text-sm font-medium hover:border-accent-gold transition-colors flex items-center justify-between group"
                     >
-                      <span>Benzer Bir Koku Arıyorum</span>
+                      <span>{lang === 'tr' ? 'Benzer Bir Koku Arıyorum' : lang === 'ar' ? 'أبحث عن عطر مشابه' : 'I am looking for a similar scent'}</span>
                       <ArrowRight size={14} className="text-foreground/40 group-hover:text-accent-gold transition-colors" />
                     </button>
                   </div>
@@ -585,7 +590,7 @@ export default function ChatWidget() {
                       if (tr.toolName === 'searchProducts') {
                         return (
                           <div key={idx} className="mt-3 p-3 bg-foreground/5 rounded-xl border border-foreground/10">
-                            <p className="text-[10px] font-medium text-accent-gold mb-2 tracking-widest uppercase">Önerilen İmza Parfümler ({Array.isArray(resultData) ? resultData.length : 0})</p>
+                            <p className="text-[10px] font-medium text-accent-gold mb-2 tracking-widest uppercase">{t("Önerilen İmza Parfümler", "Recommended Signature Perfumes", "العطور المميزة المقترحة")} ({Array.isArray(resultData) ? resultData.length : 0})</p>
                             <div className="space-y-2 max-h-[280px] overflow-y-auto overscroll-contain pr-1 custom-scrollbar">
                               {Array.isArray(resultData) && resultData.length > 0 ? resultData.map((prod: any) => {
                                 // Gerçek fotoğraf yoksa (prod.image null), ürünle alakasız rastgele
@@ -610,7 +615,7 @@ export default function ChatWidget() {
                                         <span className="font-bold text-foreground hover:text-accent-gold transition-colors text-xs truncate block">
                                           PN {prod.sku}
                                         </span>
-                                        <span className="text-[10px] text-foreground/50 truncate block">{prod.mood_tag || prod.fragrance_family?.[0] || 'İmza Koku'}</span>
+                                        <span className="text-[10px] text-foreground/50 truncate block">{prod.mood_tag || prod.fragrance_family?.[0] || t("İmza Koku", "Signature Scent", "عطر مميز")}</span>
                                         <span className="text-[11px] font-semibold text-accent-gold block">{prod.price || 850} TL</span>
                                       </div>
                                     </Link>
@@ -629,7 +634,7 @@ export default function ChatWidget() {
                                     </button>
                                   </div>
                                 )
-                              }) : <div className="text-xs text-foreground/60">Ürün bulunamadı.</div>}
+                              }) : <div className="text-xs text-foreground/60">{t("Ürün bulunamadı.", "No products found.", "لم يتم العثور على منتجات.")}</div>}
                             </div>
                           </div>
                         )
@@ -640,16 +645,16 @@ export default function ChatWidget() {
                         return (
                           <div key={idx} className="mt-3 p-3 bg-gradient-to-br from-amber-500/15 to-accent-rose/15 rounded-xl border border-accent-gold/30 text-center space-y-1.5">
                             <div className="text-[10px] font-bold uppercase tracking-widest text-accent-gold flex items-center justify-center gap-1">
-                              <Tag size={12} /> Size Özel İndirim Tanımlandı
+                              <Tag size={12} /> {t("Size Özel İndirim Tanımlandı", "A Special Discount Has Been Created for You", "تم إنشاء خصم خاص لك")}
                             </div>
                             <div className="font-mono font-bold text-base text-foreground tracking-wider">{resultData.code}</div>
-                            <div className="text-[11px] text-foreground/70 font-medium">%{resultData.discountPercentage} Anında İndirim</div>
+                            <div className="text-[11px] text-foreground/70 font-medium">{lang === 'tr' ? `%${resultData.discountPercentage} Anında İndirim` : lang === 'ar' ? `خصم فوري ${resultData.discountPercentage}%` : `${resultData.discountPercentage}% Instant Discount`}</div>
                             <button
                               onClick={() => handleApplyCoupon(resultData.code)}
                               className="w-full mt-1 bg-foreground text-background py-1.5 rounded-lg text-[11px] font-semibold hover:bg-accent-gold transition-colors flex items-center justify-center gap-1 shadow-sm"
                             >
                               {copiedCoupon === resultData.code ? <Check size={12} /> : <Copy size={12} />}
-                              <span>{copiedCoupon === resultData.code ? 'Kupon Kopyalandı!' : 'Kuponu Sepete Tanımla'}</span>
+                              <span>{copiedCoupon === resultData.code ? t("Kupon Kopyalandı!", "Coupon Copied!", "تم نسخ القسيمة!") : t("Kuponu Sepete Tanımla", "Apply Coupon to Cart", "طبّق القسيمة على السلة")}</span>
                             </button>
                           </div>
                         )
@@ -682,7 +687,7 @@ export default function ChatWidget() {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder={flowMode === 'wizard' ? "Lütfen yukarıdan seçim yapın" : "Mesajınızı yazın..."}
+                  placeholder={flowMode === 'wizard' ? t("Lütfen yukarıdan seçim yapın", "Please choose from above", "يرجى الاختيار من الأعلى") : t("Mesajınızı yazın...", "Type your message...", "اكتب رسالتك...")}
                   disabled={flowMode === 'wizard'}
                   className="flex-1 bg-foreground/5 border border-foreground/10 rounded-full px-4 py-3 text-sm focus:outline-none focus:border-accent-rose/50 transition-colors disabled:bg-foreground/5 text-foreground"
                   style={{ touchAction: 'manipulation' }}

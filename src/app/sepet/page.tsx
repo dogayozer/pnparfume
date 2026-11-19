@@ -7,10 +7,15 @@ import { ArrowLeft, Trash2, Tag, Truck, Info, Users, ShieldCheck, Check, Clock, 
 import { useCart } from '@/contexts/CartContext'
 import { useDealer } from '@/contexts/DealerContext'
 import { SECOND_ITEM_DISCOUNT } from '@/lib/pricingConstants'
+import { useT, useLang } from '@/lib/i18n'
 
 export default function CartPage() {
   const { items, removeFromCart, totalAmount, clearCart, syncRetailPrices } = useCart()
   const { isDealer } = useDealer()
+  const t = useT()
+  const lang = useLang()
+  const [intlOrderNo, setIntlOrderNo] = useState<string | null>(null)
+  const [foreignMode, setForeignMode] = useState(false)
   const [couponCode, setCouponCode] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState<{code: string, type: string, value: number} | null>(null)
   
@@ -45,7 +50,8 @@ export default function CartPage() {
     name: '',
     email: '',
     phone: '',
-    address: ''
+    address: '',
+    country: 'Türkiye'
   })
   
   useEffect(() => {
@@ -79,20 +85,21 @@ export default function CartPage() {
       if (res.ok && data.user) {
         setCurrentUser(data.user)
         localStorage.setItem('user', JSON.stringify(data.user))
-        setCheckoutForm({
+        setCheckoutForm(prev => ({
+          ...prev,
           name: data.user.name || '',
           email: data.user.email || loginEmail,
           phone: data.user.phone || '',
           address: data.user.address || ''
-        })
+        }))
         setIsLoginTabOpen(false)
-        setLoginSuccessMsg(`Hoş geldiniz ${data.user.name || ''}! Kayıtlı bilgileriniz yüklendi.`)
+        setLoginSuccessMsg(lang === 'tr' ? `Hoş geldiniz ${data.user.name || ''}! Kayıtlı bilgileriniz yüklendi.` : lang === 'ar' ? `مرحبًا ${data.user.name || ''}! تم تحميل بياناتك المحفوظة.` : `Welcome ${data.user.name || ''}! Your saved details have been loaded.`)
         setTimeout(() => setLoginSuccessMsg(null), 5000)
       } else {
-        setLoginError(data.error || 'Giriş yapılamadı. E-posta ve şifrenizi kontrol ediniz.')
+        setLoginError(data.error || t("Giriş yapılamadı. E-posta ve şifrenizi kontrol ediniz.", "Could not sign in. Please check your email and password.", "تعذّر تسجيل الدخول. تحقق من البريد وكلمة المرور."))
       }
     } catch (err) {
-      setLoginError('Bağlantı hatası oluştu. Lütfen tekrar deneyin.')
+      setLoginError(t("Bağlantı hatası oluştu. Lütfen tekrar deneyin.", "A connection error occurred. Please try again.", "حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى."))
     } finally {
       setLoginLoading(false)
     }
@@ -170,7 +177,9 @@ export default function CartPage() {
   // kargosu) her zaman öncelikli olarak ücretsiz yapar.
   let shippingFee = shippingDiscountApplied ? 0 : dynamicShipping.shippingFee
 
-  const total = subtotal - multiItemDiscount - couponDiscount + shippingFee
+  // Yurt dışı adres: kart yerine havale; kargo ücreti talep üzerine belirlenir (toplam kargosuz, kupon yok).
+  const isForeign = foreignMode && !['türkiye', 'turkiye', 'turkey', 'tr'].includes(checkoutForm.country.trim().toLocaleLowerCase('tr-TR'))
+  const total = isForeign ? subtotal - multiItemDiscount : subtotal - multiItemDiscount - couponDiscount + shippingFee
 
   // WhatsApp Manuel Sipariş Hazırlığı (Yedek olarak durabilir)
   const whatsappNumber = "902127360990"
@@ -183,6 +192,29 @@ export default function CartPage() {
     setIsSubmitting(true)
 
     try {
+      if (isForeign) {
+        const sessionTokenIntl = localStorage.getItem('pn_session')
+        const resIntl = await fetch('/api/orders/international', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(sessionTokenIntl ? { Authorization: `Bearer ${sessionTokenIntl}` } : {})
+          },
+          body: JSON.stringify({ customer: checkoutForm, cart: items, totalAmount: total, locale: lang })
+        })
+        const dataIntl = await resIntl.json()
+        if (resIntl.ok && dataIntl.success) {
+          setIntlOrderNo(dataIntl.orderNumber)
+          clearCart()
+        } else if (resIntl.status === 409) {
+          if (dataIntl.code === 'PRICE_CHANGED' && dataIntl.prices) syncRetailPrices(dataIntl.prices)
+          setIsCheckoutModalOpen(false)
+          alert(dataIntl.error)
+        } else {
+          alert(dataIntl.error || t("Sipariş oluşturulamadı.", "The order could not be created.", "تعذّر إنشاء الطلب."))
+        }
+        return
+      }
       // Oturum token'ı: sunucu bayi fiyatını ve siparişin sahibini bununla doğruluyor.
       const sessionToken = localStorage.getItem('pn_session')
       const res = await fetch('/api/paytr/token', {
@@ -215,10 +247,10 @@ export default function CartPage() {
         setIsCheckoutModalOpen(false)
         alert(data.error)
       } else {
-        alert('Ödeme başlatılırken bir hata oluştu: ' + (data.error || 'Bilinmeyen hata'))
+        alert(t("Ödeme başlatılırken bir hata oluştu: ", "An error occurred while starting the payment: ", "حدث خطأ أثناء بدء الدفع: ") + (data.error || t("Bilinmeyen hata", "Unknown error", "خطأ غير معروف")))
       }
     } catch (err) {
-      alert('Sistem hatası, lütfen daha sonra tekrar deneyin.')
+      alert(t("Sistem hatası, lütfen daha sonra tekrar deneyin.", "System error, please try again later.", "خطأ في النظام، يرجى المحاولة لاحقًا."))
     } finally {
       setIsSubmitting(false)
     }
@@ -239,10 +271,10 @@ export default function CartPage() {
         setAppliedCoupon({ code: couponCode.toUpperCase(), type: data.type, value: data.value })
         setCouponCode('')
       } else {
-        alert(data.error || 'Geçersiz kupon kodu')
+        alert(data.error || t("Geçersiz kupon kodu", "Invalid coupon code", "رمز القسيمة غير صالح"))
       }
     } catch (err) {
-      alert('Kupon kontrol edilirken bir hata oluştu.')
+      alert(t("Kupon kontrol edilirken bir hata oluştu.", "An error occurred while checking the coupon.", "حدث خطأ أثناء التحقق من القسيمة."))
     }
   }
 
@@ -255,10 +287,10 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-background pt-32 pb-20 px-6 text-center">
-        <h1 className="text-3xl font-light mb-4 text-foreground">Sepetiniz Boş</h1>
-        <p className="text-foreground/60 mb-8">Koku imzanızı bulmak için koleksiyonlarımızı keşfedin.</p>
+        <h1 className="text-3xl font-light mb-4 text-foreground">{t("Sepetiniz Boş", "Your Cart is Empty", "سلتك فارغة")}</h1>
+        <p className="text-foreground/60 mb-8">{t("Koku imzanızı bulmak için koleksiyonlarımızı keşfedin.", "Explore our collections to find your signature scent.", "اكتشف مجموعاتنا لتجد عطرك المميز.")}</p>
         <Link href="/katalog" className="inline-block bg-foreground text-background px-8 py-4 uppercase tracking-widest text-sm hover:bg-accent-gold transition-colors">
-          Alışverişe Başla
+          {t("Alışverişe Başla", "Start Shopping", "ابدأ التسوق")}
         </Link>
       </div>
     )
@@ -273,10 +305,10 @@ export default function CartPage() {
           <div className="mb-8 bg-gradient-to-r from-accent-gold/20 via-accent-gold/10 to-transparent border border-accent-gold/30 rounded-2xl p-4 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-6 animate-in slide-in-from-top-4 duration-700">
             <div>
               <h2 className="text-lg font-medium text-foreground mb-1 flex items-center gap-2">
-                <Clock className="text-accent-gold" size={20} /> Yeni Üyeliğinize Özel Ayrıcalık
+                <Clock className="text-accent-gold" size={20} /> {t("Yeni Üyeliğinize Özel Ayrıcalık", "A Privilege for Your New Membership", "امتياز خاص لعضويتك الجديدة")}
               </h2>
               <p className="text-sm text-foreground/70 font-light">
-                PN Parfüm kulübüne hoş geldiniz. %15 İndirim ve 1 Adet Signature Koku Deneme Boyu (Tester) hediyenizi sepetinize eklemek için size ayrılan süre:
+                {t("PN Parfüm kulübüne hoş geldiniz. %15 İndirim ve 1 Adet Signature Koku Deneme Boyu (Tester) hediyenizi sepetinize eklemek için size ayrılan süre:", "Welcome to the PN Parfüm club. The time reserved for you to add a 15% discount and 1 Signature scent sample (tester) gift to your cart:", "مرحبًا بك في نادي PN Parfüm. الوقت المخصص لك لإضافة خصم 15% وهدية عينة عطر مميزة إلى سلتك:")}
               </p>
             </div>
             <div className="flex-shrink-0 flex items-center gap-4 bg-background px-6 py-3 rounded-xl border border-accent-gold/20 shadow-sm">
@@ -286,8 +318,8 @@ export default function CartPage() {
         )}
 
         <div className="mb-12">
-          <h1 className="text-4xl font-light tracking-wide text-foreground">Sepetiniz</h1>
-          <p className="text-foreground/60 font-light mt-2">{items.length} ürün seçtiniz.</p>
+          <h1 className="text-4xl font-light tracking-wide text-foreground">{t("Sepetiniz", "Your Cart", "سلتك")}</h1>
+          <p className="text-foreground/60 font-light mt-2">{t("", "", "")}</p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
@@ -313,7 +345,7 @@ export default function CartPage() {
                   {/* 5'li Discovery Set Alt Liste Gösterimi */}
                   {item.selectedScents && item.selectedScents.length > 0 && (
                     <div className="my-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl space-y-1">
-                      <div className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Kutu İçeriği (5x10ml):</div>
+                      <div className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">{t("Kutu İçeriği (5x10ml):", "Box Contents (5x10ml):", "محتويات الصندوق (5×10 مل):")}</div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs text-foreground/80 font-mono">
                         {item.selectedScents.map((s, idx) => (
                           <div key={idx} className="flex items-center gap-1.5">
@@ -326,7 +358,7 @@ export default function CartPage() {
                   
                   <div className="mt-auto pt-2">
                     <span className="text-lg font-light text-foreground">{item.price * item.quantity} TL</span>
-                    <span className="text-xs text-foreground/40 ml-2">({item.quantity} Adet)</span>
+                    <span className="text-xs text-foreground/40 ml-2">({item.quantity} {t("Adet", "pcs", "قطعة")})</span>
                   </div>
                 </div>
               </div>
@@ -336,9 +368,9 @@ export default function CartPage() {
             {timeLeft > 0 && (
               <div className="mt-8 border border-accent-gold/20 bg-accent-gold/5 rounded-2xl p-6">
                 <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
-                  <Tag size={18} className="text-accent-gold" /> Hediye Tester Seçiminiz
+                  <Tag size={18} className="text-accent-gold" /> {t("Hediye Tester Seçiminiz", "Your Free Tester Choice", "اختيار عينتك المجانية")}
                 </h3>
-                <p className="text-sm text-foreground/60 font-light mb-4">Ayrıcalıklı süreniz dolmadan siparişinize eklenecek hediye kokuyu seçin.</p>
+                <p className="text-sm text-foreground/60 font-light mb-4">{t("Ayrıcalıklı süreniz dolmadan siparişinize eklenecek hediye kokuyu seçin.", "Choose the free scent to be added to your order before your privileged time runs out.", "اختر العطر المجاني الذي سيُضاف إلى طلبك قبل انتهاء وقتك المميز.")}</p>
                 <div className="flex flex-wrap gap-3">
                   {['Pera Leather', 'Smyrna Fig', 'Ephesus Rose'].map(tester => (
                     <button 
@@ -357,44 +389,46 @@ export default function CartPage() {
           {/* Sağ Kolon: Özet & Paydaş Ekonomisi */}
           <div className="w-full lg:w-[400px] flex-shrink-0">
             <div className="bg-foreground/[0.02] border border-foreground/10 rounded-2xl p-6 lg:p-8 sticky top-24">
-              <h2 className="text-xl font-medium mb-6 text-foreground">Sipariş Özeti</h2>
+              <h2 className="text-xl font-medium mb-6 text-foreground">{t("Sipariş Özeti", "Order Summary", "ملخص الطلب")}</h2>
               
               {/* Hesaplamalar */}
               <div className="space-y-4 text-sm font-light text-foreground/80 mb-6 border-b border-foreground/10 pb-6">
                 <div className="flex justify-between">
-                  <span>Ara Toplam</span>
+                  <span>{t("Ara Toplam", "Subtotal", "المجموع الفرعي")}</span>
                   <span>{subtotal} TL</span>
                 </div>
                 
                 {multiItemDiscount > 0 && (
                   <div className="flex justify-between text-accent-rose font-medium animate-in fade-in">
-                    <span className="flex items-center gap-2"><Tag size={14} /> Çoklu Alım İndirimi (2. Ürün)</span>
+                    <span className="flex items-center gap-2"><Tag size={14} /> {t("Çoklu Alım İndirimi (2. Ürün)", "Multi-item Discount (2nd item)", "خصم الشراء المتعدد (المنتج الثاني)")}</span>
                     <span>-{multiItemDiscount} TL</span>
                   </div>
                 )}
                 
                 {couponDiscount > 0 && (
                   <div className="flex justify-between text-accent-rose font-medium animate-in fade-in">
-                    <span className="flex items-center gap-2"><Tag size={14} /> Kupon ({appliedCoupon?.code})</span>
+                    <span className="flex items-center gap-2"><Tag size={14} /> {t("Kupon", "Coupon", "قسيمة")} ({appliedCoupon?.code})</span>
                     <span>-{couponDiscount} TL</span>
                   </div>
                 )}
 
                 <div>
                   <div className="flex justify-between items-center">
-                    <span>Kargo Ücreti</span>
-                    {shippingLoading ? (
-                      <span className="text-foreground/40 text-xs">hesaplanıyor...</span>
+                    <span>{t("Kargo Ücreti", "Shipping", "الشحن")}</span>
+                    {isForeign ? (
+                      <span className="text-xs text-foreground/60 text-right max-w-[60%]">{t("Talebiniz üzerine belirlenir", "Determined on request", "يُحدَّد بناءً على طلبك")}</span>
+                    ) : shippingLoading ? (
+                      <span className="text-foreground/40 text-xs">{t("hesaplanıyor...", "calculating...", "جارٍ الحساب...")}</span>
                     ) : shippingFee === 0 ? (
                       <span className="text-accent-gold font-medium flex items-center gap-1">
-                        <Truck size={14} /> ÜCRETSİZ
+                        <Truck size={14} /> {t("ÜCRETSİZ", "FREE", "مجاني")}
                       </span>
                     ) : (
                       <span>{shippingFee} TL</span>
                     )}
                   </div>
                   {shippingFee === 0 && dynamicShipping.freeShippingEligible && !shippingDiscountApplied && (
-                    <p className="text-[11px] text-accent-gold/80 font-medium mt-1">Size Özel: Kargonuz Bizden! 🎁</p>
+                    <p className="text-[11px] text-accent-gold/80 font-medium mt-1">{t("Size Özel: Kargonuz Bizden! 🎁", "Just for you: shipping is on us! 🎁", "خاص بك: الشحن علينا! 🎁")}</p>
                   )}
                 </div>
               </div>
@@ -409,8 +443,8 @@ export default function CartPage() {
                     className="mt-1 w-4 h-4 rounded-sm border-foreground/30 text-accent-gold focus:ring-accent-gold bg-transparent cursor-pointer"
                   />
                   <div>
-                    <span className="block font-medium text-foreground group-hover:text-accent-gold transition-colors">Paydaş Ekonomisi</span>
-                    <span className="text-xs text-foreground/60 leading-relaxed">Arkadaşımın siparişi ile aynı kargo paketinde gelsin. (Kargo bedava)</span>
+                    <span className="block font-medium text-foreground group-hover:text-accent-gold transition-colors">{t("Paydaş Ekonomisi", "Shared Shipping", "الشحن المشترك")}</span>
+                    <span className="text-xs text-foreground/60 leading-relaxed">{t("Arkadaşımın siparişi ile aynı kargo paketinde gelsin. (Kargo bedava)", "Ship together with my friend's order in the same package. (Free shipping)", "يُشحن مع طلب صديقي في نفس الطرد. (شحن مجاني)")}</span>
                   </div>
                 </label>
                 
@@ -422,7 +456,7 @@ export default function CartPage() {
                         type="text" 
                         value={friendOrderCode}
                         onChange={(e) => setFriendOrderCode(e.target.value)}
-                        placeholder="Arkadaşının Sipariş No (Örn: PN-12345)" 
+                        placeholder={t("Arkadaşının Sipariş No (Örn: PN-12345)", "Your friend's order no. (e.g. PN-12345)", "رقم طلب صديقك (مثال: PN-12345)")} 
                         className="w-full bg-background border border-foreground/20 rounded-md py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-accent-gold text-foreground placeholder:text-foreground/30"
                       />
                     </div>
@@ -430,7 +464,7 @@ export default function CartPage() {
                       onClick={applyFriendOrder}
                       className="bg-foreground text-background px-4 py-2 rounded-md text-sm font-medium hover:bg-accent-gold transition-colors"
                     >
-                      Uygula
+                      {t("Uygula", "Apply", "تطبيق")}
                     </button>
                   </div>
                 )}
@@ -438,34 +472,34 @@ export default function CartPage() {
                 {shippingDiscountApplied && (
                   <div className="mt-3 p-3 bg-accent-gold/10 border border-accent-gold/20 rounded-md flex items-start gap-2 text-sm text-accent-gold animate-in fade-in">
                     <Check size={16} className="mt-0.5 flex-shrink-0" />
-                    <span>Harika! Siparişiniz <strong>{friendOrderCode}</strong> numaralı paketle birleştirilecek ve kargo ücreti ödemeyeceksiniz.</span>
+                    <span>{t("Harika! Siparişiniz", "Great! Your order will be combined with package", "رائع! سيُدمج طلبك مع الطرد")} <strong>{friendOrderCode}</strong> {t("numaralı paketle birleştirilecek ve kargo ücreti ödemeyeceksiniz.", "and you will not pay shipping.", "ولن تدفع رسوم الشحن.")}</span>
                   </div>
                 )}
               </div>
 
               {/* Kupon Kodu */}
               <div className="mb-8">
-                <p className="text-xs uppercase tracking-widest text-foreground/50 mb-3">İndirim Kodu / Cüzdan Bakiyesi</p>
+                <p className="text-xs uppercase tracking-widest text-foreground/50 mb-3">{t("İndirim Kodu / Cüzdan Bakiyesi", "Discount Code / Wallet Balance", "رمز الخصم / رصيد المحفظة")}</p>
                 <div className="flex gap-2">
                   <input 
                     type="text" 
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
-                    placeholder="Kod giriniz" 
+                    placeholder={t("Kod giriniz", "Enter code", "أدخل الرمز")} 
                     className="flex-1 bg-background border border-foreground/20 rounded-md py-3 px-4 text-sm focus:outline-none focus:border-accent-gold text-foreground placeholder:text-foreground/30 uppercase"
                   />
                   <button 
                     onClick={applyCoupon}
                     className="bg-foreground/10 text-foreground px-6 py-3 rounded-md text-sm font-medium hover:bg-foreground hover:text-background transition-colors"
                   >
-                    Ekle
+                    {t("Ekle", "Add", "إضافة")}
                   </button>
                 </div>
               </div>
 
               {/* Total */}
               <div className="flex justify-between items-end mb-8">
-                <span className="text-lg font-medium text-foreground">Toplam</span>
+                <span className="text-lg font-medium text-foreground">{t("Toplam", "Total", "الإجمالي")}</span>
                 <div className="text-right">
                   <span className="text-4xl font-light text-foreground">{total} TL</span>
                 </div>
@@ -475,11 +509,11 @@ export default function CartPage() {
                 onClick={() => setIsCheckoutModalOpen(true)}
                 className="w-full flex items-center justify-center gap-3 bg-foreground text-background py-5 uppercase tracking-widest text-sm font-medium hover:bg-accent-gold transition-colors rounded-xl shadow-lg"
               >
-                Kredi Kartı İle Güvenli Öde
+                {t("Kredi Kartı İle Güvenli Öde", "Secure Checkout", "الدفع الآمن")}
               </button>
 
               <div className="flex items-center justify-center gap-2 mt-6 text-xs text-foreground/40">
-                <ShieldCheck size={14} /> Manuel Onaylı Güvenli Sipariş
+                <ShieldCheck size={14} /> {t("Manuel Onaylı Güvenli Sipariş", "Manually Verified Secure Order", "طلب آمن بمراجعة يدوية")}
               </div>
             </div>
           </div>
@@ -493,7 +527,7 @@ export default function CartPage() {
           <div className={`bg-background border border-foreground/10 rounded-2xl w-full ${paytrToken ? 'max-w-3xl h-[94vh] sm:h-[90vh]' : 'max-w-2xl max-h-[90vh]'} flex flex-col shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden`}>
             <div className="sticky top-0 bg-background border-b border-foreground/10 px-6 py-4 flex justify-between items-center z-10 flex-shrink-0">
               <h2 className="text-xl font-medium flex items-center gap-2">
-                <CreditCard size={20} className="text-accent-gold" /> Güvenli Ödeme
+                <CreditCard size={20} className="text-accent-gold" /> {t("Güvenli Ödeme", "Secure Payment", "دفع آمن")}
               </h2>
               <button 
                 onClick={() => {
@@ -519,15 +553,24 @@ export default function CartPage() {
                   ></iframe>
                 </div>
               ) : (
+                intlOrderNo ? (
+                  <div className="py-10 px-4 text-center space-y-4">
+                    <div className="mx-auto w-14 h-14 rounded-full bg-accent-gold/15 flex items-center justify-center"><Check size={28} className="text-accent-gold" /></div>
+                    <h3 className="text-2xl font-light">{t("Siparişiniz alındı", "Your order has been received", "تم استلام طلبك")}</h3>
+                    <p className="text-sm text-foreground/70">{t("Sipariş no:", "Order no:", "رقم الطلب:")} <strong>{intlOrderNo}</strong></p>
+                    <p className="text-sm text-foreground/70 max-w-md mx-auto leading-relaxed">{t("Ödeme havale ile yapılır. Yurt dışı gönderilerde kargo ücreti talebiniz üzerine belirlenir ve tarafınıza en kısa sürede e-posta gönderilir.", "Payment is made by bank transfer. For shipments abroad, the shipping cost is determined on request and we will email you as soon as possible.", "يتم الدفع بالتحويل البنكي. في الشحنات الدولية تُحدَّد تكلفة الشحن بناءً على طلبك وسنرسل لك بريدًا إلكترونيًا في أقرب وقت.")}</p>
+                    <Link href="/katalog" onClick={() => { setIsCheckoutModalOpen(false); setIntlOrderNo(null) }} className="inline-block bg-foreground text-background px-6 py-3 rounded-lg text-sm hover:bg-accent-gold transition-colors">{t("Alışverişe devam et", "Continue shopping", "متابعة التسوق")}</Link>
+                  </div>
+                ) : (
                 <form onSubmit={handleCheckoutSubmit} className="space-y-4">
                   {/* Member Login Switch / Success Alert */}
                   {currentUser ? (
                     <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2.5 text-emerald-400 font-medium">
                         <UserCheck size={16} />
-                        <span><strong>{currentUser.name || currentUser.email}</strong> hesabınızla işlem yapıyorsunuz.</span>
+                        <span><strong>{currentUser.name || currentUser.email}</strong> {t("hesabınızla işlem yapıyorsunuz.", "you are checking out with your account.", "أنت تُكمل الطلب بحسابك.")}</span>
                       </div>
-                      <span className="text-[11px] text-foreground/50 hidden sm:inline">Kayıtlı adresiniz yüklendi ✓</span>
+                      <span className="text-[11px] text-foreground/50 hidden sm:inline">{t("Kayıtlı adresiniz yüklendi ✓", "Saved address loaded ✓", "تم تحميل عنوانك المحفوظ ✓")}</span>
                     </div>
                   ) : (
                     <div>
@@ -541,10 +584,10 @@ export default function CartPage() {
                         <div className="bg-gradient-to-r from-accent-gold/15 via-accent-gold/5 to-transparent border border-accent-gold/30 rounded-xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                           <div>
                             <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
-                              <LogIn size={15} className="text-accent-gold" /> Zaten bir hesabınız var mı?
+                              <LogIn size={15} className="text-accent-gold" /> {t("Zaten bir hesabınız var mı?", "Already have an account?", "هل لديك حساب بالفعل؟")}
                             </div>
                             <p className="text-[11px] text-foreground/60 font-light mt-0.5">
-                              Giriş yaparak kayıtlı adresinizi otomatik doldurabilir ve siparişinizi profilinizden takip edebilirsiniz.
+                              {t("Giriş yaparak kayıtlı adresinizi otomatik doldurabilir ve siparişinizi profilinizden takip edebilirsiniz.", "Sign in to fill in your saved address automatically and track your order from your profile.", "سجّل الدخول لملء عنوانك المحفوظ تلقائيًا وتتبع طلبك من ملفك الشخصي.")}
                             </p>
                           </div>
                           <button
@@ -552,13 +595,13 @@ export default function CartPage() {
                             onClick={() => setIsLoginTabOpen(true)}
                             className="px-4 py-2 bg-foreground text-background text-xs font-semibold rounded-lg hover:bg-accent-gold transition-colors flex-shrink-0"
                           >
-                            Hızlı Üye Girişi Yap
+                            {t("Hızlı Üye Girişi Yap", "Quick Sign In", "تسجيل دخول سريع")}
                           </button>
                         </div>
                       ) : (
                         <div className="p-4 sm:p-5 bg-foreground/[0.03] border border-foreground/15 rounded-xl space-y-3 animate-in fade-in zoom-in-95 duration-200">
                           <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-foreground">
-                            <LogIn size={15} className="text-accent-gold" /> Hızlı Üye Girişi
+                            <LogIn size={15} className="text-accent-gold" /> {t("Hızlı Üye Girişi", "Quick Sign In", "تسجيل دخول سريع")}
                           </h3>
 
                           {loginError && (
@@ -569,7 +612,7 @@ export default function CartPage() {
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                              <label className="text-xs font-medium text-foreground/70 block mb-1">E-Posta Adresi</label>
+                              <label className="text-xs font-medium text-foreground/70 block mb-1">{t("E-Posta Adresi", "Email Address", "البريد الإلكتروني")}</label>
                               <input
                                 type="email"
                                 value={loginEmail}
@@ -579,7 +622,7 @@ export default function CartPage() {
                               />
                             </div>
                             <div>
-                              <label className="text-xs font-medium text-foreground/70 block mb-1">Şifre</label>
+                              <label className="text-xs font-medium text-foreground/70 block mb-1">{t("Şifre", "Password", "كلمة المرور")}</label>
                               <input
                                 type="password"
                                 value={loginPassword}
@@ -596,7 +639,7 @@ export default function CartPage() {
                               onClick={() => setIsLoginTabOpen(false)}
                               className="text-xs text-foreground/50 hover:text-foreground underline"
                             >
-                              Misafir olarak devam et
+                              {t("Misafir olarak devam et", "Continue as guest", "المتابعة كضيف")}
                             </button>
 
                             <button
@@ -605,7 +648,7 @@ export default function CartPage() {
                               disabled={loginLoading || !loginEmail || !loginPassword}
                               className="px-4 py-2 bg-accent-gold text-background rounded-lg text-xs font-bold hover:bg-accent-gold/90 transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
                             >
-                              {loginLoading ? 'Giriş Yapılıyor...' : 'Giriş Yap ve Bilgilerimi Yükle'}
+                              {loginLoading ? t("Giriş Yapılıyor...", "Signing in...", "جارٍ تسجيل الدخول...") : t("Giriş Yap ve Bilgilerimi Yükle", "Sign In & Load My Details", "تسجيل الدخول وتحميل بياناتي")}
                             </button>
                           </div>
                         </div>
@@ -613,11 +656,11 @@ export default function CartPage() {
                     </div>
                   )}
 
-                  <p className="text-xs text-foreground/60">Siparişinizi tamamlamak için teslimat ve fatura bilgilerinizi kontrol ediniz. (3D Secure ile güvenle korunmaktadır)</p>
+                  <p className="text-xs text-foreground/60">{isForeign ? t("Siparişinizi tamamlamak için teslimat bilgilerinizi kontrol ediniz.", "Please check your delivery details to complete your order.", "يرجى التحقق من بيانات التسليم لإتمام طلبك.") : t("Siparişinizi tamamlamak için teslimat ve fatura bilgilerinizi kontrol ediniz. (3D Secure ile güvenle korunmaktadır)", "Please check your delivery and billing details to complete your order. (Protected with 3D Secure)", "يرجى التحقق من بيانات التسليم والفوترة لإتمام طلبك. (محمي بتقنية 3D Secure)")}</p>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Ad Soyad</label>
+                      <label className="text-sm font-medium">{t("Ad Soyad", "Full Name", "الاسم الكامل")}</label>
                       <input 
                         required 
                         type="text" 
@@ -627,7 +670,7 @@ export default function CartPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Telefon</label>
+                      <label className="text-sm font-medium">{t("Telefon", "Phone", "الهاتف")}</label>
                       <input 
                         required 
                         type="tel" 
@@ -639,7 +682,7 @@ export default function CartPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">E-Posta Adresi</label>
+                    <label className="text-sm font-medium">{t("E-Posta Adresi", "Email Address", "البريد الإلكتروني")}</label>
                     <input 
                       required 
                       type="email" 
@@ -650,7 +693,37 @@ export default function CartPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Teslimat Adresi</label>
+                    <label className="text-sm font-medium">{t("Ülke", "Country", "الدولة")}</label>
+                    <select
+                      value={foreignMode ? 'OTHER' : 'TR'}
+                      onChange={e => { const other = e.target.value === 'OTHER'; setForeignMode(other); setCheckoutForm({...checkoutForm, country: other ? '' : 'Türkiye'}) }}
+                      className="w-full bg-foreground/[0.02] border border-foreground/10 rounded-lg p-3 text-sm focus:border-accent-gold outline-none"
+                    >
+                      <option value="TR">Türkiye</option>
+                      <option value="OTHER">{t("Diğer / Yurt dışı", "Other / International", "دولة أخرى / خارج تركيا")}</option>
+                    </select>
+                    {foreignMode && (
+                      <input
+                        required
+                        type="text"
+                        value={checkoutForm.country}
+                        onChange={e => setCheckoutForm({...checkoutForm, country: e.target.value})}
+                        placeholder={t("Ülke adı", "Country name", "اسم الدولة")}
+                        className="w-full bg-foreground/[0.02] border border-foreground/10 rounded-lg p-3 text-sm focus:border-accent-gold outline-none"
+                      />
+                    )}
+                  </div>
+
+                  {isForeign && (
+                    <div className="p-3.5 bg-accent-gold/10 border border-accent-gold/30 rounded-xl text-xs text-foreground/80 leading-relaxed space-y-1.5">
+                      <p><strong>{t("Yurt dışı siparişi:", "International order:", "طلب دولي:")}</strong> {t("Ödeme havale ile yapılır.", "Payment is made by bank transfer.", "يتم الدفع بالتحويل البنكي.")}</p>
+                      <p>{t("Yurt dışı gönderilerde kargo ücreti talebiniz üzerine belirlenir ve tarafınıza en kısa sürede e-posta gönderilir.", "For shipments abroad, the shipping cost is determined on request and we will email you as soon as possible.", "في الشحنات الدولية تُحدَّد تكلفة الشحن بناءً على طلبك وسنرسل لك بريدًا إلكترونيًا في أقرب وقت.")}</p>
+                      <p className="text-foreground/50">{t("Bu siparişlerde kupon kodu uygulanmaz. Fiyatlar Türk Lirası (TRY) cinsindendir.", "Coupon codes do not apply to these orders. Prices are in Turkish Lira (TRY).", "لا تُطبَّق رموز الخصم على هذه الطلبات. الأسعار بالليرة التركية (TRY).")}</p>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">{t("Teslimat Adresi", "Delivery Address", "عنوان التسليم")}</label>
                     <textarea 
                       required 
                       rows={3}
@@ -668,7 +741,7 @@ export default function CartPage() {
                         className="mt-1 w-4 h-4 rounded border-foreground/20 text-accent-gold focus:ring-accent-gold focus:ring-offset-background"
                       />
                       <span className="text-xs text-foreground/70 leading-relaxed">
-                        <a href="/sozlesmeler.html" target="_blank" className="text-accent-gold hover:underline">Mesafeli Satış Sözleşmesi</a> ve <a href="/sozlesmeler.html" target="_blank" className="text-accent-gold hover:underline">Ön Bilgilendirme Formu</a>'nu okudum, onaylıyorum. (Cayma hakkı istisnalarını kabul ediyorum).
+                        {lang === 'tr' ? (<><a href="/sozlesmeler.html" target="_blank" className="text-accent-gold hover:underline">Mesafeli Satış Sözleşmesi</a> ve <a href="/sozlesmeler.html" target="_blank" className="text-accent-gold hover:underline">Ön Bilgilendirme Formu</a>'nu okudum, onaylıyorum. (Cayma hakkı istisnalarını kabul ediyorum).</>) : (<>{lang === 'ar' ? 'لقد قرأت ووافقت على' : 'I have read and agree to the'} <a href="/sozlesmeler.html" target="_blank" className="text-accent-gold hover:underline">{lang === 'ar' ? 'عقد البيع عن بُعد' : 'Distance Sales Agreement'}</a> {lang === 'ar' ? 'و' : 'and'} <a href="/sozlesmeler.html" target="_blank" className="text-accent-gold hover:underline">{lang === 'ar' ? 'نموذج المعلومات المسبقة' : 'Preliminary Information Form'}</a>.</>)}
                       </span>
                     </label>
                   </div>
@@ -679,10 +752,11 @@ export default function CartPage() {
                       disabled={isSubmitting}
                       className="w-full bg-accent-gold text-background py-4 uppercase tracking-widest text-sm font-medium rounded-lg hover:bg-accent-gold/90 transition-colors disabled:opacity-50"
                     >
-                      {isSubmitting ? 'Hazırlanıyor...' : `Ödemeye Geç (${total} TL)`}
+                      {isSubmitting ? t("Hazırlanıyor...", "Processing...", "جارٍ التحضير...") : isForeign ? t(`Siparişi Tamamla (${total} TL)`, `Place Order (${total} TRY)`, `إتمام الطلب (${total} ليرة)`) : t(`Ödemeye Geç (${total} TL)`, `Proceed to Payment (${total} TRY)`, `المتابعة إلى الدفع (${total} ليرة)`)}
                     </button>
                   </div>
                 </form>
+                )
               )}
             </div>
           </div>

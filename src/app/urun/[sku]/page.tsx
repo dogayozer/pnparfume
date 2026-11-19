@@ -7,6 +7,9 @@ import ProductGallery from '@/components/ProductGallery'
 import ProductActions from '@/components/ProductActions'
 import ProductReviews from '@/components/ProductReviews'
 import ViewTracker from '@/components/ViewTracker'
+import { T } from '@/lib/i18n'
+import { V_ } from '@/lib/vocab'
+import { LocalizedDescription } from '@/components/ProductI18n'
 
 export const revalidate = 86400 // Cache for 24 hours (super fast loading)
 
@@ -227,7 +230,7 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
       />
       <Link href="/katalog" className="inline-flex items-center gap-2 text-foreground/50 hover:text-accent-rose mb-6 md:mb-12 transition-colors text-base md:text-lg">
-        <ArrowLeft size={18} /> Kataloğa Dön
+        <ArrowLeft size={18} /> <T tr="Kataloğa Dön" en="Back to Catalog" ar="العودة إلى الكتالوج" />
       </Link>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-start min-w-0">
@@ -243,21 +246,21 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
           {/* Etkinlik ve Kullanım Simgeleri */}
           <div className="flex flex-wrap gap-3 justify-center pt-6">
             {product.season_tag && product.season_tag !== 'Bilinmiyor' && (
-               <div className="flex items-center gap-2 px-4 py-2 bg-foreground/5 hover:bg-foreground/10 transition-colors rounded-full text-sm font-medium text-foreground/70 cursor-default" title="Mevsimsellik">
+               <div className="flex items-center gap-2 px-4 py-2 bg-foreground/5 hover:bg-foreground/10 transition-colors rounded-full text-sm font-medium text-foreground/70 cursor-default" title="Season">
                   {getSeasonIcon(product.season_tag)}
-                  {product.season_tag}
+                  <V_ value={product.season_tag} />
                </div>
             )}
             {product.time_of_day_tag && product.time_of_day_tag !== 'Bilinmiyor' && (
-               <div className="flex items-center gap-2 px-4 py-2 bg-foreground/5 hover:bg-foreground/10 transition-colors rounded-full text-sm font-medium text-foreground/70 cursor-default" title="Kullanım Zamanı">
+               <div className="flex items-center gap-2 px-4 py-2 bg-foreground/5 hover:bg-foreground/10 transition-colors rounded-full text-sm font-medium text-foreground/70 cursor-default" title="Time of day">
                   {getTimeIcon(product.time_of_day_tag)}
-                  {product.time_of_day_tag}
+                  <V_ value={product.time_of_day_tag} />
                </div>
             )}
             {product.occasion_tag && product.occasion_tag !== 'Bilinmiyor' && (
-               <div className="flex items-center gap-2 px-4 py-2 bg-foreground/5 hover:bg-foreground/10 transition-colors rounded-full text-sm font-medium text-foreground/70 cursor-default" title="Etkinlik / Mekan">
+               <div className="flex items-center gap-2 px-4 py-2 bg-foreground/5 hover:bg-foreground/10 transition-colors rounded-full text-sm font-medium text-foreground/70 cursor-default" title="Occasion">
                   {getOccasionIcon(product.occasion_tag)}
-                  {product.occasion_tag}
+                  <V_ value={product.occasion_tag} />
                </div>
             )}
           </div>
@@ -267,7 +270,7 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
             <div className="flex items-center gap-4 md:gap-6 mb-6 md:mb-8 text-foreground/50">
               <div className="flex flex-col">
                 <span className="text-xs font-bold uppercase tracking-[0.2em] mb-1">
-                  Kalıcılık <span className="text-accent-gold ml-1">({product.longevity_score || 0}/10)</span>
+                  <T tr="Kalıcılık" en="Longevity" ar="الثبات" /> <span className="text-accent-gold ml-1">({product.longevity_score || 0}/10)</span>
                 </span>
                 <div className="flex gap-1">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -278,7 +281,7 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
               <span className="text-foreground/20">|</span>
               <div className="flex flex-col">
                 <span className="text-xs font-bold uppercase tracking-[0.2em] mb-1">
-                  Silaj (İz) <span className="text-accent-gold ml-1">({product.sillage_score || 0}/10)</span>
+                  <T tr="Silaj (İz)" en="Sillage (Trail)" ar="الانتشار" /> <span className="text-accent-gold ml-1">({product.sillage_score || 0}/10)</span>
                 </span>
                 <div className="flex gap-1">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -288,30 +291,30 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
               </div>
             </div>
 
-            <h3 className="text-2xl md:text-3xl font-light mb-6 md:mb-8 tracking-tight">Koku Mimarisi</h3>
+            <h3 className="text-2xl md:text-3xl font-light mb-6 md:mb-8 tracking-tight"><T tr="Koku Mimarisi" en="Fragrance Structure" ar="هيكل العطر" /></h3>
             
             <div className="space-y-8 relative before:absolute before:inset-y-0 before:left-[5px] before:w-[1px] before:bg-gradient-to-b before:from-accent-gold/50 before:to-transparent ml-2">
               <div className="relative pl-8">
                 <div className="absolute left-[3px] top-2 w-1.5 h-1.5 rounded-full bg-accent-gold"></div>
-                <h4 className="text-sm font-bold text-foreground/40 uppercase tracking-[0.2em] mb-2">Tepe Notaları</h4>
+                <h4 className="text-sm font-bold text-foreground/40 uppercase tracking-[0.2em] mb-2"><T tr="Tepe Notaları" en="Top Notes" ar="النوتات العليا" /></h4>
                 <p className="text-foreground text-base font-medium tracking-wide leading-relaxed">
-                  {(product.top_notes || 'Gizli Formül').split(',').map(n => n.trim()).join(' • ')}
+                  <V_ value={(product.top_notes || 'Gizli Formül').split(',').map(n => n.trim()).join(' • ')} />
                 </p>
               </div>
 
               <div className="relative pl-8">
                 <div className="absolute left-[3px] top-2 w-1.5 h-1.5 rounded-full bg-accent-gold/60"></div>
-                <h4 className="text-sm font-bold text-foreground/40 uppercase tracking-[0.2em] mb-2">Kalp Notaları</h4>
+                <h4 className="text-sm font-bold text-foreground/40 uppercase tracking-[0.2em] mb-2"><T tr="Kalp Notaları" en="Heart Notes" ar="نوتات القلب" /></h4>
                 <p className="text-foreground text-base font-medium tracking-wide leading-relaxed">
-                  {(product.heart_notes || 'Gizli Formül').split(',').map(n => n.trim()).join(' • ')}
+                  <V_ value={(product.heart_notes || 'Gizli Formül').split(',').map(n => n.trim()).join(' • ')} />
                 </p>
               </div>
 
               <div className="relative pl-8">
                 <div className="absolute left-[3px] top-2 w-1.5 h-1.5 rounded-full bg-foreground/20"></div>
-                <h4 className="text-sm font-bold text-foreground/40 uppercase tracking-[0.2em] mb-2">Dip Notalar</h4>
+                <h4 className="text-sm font-bold text-foreground/40 uppercase tracking-[0.2em] mb-2"><T tr="Dip Notalar" en="Base Notes" ar="النوتات القاعدية" /></h4>
                 <p className="text-foreground text-base font-medium tracking-wide leading-relaxed">
-                  {(product.base_notes || 'Gizli Formül').split(',').map(n => n.trim()).join(' • ')}
+                  <V_ value={(product.base_notes || 'Gizli Formül').split(',').map(n => n.trim()).join(' • ')} />
                 </p>
               </div>
             </div>
@@ -323,7 +326,7 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 md:gap-4 mb-3">
               <span className="text-sm md:text-base font-medium tracking-widest text-accent-gold">
-                {product.fragrance_family?.[0]?.toUpperCase() || 'ÖZEL HARMAN'}
+                <span className="uppercase"><V_ value={product.fragrance_family?.[0] || 'Özel Harman'} /></span>
               </span>
               <div className="flex items-center gap-3">
                 <span className="text-3xl md:text-4xl font-light text-foreground">{displayPrice.toLocaleString('tr-TR')} ₺</span>
@@ -331,7 +334,7 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
                   <span className="text-lg md:text-xl text-foreground/40 line-through">{marketPrice.toLocaleString('tr-TR')} ₺</span>
                 )}
                 {displayPrice > 3000 && !isOutOfStock && (
-                  <span className="text-xs md:text-sm bg-foreground/10 px-2 py-1 uppercase tracking-widest text-foreground/70">Premium Kargo</span>
+                  <span className="text-xs md:text-sm bg-foreground/10 px-2 py-1 uppercase tracking-widest text-foreground/70"><T tr="Premium Kargo" en="Premium Shipping" ar="شحن مميز" /></span>
                 )}
               </div>
             </div>
@@ -344,11 +347,11 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
               </h2>
             )}
             <p className="text-xs md:text-sm text-foreground/40 mt-1 md:mt-2 uppercase tracking-widest">
-              {product.fragrance_family?.join(', ') || 'Gizli Formül'}
+              <V_ value={product.fragrance_family?.join(', ') || 'Gizli Formül'} />
             </p>
           </div>
 
-          <div className="text-foreground/80 leading-relaxed text-base md:text-lg font-light" dangerouslySetInnerHTML={{ __html: description }} />
+          <LocalizedDescription html={description} mood={product.mood_tag} top={product.top_notes} heart={product.heart_notes} base={product.base_notes} family={product.fragrance_family?.join(', ')} />
 
           {/* Tek bir yerde, kod seviyesinde tutuluyor — 339 ürünün açıklama metnine
               tek tek yazmak yerine burada, çünkü hepsi zaten aynı varsayılan 50ml
@@ -356,7 +359,7 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
               ürünlerde de otomatik görünür, elle güncellenmesi gerekmez. */}
           <p className="flex items-center gap-2 text-sm text-foreground/60">
             <Plane size={16} className="text-accent-gold flex-shrink-0" />
-            50 mililitrelik kompakt şişe boyutu sayesinde seyahat dostudur.
+            <T tr="50 mililitrelik kompakt şişe boyutu sayesinde seyahat dostudur." en="Its compact 50 ml bottle makes it travel-friendly." ar="زجاجته المدمجة بحجم 50 مل تجعله مناسبًا للسفر." />
           </p>
 
           <ProductActions

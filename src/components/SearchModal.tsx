@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Search, X } from 'lucide-react'
 import { Meilisearch } from 'meilisearch'
 import Link from 'next/link'
+import { useT } from '@/lib/i18n'
 
 // We only initialize the client if keys are present, so it doesn't crash if they haven't set it up yet.
 const getMeiliClient = () => {
@@ -18,6 +19,7 @@ const getMeiliClient = () => {
 }
 
 export default function SearchModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+  const t = useT()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<any[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -80,7 +82,7 @@ export default function SearchModal({ isOpen, onClose }: { isOpen: boolean, onCl
                 ref={inputRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Parfüm adı, SKU veya koku ailesi ara..."
+                placeholder={t('Parfüm adı, SKU veya koku ailesi ara...', 'Search by perfume name, SKU or fragrance family...', 'ابحث باسم العطر أو الرمز أو عائلة العطر...')}
                 className="flex-1 bg-transparent border-none outline-none px-4 text-lg font-light text-foreground placeholder:text-foreground/30"
               />
               <button onClick={onClose} className="p-2 text-foreground/40 hover:text-foreground">
@@ -105,17 +107,17 @@ export default function SearchModal({ isOpen, onClose }: { isOpen: boolean, onCl
                           {hit.family && <span>Aile: {hit.family}</span>}
                         </div>
                       </div>
-                      <span className="text-sm text-foreground/40 group-hover:text-foreground transition-colors">Detay &rarr;</span>
+                      <span className="text-sm text-foreground/40 group-hover:text-foreground transition-colors">{t('Detay', 'Details', 'التفاصيل')} &rarr;</span>
                     </Link>
                   ))}
                 </div>
               ) : query.length >= 2 ? (
                 <div className="py-12 text-center text-foreground/40">
-                  "{query}" için sonuç bulunamadı.
+                  {t(`"${query}" için sonuç bulunamadı.`, `No results found for "${query}".`, `لم يتم العثور على نتائج لـ "${query}".`)}
                 </div>
               ) : (
                 <div className="py-12 text-center text-foreground/20 text-sm">
-                  Aramaya başlamak için en az 2 karakter girin.
+                  {t("Aramaya başlamak için en az 2 karakter girin.", "Enter at least 2 characters to start searching.", "أدخل حرفين على الأقل لبدء البحث.")}
                 </div>
               )}
             </div>
