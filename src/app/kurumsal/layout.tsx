@@ -9,6 +9,7 @@ export default function KurumsalLayout({ children }: { children: React.ReactNode
   const links = [
     { href: '/kurumsal/markalarimiz', label: 'Markalarımız' },
     { href: '/kurumsal/girisimcilere-ozel', label: 'Girişimcilere Özel' },
+    { href: '/kurumsal/distributorluk', label: 'Distribütörlük' },
     { href: '/kurumsal/kurumsal-kimlik', label: 'Kurumsal Kimlik' },
     { href: '/kurumsal/iletisim', label: 'İletişim' }
   ]

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import B2BSubNav from '@/components/b2b/B2BSubNav'
 import B2BLeadForm from '@/components/b2b/B2BLeadForm'
 import BrandPartnership from '@/components/b2b/BrandPartnership'
 import { Lightbulb, TestTube, Factory, PackageCheck, Truck, ChevronDown } from 'lucide-react'
@@ -16,7 +17,8 @@ export const metadata = {
     languages: {
       'en': 'https://pnparfume.com/en/private-label',
       'ar': 'https://pnparfume.com/ar/private-label',
-      'tr': 'https://pnparfume.com/kurumsal/girisimcilere-ozel',
+      'tr': 'https://pnparfume.com/kendi-parfum-markani-yarat',
+      'x-default': 'https://pnparfume.com/en/private-label',
     }
   },
   openGraph: {
@@ -97,6 +99,7 @@ const steps = [
 export default function ArPrivateLabelPage() {
   return (
     <div lang="ar" dir="rtl" className="min-h-screen max-w-5xl mx-auto px-6 py-16 md:px-12 md:py-24">
+      <B2BSubNav locale="ar" />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}

@@ -15,7 +15,15 @@ export const metadata = {
     'silivri parfüm üretim', 'kendi markan ile parfüm', 'koku fabrikası', 'fason kolonya',
     'fason oda kokusu', 'parfüm fason üretim istanbul'
   ],
-  alternates: { canonical: 'https://pnparfume.com/kendi-parfum-markani-yarat' },
+  alternates: {
+    canonical: 'https://pnparfume.com/kendi-parfum-markani-yarat',
+    languages: {
+      tr: 'https://pnparfume.com/kendi-parfum-markani-yarat',
+      en: 'https://pnparfume.com/en/private-label',
+      ar: 'https://pnparfume.com/ar/private-label',
+      'x-default': 'https://pnparfume.com/en/private-label',
+    },
+  },
   openGraph: {
     title: 'Kendi Parfüm Markanı Yarat | PN Parfüm Private Label',
     description: 'Koku briefinden sevkiyata kadar kendi parfüm markanızı PN Parfüm ile hayata geçirin.',

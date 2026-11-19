@@ -6,8 +6,9 @@ export const metadata = {
     canonical: 'https://pnparfume.com/kurumsal/girisimcilere-ozel',
     languages: {
       tr: 'https://pnparfume.com/kurumsal/girisimcilere-ozel',
-      en: 'https://pnparfume.com/en/private-label',
-      ar: 'https://pnparfume.com/ar/private-label',
+      en: 'https://pnparfume.com/en/entrepreneurs',
+      ar: 'https://pnparfume.com/ar/entrepreneurs',
+      'x-default': 'https://pnparfume.com/en/entrepreneurs',
     },
   },
   openGraph: {

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import B2BSubNav from '@/components/b2b/B2BSubNav'
 import B2BLeadForm from '@/components/b2b/B2BLeadForm'
 import DealerFilm from '@/components/b2b/DealerFilm'
 import { MapPin, Package, ShieldCheck, ChevronDown } from 'lucide-react'
@@ -52,6 +53,7 @@ const faqJsonLd = {
 export default function WholesalePage() {
   return (
     <div lang="en" className="min-h-screen max-w-5xl mx-auto px-6 py-16 md:px-12 md:py-24">
+      <B2BSubNav locale="en" />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}

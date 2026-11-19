@@ -1,6 +1,15 @@
 export const metadata = {
   title: 'Kurumsal Kimlik | PN Parfüm',
   description: 'PN Parfüm marka vizyonu, misyonu ve kurumsal varlıkları.',
+  alternates: {
+    canonical: 'https://pnparfume.com/kurumsal/kurumsal-kimlik',
+    languages: {
+      tr: 'https://pnparfume.com/kurumsal/kurumsal-kimlik',
+      en: 'https://pnparfume.com/en/about',
+      ar: 'https://pnparfume.com/ar/about',
+      'x-default': 'https://pnparfume.com/en/about',
+    },
+  },
 }
 
 export default function KurumsalKimlikPage() {

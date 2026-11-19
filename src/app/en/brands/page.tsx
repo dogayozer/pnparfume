@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import B2BSubNav from '@/components/b2b/B2BSubNav'
 import BrandsShowcase, { BRANDS } from '@/components/brands/BrandsShowcase'
 import UmbrellaSeries from '@/components/brands/UmbrellaSeries'
 
@@ -16,6 +17,7 @@ export const metadata = {
       en: 'https://pnparfume.com/en/brands',
       tr: 'https://pnparfume.com/kurumsal/markalarimiz',
       ar: 'https://pnparfume.com/ar/brands',
+      'x-default': 'https://pnparfume.com/en/brands',
     },
   },
   openGraph: {
@@ -87,6 +89,7 @@ const jsonLd = [
 export default function BrandsPage() {
   return (
     <div lang="en" className="min-h-screen max-w-5xl mx-auto px-6 py-16 md:px-12 md:py-24">
+      <B2BSubNav locale="en" />
       {jsonLd.map((d) => (
         <script
           key={d['@type']}
