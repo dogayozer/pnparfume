@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { requireCustomer } from '@/lib/customerAuth'
 import { createHash } from 'crypto'
+import { AURA_BILGI_BANKASI } from '@/lib/auraKnowledge'
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30
@@ -146,7 +147,7 @@ KULLANICI PARFÜM ÖNERİSİ İSTEDİĞİNDE:
 1. Önce kime baktığını (Kadın, Erkek, Unisex) ve hangi ortamda kullanacağını (Günlük, Ofis, Gece, Özel Davet) sor.
 2. Sevdiği koku tarzını (Odunsu, Çiçeksi, Ferah/Narenciye, Oryantal/Baharatlı) öğren.
 3. Ardından "searchProducts" aracını çağırarak en uygun 2 veya 3 parfümü öner.
-4. Müşteri bilinen bir parfüm ismi sorarsa (Örn: Baccarat, Sauvage, Aventus, Tom Ford benzeri), doğrudan ona en yakın koku profiline sahip PN parfümlerini bul ve zarifçe sun.
+4. Müşteri bilinen bir parfüm veya tasarım markası sorarsa, o adı TEKRAR ETMEDEN, notaları ve koku ailesi diliyle ona en yakın profildeki PN parfümlerini bul ve zarifçe sun.
 
 SATIŞ KAPATMA VE İNDİRİM:
 - Müşteri kararsız kaldığında veya indirim istediğinde, inisiyatif alarak "generateDiscount" aracını kullan ve ona özel bir kupon kodu oluştur.
@@ -188,6 +189,12 @@ ${customer.referral_code
     if (config?.active_campaign) {
       systemPrompt += `\n\nAKTİF KAMPANYA:\n${config.active_campaign}`
     }
+
+    // Bilgi bankası (n8n Aura ve WhatsApp hattıyla aynı bilgiler/bağlantılar/kurallar).
+    // EN SONA eklenir: veritabanındaki (admin) prompt, quiz modu ve satış kuralları ne derse
+    // desin, dil, bağlantı ve ticari konuşma (kendi marka/bayi/distribütör/toptan) kuralları
+    // bunlara üstün gelir.
+    systemPrompt += AURA_BILGI_BANKASI + `\n\nÖNCELİK (KESİN): Yukarıdaki PN PARFÜM BİLGİ BANKASI kuralları, bu metindeki "2-3 kısa cümle", "QUIZ MODU", "mutlaka satışa yönlendir" ve "indirim ver" gibi önceki bütün kuralların üstündedir. Kendi marka, bayi, distribütör, toptan ve fason sorularında quiz sorularını (cinsiyet/ortam/koku) SORMA ve ürün/kupon sunma; müşterinin diliyle cevap ver.\n\nLANGUAGE RULE (STRICT, HIGHEST PRIORITY): Detect the language of the customer's LAST message and write your ENTIRE reply in that same language. If the customer writes in English, reply fully in English; if Arabic, fully in Arabic; if Turkish, in Turkish. Never answer an English or Arabic message in Turkish.`
 
     const canGiveDiscount = config?.can_give_discount ?? true
     const discountLimit = config?.discount_limit ?? 20
