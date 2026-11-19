@@ -158,18 +158,17 @@ export default function DealershipContent({ locale = 'tr' }: { locale?: Locale }
 
   return (
     <div className="space-y-16" lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
-      <section aria-labelledby={`${p}-hero`} className="relative overflow-hidden rounded-3xl">
-        <div className="relative min-h-[480px] w-full sm:min-h-[400px]">
+      <section aria-labelledby={`${p}-hero`} className="relative overflow-hidden rounded-3xl bg-neutral-900">
+        <div className="relative h-64 w-full sm:h-80 md:absolute md:inset-0 md:h-auto">
           <Image src="/kurumsal/bayilik-hero-v3.jpg" alt={c.heroAlt} fill priority sizes="(min-width: 1024px) 900px, 100vw" className="object-cover" />
-          <div className={`absolute inset-0 ${locale === 'ar' ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-black/80 via-black/50 to-black/5`} aria-hidden="true" />
-          <div className="absolute inset-0 bg-black/35 sm:hidden" aria-hidden="true" />
-          <div className="relative flex min-h-[480px] flex-col justify-center gap-4 p-6 sm:min-h-[400px] sm:p-10 md:max-w-[70%]">
-            <p className={`text-xs font-medium uppercase tracking-[0.25em] text-[#d9b98a] ${rtl}`}>{c.eyebrow}</p>
-            <h2 id={`${p}-hero`} className="text-3xl font-light leading-tight text-white sm:text-4xl">{c.h}</h2>
-            <p className="text-sm leading-relaxed text-white/85 sm:text-base">{c.lead}</p>
-            <div>
-              <a href={`#${p}-form`} className="inline-block rounded-full bg-[#d9b98a] px-6 py-3 text-sm font-medium text-black transition-colors hover:bg-white">{c.cta}</a>
-            </div>
+          <div className={`absolute inset-0 hidden md:block ${locale === 'ar' ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-black/80 via-black/45 to-transparent`} aria-hidden="true" />
+        </div>
+        <div className="relative flex flex-col justify-center gap-4 p-6 sm:p-8 md:min-h-[400px] md:max-w-[46%] md:p-10">
+          <p className={`text-xs font-medium uppercase tracking-[0.25em] text-[#d9b98a] ${rtl}`}>{c.eyebrow}</p>
+          <h2 id={`${p}-hero`} className="text-2xl font-light leading-tight text-white sm:text-3xl">{c.h}</h2>
+          <p className="text-sm leading-relaxed text-white/85">{c.lead}</p>
+          <div>
+            <a href={`#${p}-form`} className="inline-block rounded-full bg-[#d9b98a] px-6 py-3 text-sm font-medium text-black transition-colors hover:bg-white">{c.cta}</a>
           </div>
         </div>
       </section>
