@@ -2,6 +2,7 @@ import Link from 'next/link'
 import B2BSubNav from '@/components/b2b/B2BSubNav'
 import B2BLeadForm from '@/components/b2b/B2BLeadForm'
 import BrandPartnership from '@/components/b2b/BrandPartnership'
+import BrandHero from '@/components/b2b/BrandHero'
 import { Lightbulb, TestTube, Factory, PackageCheck, Truck, ChevronDown } from 'lucide-react'
 
 export const metadata = {
@@ -109,6 +110,10 @@ export default function ArPrivateLabelPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceJsonLd) }}
       />
 
+      <div className="mb-10">
+        <BrandHero locale="ar" />
+      </div>
+
       <div className="max-w-2xl mb-16">
         <span className="text-xs font-medium uppercase tracking-widest text-accent-gold">Private Label</span>
         <h1 className="text-4xl md:text-5xl font-light mt-4 mb-6 leading-tight">
@@ -123,7 +128,7 @@ export default function ArPrivateLabelPage() {
         <BrandPartnership locale="ar" />
       </div>
 
-      <div className="mb-16">
+      <div id="process" className="mb-16 scroll-mt-24">
         <h2 className="text-2xl font-light mb-8">كيف تسير العملية</h2>
         <div className="space-y-6">
           {steps.map((s, i) => (
@@ -167,7 +172,9 @@ export default function ArPrivateLabelPage() {
         </div>
       </div>
 
-      <B2BLeadForm defaultInterest="Private Label" lang="ar" />
+      <div id="apply" className="scroll-mt-24">
+        <B2BLeadForm defaultInterest="Private Label" lang="ar" />
+      </div>
 
       {/* middleware.ts kök sayfayı ("/") Körfez ülkelerinden gelen ziyaretçiler için
           buraya yönlendiriyor — geri dönmek isteyenler için bir çıkış yolu. */}

@@ -82,6 +82,7 @@ const jsonLd = [
   },
 ]
 
+import BrandHero from '@/components/b2b/BrandHero'
 import BrandPartnership from '@/components/b2b/BrandPartnership'
 import BrandRoadmapGuide from './BrandRoadmapGuide'
 import CorporateForm from './CorporateForm'
@@ -90,6 +91,7 @@ import { MEVZUAT_SSS, MEVZUAT_NOTU } from './mevzuatSss'
 export default function GirisimcilereOzelPage() {
   return (
     <div className="space-y-12">
+      <BrandHero />
       {jsonLd.map((d) => (
         <script
           key={d['@type']}
@@ -145,7 +147,9 @@ export default function GirisimcilereOzelPage() {
 
       <BrandPartnership locale="tr" />
 
-      <BrandRoadmapGuide />
+      <div id="surec" className="scroll-mt-24">
+        <BrandRoadmapGuide />
+      </div>
 
       <section aria-labelledby="sss-baslik" className="space-y-3">
         <h2 id="sss-baslik" className="text-2xl font-light">
@@ -178,7 +182,9 @@ export default function GirisimcilereOzelPage() {
         <p className="pt-1 text-xs leading-relaxed text-foreground/45">{MEVZUAT_NOTU}</p>
       </section>
 
-      <CorporateForm />
+      <div id="basvuru" className="scroll-mt-24">
+        <CorporateForm />
+      </div>
     </div>
   )
 }
