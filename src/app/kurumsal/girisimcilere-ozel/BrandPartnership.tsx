@@ -10,24 +10,46 @@ const PILLARS = [
   },
   {
     no: '02',
+    title: 'Marka Tescili',
+    image: '/kurumsal/marka-tescil.jpg',
+    alt: 'Marka tescil dosyası, mühür ve büyüteç',
+    text: 'Marka isminizin tescil (patent) sürecinde başvurudan takibe adım adım yönlendiriyor, isim ve sınıf seçimi gibi kritik kararlarda yanınızda oluyoruz.',
+  },
+  {
+    no: '03',
+    title: 'Logo Tasarımı',
+    image: '/kurumsal/logo-tasarimi.jpg',
+    alt: 'Logo çizim çalışması: eskizler, renk ve folyo örnekleri',
+    text: 'Markanızın karakterini yansıtan logo ve renk kimliğini eskizden son hâline kadar birlikte tasarlıyoruz.',
+  },
+  {
+    no: '04',
     title: 'Şişe Seçimi',
     image: '/kurumsal/sise-cesitleri.jpg',
     alt: 'Farklı şekil ve hacimlerde boş parfüm şişeleri',
     text: 'Çalıştığımız şişe üreticileriyle zengin model çeşitleri sunuyor, sektörün nabzına göre hacim seçimi konusunda danışmanlık veriyoruz.',
   },
   {
-    no: '03',
+    no: '05',
     title: 'Kutu Tasarımı',
     image: '/kurumsal/kutu-tasarimi.jpg',
     alt: 'Parfüm kutusu tasarım çalışması: renk ve kâğıt örnekleri',
     text: 'Anlaşmalı matbaalarımızla, kutu tasarımınız için en uygun fiyatı almanıza aracılık ediyoruz.',
   },
+  {
+    no: '06',
+    title: 'Etiket Tasarımı',
+    image: '/kurumsal/etiket-tasarimi.jpg',
+    alt: 'Parfüm şişeleri için etiket tasarımı ve folyo detayları',
+    text: 'Şişenize uygun etiket formu, malzeme ve baskı detaylarını yasal etiket gerekliliklerini de gözeterek birlikte tasarlıyoruz.',
+  },
 ] as const
 
 const STEPS = [
-  { title: 'Koku Konsepti', sub: 'Hedef kitle ve koku ailesi' },
-  { title: 'Kişilik Kazandırma', sub: 'Size özgü koku karakteri' },
-  { title: 'Şişe ve Kutu', sub: 'Model, hacim ve baskı' },
+  { title: 'Koku ve Kişilik', sub: 'Size özgü koku karakteri' },
+  { title: 'Marka ve Logo', sub: 'Tescil ve görsel kimlik' },
+  { title: 'Şişe Seçimi', sub: 'Model ve hacim' },
+  { title: 'Kutu ve Etiket', sub: 'Tasarım ve baskı' },
   { title: 'Kayıt ve Belgeler', sub: 'Süreçlerde kolaylık' },
   { title: 'Markanızın Koleksiyonu', sub: 'Kendi adınız altında' },
 ]
@@ -44,15 +66,15 @@ export default function BrandPartnership() {
         </h3>
         <p className="max-w-3xl text-sm leading-relaxed text-foreground/70">
           24 yıllık tecrübemiz ve var olan markalarımızla birçok kayıt sürecini sizin için
-          kolaylaştırıyor, kendi markanız altında koleksiyon oluşturmanız için koku, şişe ve kutu
-          adımlarının hepsinde yanınızda oluyoruz.
+          kolaylaştırıyor, kendi markanız altında koleksiyon oluşturmanız için koku, marka tescili,
+          logo, şişe, kutu ve etiket adımlarının hepsinde yanınızda oluyoruz.
         </p>
       </div>
 
       {/* Görsel şema: süreç akışı */}
       <ol
         aria-label="Marka kurma süreci"
-        className="grid grid-cols-1 gap-3 md:grid-cols-5 md:gap-0"
+        className="grid grid-cols-1 gap-3 md:grid-cols-6 md:gap-0"
       >
         {STEPS.map((step, i) => (
           <li key={step.title} className="relative flex items-start gap-4 md:flex-col md:items-center md:text-center">
