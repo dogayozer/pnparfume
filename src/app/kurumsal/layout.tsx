@@ -7,6 +7,7 @@ export default function KurumsalLayout({ children }: { children: React.ReactNode
   const pathname = usePathname()
 
   const links = [
+    { href: '/kurumsal/markalarimiz', label: 'Markalarımız' },
     { href: '/kurumsal/girisimcilere-ozel', label: 'Girişimcilere Özel' },
     { href: '/kurumsal/kurumsal-kimlik', label: 'Kurumsal Kimlik' },
     { href: '/kurumsal/iletisim', label: 'İletişim' }

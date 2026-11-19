@@ -35,6 +35,7 @@ export default function Footer() {
           </p>
           <div className="flex flex-wrap justify-center gap-3 md:gap-6 text-xs md:text-sm text-foreground/50">
             <span className="hover:text-foreground transition-colors cursor-not-allowed">Kolonyalar & Yapım Kitleri (Yakında)</span>
+            <Link href="/kurumsal/markalarimiz" className="hover:text-foreground transition-colors">Markalarımız</Link>
             <Link href="/kurumsal/girisimcilere-ozel" className="hover:text-foreground transition-colors">Girişimcilere Özel</Link>
             <Link href="/kurumsal/kurumsal-kimlik" className="hover:text-foreground transition-colors">Kurumsal Kimlik</Link>
             <Link href="/kurumsal/iletisim" className="hover:text-foreground transition-colors">İletişim</Link>
