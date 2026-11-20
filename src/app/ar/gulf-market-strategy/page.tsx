@@ -78,7 +78,7 @@ const faqJsonLd = {
 
 export default function GulfMarketStrategyPage() {
   return (
-    <div lang="ar" dir="rtl" className="min-h-screen max-w-5xl mx-auto px-6 py-16 md:px-12 md:py-24">
+    <div lang="ar" dir="rtl">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}

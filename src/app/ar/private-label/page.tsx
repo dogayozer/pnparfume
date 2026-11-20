@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import B2BSubNav from '@/components/b2b/B2BSubNav'
 import B2BLeadForm from '@/components/b2b/B2BLeadForm'
 import BrandPartnership from '@/components/b2b/BrandPartnership'
 import BrandHero from '@/components/b2b/BrandHero'
@@ -99,8 +98,7 @@ const steps = [
 
 export default function ArPrivateLabelPage() {
   return (
-    <div lang="ar" dir="rtl" className="min-h-screen max-w-5xl mx-auto px-6 py-16 md:px-12 md:py-24">
-      <B2BSubNav locale="ar" />
+    <div lang="ar" dir="rtl">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}

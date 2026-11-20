@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import B2BSubNav from '@/components/b2b/B2BSubNav'
 import DealershipContent, { dealershipJsonLd } from '@/components/b2b/DealershipContent'
 
 export const metadata = {
@@ -33,11 +32,10 @@ export const metadata = {
 
 export default function ArDealershipPage() {
   return (
-    <div lang="ar" dir="rtl" className="min-h-screen max-w-5xl mx-auto px-6 py-16 md:px-12 md:py-24">
+    <div lang="ar" dir="rtl">
       {dealershipJsonLd('ar', 'https://pnparfume.com/ar/dealership').map((d) => (
         <script key={d['@type']} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(d) }} />
       ))}
-      <B2BSubNav locale="ar" />
       <h1 className="sr-only">كن وكيل PN Parfüm</h1>
       <DealershipContent locale="ar" />
       <p className="text-center mt-16 text-sm text-foreground/40">

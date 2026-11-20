@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import B2BSubNav from '@/components/b2b/B2BSubNav'
 import ContactContent from '@/components/b2b/ContactContent'
 
 export const metadata = {
@@ -33,11 +32,10 @@ const jsonLd = [{"@context": "https://schema.org", "@type": "ContactPage", "name
 
 export default function EnContactPage() {
   return (
-    <div lang="en" className="min-h-screen max-w-5xl mx-auto px-6 py-16 md:px-12 md:py-24">
+    <div lang="en">
       {jsonLd.map((d) => (
         <script key={d['@type']} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(d) }} />
       ))}
-      <B2BSubNav locale="en" />
       <h1 className="sr-only">Contact PN Parfüm</h1>
       <ContactContent locale="en" />
       <p className="text-center mt-16 text-sm text-foreground/40">

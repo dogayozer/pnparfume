@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import B2BSubNav from '@/components/b2b/B2BSubNav'
 import BrandsShowcase, { BRANDS } from '@/components/brands/BrandsShowcase'
 import UmbrellaSeries from '@/components/brands/UmbrellaSeries'
 
@@ -87,8 +86,7 @@ const jsonLd = [
 
 export default function ArBrandsPage() {
   return (
-    <div lang="ar" dir="rtl" className="min-h-screen max-w-5xl mx-auto px-6 py-16 md:px-12 md:py-24">
-      <B2BSubNav locale="ar" />
+    <div lang="ar" dir="rtl">
       {jsonLd.map((d) => (
         <script
           key={d['@type']}

@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import B2BSubNav from '@/components/b2b/B2BSubNav'
 import EntrepreneursContent, { entrepreneursJsonLd } from '@/components/b2b/EntrepreneursContent'
 
 export const metadata = {
@@ -34,11 +33,10 @@ const jsonLd = entrepreneursJsonLd('en', 'https://pnparfume.com/en/entrepreneurs
 
 export default function EnEntrepreneursPage() {
   return (
-    <div lang="en" className="min-h-screen max-w-5xl mx-auto px-6 py-16 md:px-12 md:py-24">
+    <div lang="en">
       {jsonLd.map((d) => (
         <script key={d['@type']} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(d) }} />
       ))}
-      <B2BSubNav locale="en" />
       <h1 className="sr-only">Build your own perfume brand: a guide for entrepreneurs</h1>
       <EntrepreneursContent locale="en" />
       <p className="text-center mt-16 text-sm text-foreground/40">
