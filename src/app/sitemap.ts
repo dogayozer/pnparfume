@@ -70,6 +70,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/katalog',
     '/kesfet',
     '/koleksiyonlar/kolonya-ve-kitler',
+    '/koleksiyonlar/pien-creative',
     '/kurumsal/girisimcilere-ozel',
     '/kurumsal/iletisim',
     '/kurumsal/kurumsal-kimlik',

@@ -84,6 +84,9 @@ export default function Navbar() {
           <Link href="/katalog" className="text-sm tracking-wide text-foreground hover:text-accent-gold transition-colors">
             {t('Parfüm Koleksiyonu', 'Perfume Collection', 'مجموعة العطور')}
           </Link>
+          <Link href="/koleksiyonlar/pien-creative" className="text-sm tracking-wide text-foreground hover:text-accent-gold transition-colors">
+            Pien Creative
+          </Link>
           <Link href="/mix/discovery-set" className="text-sm tracking-wide text-amber-500 font-medium hover:text-amber-400 transition-colors flex items-center gap-1.5 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
             <Gift size={14} />
             {t("5'li Keşif Kutusu", 'Discovery Box (5 pcs)', 'صندوق الاكتشاف (5 قطع)')}
@@ -192,6 +195,9 @@ export default function Navbar() {
           <nav className="flex flex-col gap-6 text-2xl font-light mt-8">
             <Link href="/katalog" className="border-b border-foreground/10 pb-4">
               {t('Parfüm Koleksiyonu', 'Perfume Collection', 'مجموعة العطور')}
+            </Link>
+            <Link href="/koleksiyonlar/pien-creative" className="border-b border-foreground/10 pb-4">
+              Pien Creative
             </Link>
             <Link href="/mix/discovery-set" className="border-b border-foreground/10 pb-4 text-amber-500 font-normal flex items-center justify-between">
               <span>{t("5'li Keşif Kutusu", 'Discovery Box (5 pcs)', 'صندوق الاكتشاف (5 قطع)')}</span>

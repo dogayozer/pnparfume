@@ -8,6 +8,7 @@ import MobileFilterSort from '@/components/catalog/MobileFilterSort'
 import PerksBanner from '@/components/PerksBanner'
 import QrHashRedirect from '@/components/QrHashRedirect'
 import SpecialDayBanner from '@/components/SpecialDayBanner'
+import { COLLECTIONS, getCollectionBySku } from '@/lib/collections'
 
 export default async function Home({
   searchParams,
@@ -82,6 +83,19 @@ export default async function Home({
     processedProducts.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   }
   
+  // Çok Satanlar vitrininde koleksiyon ürünleri (örn. Pien Creative) klasik ürünlerle
+  // sırayla karıştırılır; aksi halde SKU sıralamasında hep ilk 12'yi doldururlardı.
+  if (sort === 'best_sellers' && !hasFilters) {
+    const inCollection = processedProducts.filter((p: any) => getCollectionBySku(p.sku))
+    const classic = processedProducts.filter((p: any) => !getCollectionBySku(p.sku))
+    const mixed: any[] = []
+    for (let i = 0; i < Math.max(inCollection.length, classic.length); i++) {
+      if (classic[i]) mixed.push(classic[i])
+      if (inCollection[i]) mixed.push(inCollection[i])
+    }
+    processedProducts = mixed
+  }
+
   const productsWithImages = processedProducts.slice(0, 12) // Show top 12 best sellers
 
   return (
@@ -139,6 +153,25 @@ export default async function Home({
            <Link href="/katalog" className="inline-block border border-foreground text-foreground px-8 py-3 rounded-full text-sm font-medium hover:bg-foreground hover:text-background transition-colors">
              <T tr="Tümünü Gör" en="View All" ar="عرض الكل" />
            </Link>
+        </div>
+      </section>
+
+      {/* Koleksiyonlar */}
+      <section className="pb-16 px-4 md:px-12 max-w-7xl mx-auto w-full">
+        <h2 className="text-lg md:text-4xl font-medium md:font-light mb-4 md:mb-8">Koleksiyonlar</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          {COLLECTIONS.map((c) => (
+            <Link
+              key={c.slug}
+              href={`/koleksiyonlar/${c.slug}`}
+              className="group block rounded-2xl border border-foreground/10 p-6 md:p-8 hover:border-accent-gold transition-colors"
+            >
+              <span className="text-accent-gold text-[10px] uppercase tracking-[0.3em]">Koleksiyon</span>
+              <h3 className="text-2xl font-light mt-2 mb-2">{c.name}</h3>
+              <p className="text-sm text-foreground/60 mb-4">{c.tagline}</p>
+              <span className="text-sm underline underline-offset-4 group-hover:text-accent-gold">Koleksiyonu gör &rarr;</span>
+            </Link>
+          ))}
         </div>
       </section>
 
