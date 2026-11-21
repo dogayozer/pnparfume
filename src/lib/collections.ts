@@ -7,11 +7,19 @@ export interface Collection {
   name: string
   tagline: string
   description: string
-  skuPrefix: string
+  // Ön ekli koleksiyonlar SKU ön ekiyle bağlanır; ön eksiz (varsayılan) koleksiyon, diğer
+  // koleksiyonlara ait olmayan tüm ürünleri kapsar (PN).
+  skuPrefix?: string
   image?: string
 }
 
 export const COLLECTIONS: Collection[] = [
+  {
+    slug: 'pn',
+    name: 'PN',
+    tagline: 'PN Parfüm ana koleksiyonu',
+    description: 'PN Parfüm ana koleksiyonu; erkek, kadın ve unisex kokuları PN koduyla sunar. Filtrelerle sana en uygun kokuyu bul.',
+  },
   {
     slug: 'pien-creative',
     name: 'Pien Creative',
@@ -35,5 +43,26 @@ export function getCollection(slug: string): Collection | undefined {
 }
 
 export function getCollectionBySku(sku: string): Collection | undefined {
-  return COLLECTIONS.find((c) => sku.startsWith(c.skuPrefix))
+  return COLLECTIONS.find((c) => c.skuPrefix && sku.startsWith(c.skuPrefix))
+}
+
+// Klasik ürünler ve her koleksiyonu dönüşümlü dizer (vitrin/katalogda karışık görünüm için).
+export function mixByCollection<T extends { sku: string }>(items: T[]): T[] {
+  const groups: T[][] = [items.filter((p) => !getCollectionBySku(p.sku))]
+  for (const c of COLLECTIONS) {
+    if (c.skuPrefix) groups.push(items.filter((p) => getCollectionBySku(p.sku)?.slug === c.slug))
+  }
+  const mixed: T[] = []
+  const longest = Math.max(...groups.map((g) => g.length))
+  for (let i = 0; i < longest; i++) {
+    for (const g of groups) if (g[i]) mixed.push(g[i])
+  }
+  return mixed
+}
+
+// Koleksiyonun ürün kapsamı (Prisma where parçası)
+export function collectionScope(c: Collection): Record<string, unknown> {
+  if (c.skuPrefix) return { sku: { startsWith: c.skuPrefix } }
+  const others = COLLECTIONS.filter((o) => o.skuPrefix).map((o) => ({ sku: { startsWith: o.skuPrefix } }))
+  return { NOT: others }
 }

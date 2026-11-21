@@ -1,11 +1,23 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import { unstable_cache } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import ProductCard from '@/components/ProductCard'
-import { COLLECTIONS, getCollection } from '@/lib/collections'
+import FilterSidebar from '@/components/catalog/FilterSidebar'
+import MobileFilterSort from '@/components/catalog/MobileFilterSort'
+import Pagination from '@/components/catalog/Pagination'
+import { COLLECTIONS, getCollection, collectionScope } from '@/lib/collections'
 
-export const revalidate = 300
+// /katalog ile aynı filtre menüsü, sıralama ve sayfalama; kapsam koleksiyonla sınırlıdır.
+const getCachedProducts = unstable_cache(
+  async (whereClause: any) => prisma.product.findMany({
+    where: whereClause,
+    orderBy: { sku: 'asc' },
+    include: { marketplaceListings: true },
+  }),
+  ['koleksiyon-products'],
+  { revalidate: 3600, tags: ['katalog'] }
+)
 
 export function generateStaticParams() {
   return COLLECTIONS.map((c) => ({ slug: c.slug }))
@@ -18,42 +30,77 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: `${collection.name} Koleksiyonu | PN Parfüm`,
     description: collection.description,
+    alternates: { canonical: `https://pnparfume.com/koleksiyonlar/${collection.slug}` },
   }
 }
 
-export default async function CollectionPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function CollectionPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const { slug } = await params
   const collection = getCollection(slug)
   if (!collection) notFound()
+  const sp = await searchParams
+  const str = (k: string) => (typeof sp[k] === 'string' ? (sp[k] as string) : undefined)
 
-  const products = await prisma.product.findMany({
-    where: { publish_status: { not: 'DRAFT' }, sku: { startsWith: collection.skuPrefix } },
-    orderBy: { sku: 'asc' },
-    include: { marketplaceListings: true },
+  const season = str('season')
+  const occasion = str('occasion')
+  const gender = str('gender')
+  const persona = str('persona')
+  const family = str('family')
+  const sort = str('sort') || 'best_sellers'
+  const pageParam = parseInt(str('page') || '1', 10)
+  const currentPage = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam
+
+  const whereClause: any = { publish_status: { not: 'DRAFT' }, ...collectionScope(collection) }
+  if (season) whereClause.season_tag = season
+  if (occasion) whereClause.occasion_tag = occasion
+  if (gender) whereClause.gender = gender === 'Unisex' ? { in: ['Unisex', 'UNISEX', 'unisex'] } : gender
+  if (persona) whereClause.persona_tag = persona
+  if (family) whereClause.fragrance_family = { has: family }
+
+  const allProducts = await getCachedProducts(whereClause)
+  const products = allProducts.map((p: any) => {
+    const listing = p.marketplaceListings?.find((l: any) => l.platform === 'trendyol')
+    return { ...p, listing, imageUrl: listing?.images?.[0] || null }
   })
+  if (sort === 'price_asc') {
+    products.sort((a: any, b: any) => (a.listing?.price || a.base_cost) - (b.listing?.price || b.base_cost))
+  } else if (sort === 'newest') {
+    products.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  }
 
-  const items = products
-    .map((p: any) => {
-      const listing = p.marketplaceListings?.find((l: any) => l.platform === 'trendyol')
-      return { ...p, listing, imageUrl: listing?.images?.[0] || null }
-    })
-    .filter((p: any) => p.imageUrl)
+  const ITEMS_PER_PAGE = 24
+  const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE)
+  const pageItems = products.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
 
   return (
-    <div className="flex flex-col min-h-screen pb-20">
-      <section className="pt-24 pb-10 px-6 text-center border-b border-foreground/5">
+    <div className="min-h-screen px-6 py-12 md:px-12 max-w-7xl mx-auto">
+      <div className="mb-12">
         <span className="text-accent-gold text-xs font-medium uppercase tracking-[0.3em] block mb-4">Koleksiyon</span>
-        <h1 className="text-4xl md:text-5xl font-light tracking-tight mb-4">{collection.name}</h1>
-        <p className="text-foreground/70 max-w-2xl mx-auto leading-relaxed">{collection.description}</p>
-        <div className="mt-6 flex justify-center gap-4 text-sm">
-          <Link href="/katalog" className="underline underline-offset-4 hover:text-accent-rose">Tüm ürünler</Link>
-        </div>
-      </section>
+        <h1 className="text-4xl md:text-5xl font-light mb-4">{collection.name}</h1>
+        <p className="text-foreground/60 max-w-2xl">{collection.description}</p>
+      </div>
 
-      <section className="px-4 md:px-12 max-w-7xl mx-auto w-full mt-10">
-        {items.length > 0 ? (
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-6">
-            {items.map((product: any) => (
+      <div className="flex flex-col md:flex-row gap-10">
+        <MobileFilterSort />
+        <aside className="hidden md:block w-64 flex-shrink-0">
+          <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pr-2 pb-6">
+            <FilterSidebar />
+          </div>
+        </aside>
+
+        <main className="flex-1">
+          <div className="mb-6 flex justify-between items-center">
+            <span className="text-sm text-foreground/50">{products.length} ürün bulundu</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {pageItems.map((product: any) => (
               <ProductCard
                 key={product.sku}
                 product={{
@@ -70,10 +117,17 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
               />
             ))}
           </div>
-        ) : (
-          <p className="text-center text-foreground/50 py-16">Bu koleksiyondaki ürünler yakında burada olacak.</p>
-        )}
-      </section>
+
+          {products.length === 0 && (
+            <div className="text-center py-20 bg-foreground/[0.02] rounded-2xl border border-foreground/5">
+              <h3 className="text-lg font-medium mb-2">Ürün Bulunamadı</h3>
+              <p className="text-foreground/50">Seçtiğiniz filtrelere uygun parfüm bulunmuyor. Lütfen filtreleri esnetmeyi deneyin.</p>
+            </div>
+          )}
+
+          {products.length > 0 && <Pagination totalPages={totalPages} currentPage={currentPage} />}
+        </main>
+      </div>
     </div>
   )
 }

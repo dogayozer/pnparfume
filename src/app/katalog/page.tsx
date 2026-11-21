@@ -5,6 +5,7 @@ import FilterSidebar from '@/components/catalog/FilterSidebar'
 import MobileFilterSort from '@/components/catalog/MobileFilterSort'
 import Pagination from '@/components/catalog/Pagination'
 import { T } from '@/lib/i18n'
+import { mixByCollection } from '@/lib/collections'
 
 // Bu sayfa `searchParams` okuduğu için Next.js'i her ziyarette sıfırdan (hiç
 // önbelleksiz) render etmeye zorluyordu — muhtemelen sitenin en çok ziyaret
@@ -116,7 +117,9 @@ export default async function KatalogPage({
     processedProducts.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   }
 
-  const products = processedProducts
+  // Filtre/sıralama seçilmediyse klasik ürünler ve koleksiyonlar karışık (dönüşümlü) gösterilir.
+  const hasFilters = Boolean(season || occasion || gender || persona || family)
+  const products = sort === 'best_sellers' && !hasFilters ? mixByCollection(processedProducts) : processedProducts
   const ITEMS_PER_PAGE = 24
   const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE)
   const paginatedProducts = products.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)

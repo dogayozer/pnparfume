@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useT, useLang } from '@/lib/i18n'
 import { translateVocab } from '@/lib/vocab'
@@ -18,6 +18,7 @@ const FILTERS = {
 export default function FilterSidebar() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const pathname = usePathname()
   const t = useT()
   const lang = useLang()
 
@@ -98,8 +99,11 @@ export default function FilterSidebar() {
       <div className="mb-6">
         <h3 className="text-sm font-medium tracking-widest rtl:tracking-normal text-foreground/50 uppercase mb-3">{t('Koleksiyonlar', 'Collections', 'المجموعات')}</h3>
         <div className="space-y-2">
+          <Link href="/katalog" className={`block text-sm transition-colors ${pathname === '/katalog' ? 'text-accent-gold font-medium' : 'text-foreground/80 hover:text-accent-gold'}`}>
+            {t('Tümü', 'All', 'الكل')}
+          </Link>
           {COLLECTIONS.map((c) => (
-            <Link key={c.slug} href={`/koleksiyonlar/${c.slug}`} className="block text-sm text-foreground/80 hover:text-accent-gold transition-colors">
+            <Link key={c.slug} href={`/koleksiyonlar/${c.slug}`} className={`block text-sm transition-colors ${pathname === `/koleksiyonlar/${c.slug}` ? 'text-accent-gold font-medium' : 'text-foreground/80 hover:text-accent-gold'}`}>
               {c.name}
             </Link>
           ))}

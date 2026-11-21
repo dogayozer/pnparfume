@@ -8,7 +8,7 @@ import MobileFilterSort from '@/components/catalog/MobileFilterSort'
 import PerksBanner from '@/components/PerksBanner'
 import QrHashRedirect from '@/components/QrHashRedirect'
 import SpecialDayBanner from '@/components/SpecialDayBanner'
-import { COLLECTIONS, getCollectionBySku } from '@/lib/collections'
+import { COLLECTIONS, mixByCollection } from '@/lib/collections'
 
 export default async function Home({
   searchParams,
@@ -86,14 +86,8 @@ export default async function Home({
   // Çok Satanlar vitrininde koleksiyon ürünleri (örn. Pien Creative) klasik ürünlerle
   // sırayla karıştırılır; aksi halde SKU sıralamasında hep ilk 12'yi doldururlardı.
   if (sort === 'best_sellers' && !hasFilters) {
-    const inCollection = processedProducts.filter((p: any) => getCollectionBySku(p.sku))
-    const classic = processedProducts.filter((p: any) => !getCollectionBySku(p.sku))
-    const mixed: any[] = []
-    for (let i = 0; i < Math.max(inCollection.length, classic.length); i++) {
-      if (classic[i]) mixed.push(classic[i])
-      if (inCollection[i]) mixed.push(inCollection[i])
-    }
-    processedProducts = mixed
+    // Klasik ürünler ve her koleksiyon dönüşümlü dizilir; vitrinde hepsinden örnek görünür.
+    processedProducts = mixByCollection(processedProducts)
   }
 
   const productsWithImages = processedProducts.slice(0, 12) // Show top 12 best sellers
