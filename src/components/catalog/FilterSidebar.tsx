@@ -4,6 +4,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useT, useLang } from '@/lib/i18n'
 import { translateVocab } from '@/lib/vocab'
+import Link from 'next/link'
+import { COLLECTIONS } from '@/lib/collections'
 
 const FILTERS = {
   seasons: ['Yaz', 'Kış / Sonbahar', 'Dört Mevsim'],
@@ -91,6 +93,17 @@ export default function FilterSidebar() {
             {t('Temizle', 'Clear', 'مسح')}
           </button>
         )}
+      </div>
+
+      <div className="mb-6">
+        <h3 className="text-sm font-medium tracking-widest rtl:tracking-normal text-foreground/50 uppercase mb-3">{t('Koleksiyonlar', 'Collections', 'المجموعات')}</h3>
+        <div className="space-y-2">
+          {COLLECTIONS.map((c) => (
+            <Link key={c.slug} href={`/koleksiyonlar/${c.slug}`} className="block text-sm text-foreground/80 hover:text-accent-gold transition-colors">
+              {c.name}
+            </Link>
+          ))}
+        </div>
       </div>
 
       {renderFilterGroup(t('Cinsiyet', 'Gender', 'الجنس'), 'gender', FILTERS.genders)}
