@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { productLabel } from '@/lib/collections'
+import ProductExcelPanel from './ProductExcelPanel'
 import { 
   Settings, Save, AlertCircle, RefreshCw, Box, Users, TrendingUp, 
   Sparkles, Server, PackagePlus, UploadCloud, Percent, Truck, 
@@ -3310,6 +3311,10 @@ export default function AdminDashboard() {
                         </div>
                       </form>
                     </div>
+                  )}
+
+                  {productSubTab === 'excel' && (
+                    <ProductExcelPanel adminFetch={adminFetch} onApplied={() => fetchData('/api/admin/products', setProducts)} />
                   )}
 
                   {/* SUBTAB 3: EXCEL TOPLU AKTARIM */}
