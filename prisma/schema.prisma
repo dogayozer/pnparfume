@@ -238,6 +238,8 @@ model Order {
   cargoCompany         String? // Örn: "Yurtiçi Kargo", "Aras Kargo", "MNG Kargo", "Sürat Kargo", "PTT"
   trackingCode         String? // Kargo Takip Kodu
   paymentNote          String? // PayTR ödeme hatası/uyarısı (ör. "Kart limiti yetersiz") — admin panelinde gösterilir
+  paymentMethod        String? // 'card' | 'bank_transfer' (Türkiye havalesi) | 'bank_transfer_intl' (yurt dışı havalesi)
+  customerNote         String? // Müşterinin sipariş açıklaması (ör. tedarik/teslimat notu) — admin siparişte görür
   
   // Paydaş Ekonomisi (Kargo Birleştirme)
   combinedWithOrderId  String? // Arkadaşının kargo numarası
@@ -435,4 +437,23 @@ model PageView {
   @@index([sku])
   @@index([sku, createdAt])
   @@index([sku, type])
+}
+
+// Havale/EFT banka hesapları — admin panelinden (Banka Hesapları sekmesi) tanımlanır.
+// TRY hesapları Türkiye havale siparişlerinde, USD/EUR hesapları yurt dışı siparişlerde müşteriye gösterilir.
+model BankAccount {
+  id            String   @id @default(cuid())
+  currency      String   // 'TRY' | 'USD' | 'EUR'
+  bankName      String
+  accountHolder String
+  iban          String
+  swift         String?  // Yurt dışı havaleler için SWIFT/BIC
+  branch        String?
+  note          String?  // Müşteriye gösterilecek ek not (ör. "Açıklamaya sipariş numarasını yazın")
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([currency, isActive])
 }

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { 
-  sendOrderShippedNotification, 
+import {
+  sendOrderCreatedNotification,
+  sendOrderShippedNotification,
   sendOrderDeliveredNotification, 
   sendAffiliateCommissionNotification 
 } from '@/lib/notifications/notificationEngine'
@@ -135,6 +136,22 @@ export async function PUT(req: Request) {
         })
       } catch (e) {
         console.error('Shipped notification error:', e)
+      }
+    }
+
+    // 1b. Havale ödemesi onayı: kart akışında "Sipariş Alındı" SMS'i PayTR callback'inden gider;
+    // havale siparişlerinde ödeme admin tarafından onaylandığı için aynı SMS burada tetiklenir.
+    if (status === 'paid' && currentOrder.status === 'awaiting_transfer') {
+      try {
+        await sendOrderCreatedNotification({
+          orderNumber: currentOrder.orderNumber,
+          customerName: currentOrder.customerName || 'Değerli Müşterimiz',
+          phone: currentOrder.customerPhone || currentOrder.customer?.phone,
+          customerId: currentOrder.customerId,
+          totalAmount: currentOrder.totalAmount
+        })
+      } catch (e) {
+        console.error('Transfer paid notification error:', e)
       }
     }
 

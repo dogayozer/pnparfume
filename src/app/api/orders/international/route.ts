@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
-import nodemailer from 'nodemailer'
 import { prisma } from '@/lib/prisma'
 import { requireCustomer } from '@/lib/customerAuth'
 import { priceCart, computeTotals } from '@/lib/checkoutPricing'
-import { getIntegrationSettings } from '@/lib/integrationSettings'
+import { productLabel } from '@/lib/collections'
+import { getTransferAccounts } from '@/lib/bankAccounts'
+import { sendTransferOrderMails } from '@/lib/transferMail'
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 import { notifyN8n } from '@/lib/n8n'
 
@@ -12,35 +13,9 @@ import { notifyN8n } from '@/lib/n8n'
 // kargosuzdur. Fiyatlar PayTR akışındaki gibi sunucuda yeniden hesaplanır. Kupon kullanımı
 // bu akışta desteklenmez (kupon tüketimi ödeme onayına bağlı olduğundan).
 
-const esc = (v: unknown) =>
-  String(v ?? '')
-    .slice(0, 2000)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/\n/g, '<br>')
 const clean = (v: unknown, max = 300) => String(v ?? '').trim().slice(0, max)
 
 const TR_NAMES = ['türkiye', 'turkiye', 'turkey', 'tr', 'türkei', 'turquie']
-
-const MAIL = {
-  tr: {
-    subject: 'Siparişiniz alındı (havale ile ödeme)',
-    body: (no: string) =>
-      `<p>Siparişiniz (${no}) alındı. Teşekkür ederiz.</p><p>Yurt dışı gönderilerde ödeme havale/EFT ile yapılır ve kargo ücreti talebiniz üzerine belirlenir. Ekibimiz kargo ücretini ve ödeme bilgilerini içeren bir e-postayı en kısa sürede size iletecektir.</p><p>PN Parfüm / pnparfume.com</p>`,
-  },
-  en: {
-    subject: 'We have received your order (bank transfer payment)',
-    body: (no: string) =>
-      `<p>We have received your order (${no}). Thank you.</p><p>For shipments abroad, payment is made by bank transfer and the shipping cost is determined on request. Our team will email you the shipping cost and payment details as soon as possible.</p><p>PN Parfüm / pnparfume.com</p>`,
-  },
-  ar: {
-    subject: 'تم استلام طلبك (الدفع بالتحويل البنكي)',
-    body: (no: string) =>
-      `<p dir="rtl">تم استلام طلبك (${no}). شكرًا لك.</p><p dir="rtl">في الشحنات الدولية يتم الدفع بالتحويل البنكي، وتُحدَّد تكلفة الشحن بناءً على طلبك. سيرسل لك فريقنا بريدًا إلكترونيًا يتضمن تكلفة الشحن وتفاصيل الدفع في أقرب وقت.</p><p dir="rtl">PN Parfüm / pnparfume.com</p>`,
-  },
-} as const
 
 export async function POST(req: Request) {
   try {
@@ -60,6 +35,7 @@ export async function POST(req: Request) {
       country: clean(c.country, 80),
     }
     const locale: 'tr' | 'en' | 'ar' = ['tr', 'en', 'ar'].includes(body.locale) ? body.locale : 'en'
+    const customerNote = clean(body.note, 1000) || null
 
     if (!customer.name || !customer.email || !customer.phone || !customer.address || !customer.country) {
       return NextResponse.json({ error: 'Please fill in all required fields.' }, { status: 400 })
@@ -115,6 +91,8 @@ export async function POST(req: Request) {
         totalAmount,
         discountApplied: multiItemDiscount,
         status: 'awaiting_transfer',
+        paymentMethod: 'bank_transfer_intl',
+        customerNote,
         paymentNote: `Yurt dışı sipariş (${customer.country}): havale/EFT bekleniyor; kargo ücreti talep üzerine belirlenip müşteriye e-postayla bildirilecek.`,
         items: cart,
         customerName: customer.name,
@@ -125,7 +103,7 @@ export async function POST(req: Request) {
         orderItems: {
           create: cart.map((i) => ({
             sku: String(i.sku),
-            name: i.name || `PN ${i.sku}`,
+            name: i.name || productLabel(i.sku),
             price: Number(i.price) || 0,
             quantity: Number(i.quantity) || 1,
             size: i.size || '50ml',
@@ -135,38 +113,17 @@ export async function POST(req: Request) {
     })
 
     // E-postalar siparişi bozmamalı: hata olursa sipariş yine de kayıtlıdır.
+    const accounts = await getTransferAccounts('intl')
     try {
-      const { smtpHost, smtpUser, smtpPass, smtpPort } = await getIntegrationSettings()
-      const transporter = nodemailer.createTransport({
-        host: smtpHost || 'smtp.gmail.com',
-        port: smtpPort,
-        secure: smtpPort === 465,
-        auth: { user: smtpUser, pass: smtpPass },
-      })
-      const lines = cart
-        .map((i) => `${esc(i.quantity)} x PN ${esc(i.sku)} — ${esc(i.price)} TL`)
-        .join('<br>')
-      await transporter.sendMail({
-        from: `"PN Parfüm Sipariş" <${smtpUser}>`,
-        to: ['dogayozer@gmail.com', 'pnparfumsales@gmail.com'],
-        replyTo: customer.email,
-        subject: `Yurt dışı sipariş (havale): ${orderNumber} / ${customer.country}`,
-        html: `
-          <h2>Yurt Dışı Sipariş — Havale Bekleniyor</h2>
-          <p><strong>Sipariş no:</strong> ${esc(orderNumber)}</p>
-          <p><strong>Müşteri:</strong> ${esc(customer.name)} · ${esc(customer.email)} · ${esc(customer.phone)}</p>
-          <p><strong>Ülke:</strong> ${esc(customer.country)}</p>
-          <p><strong>Adres:</strong><br>${esc(customer.address)}</p>
-          <p><strong>Ürünler:</strong><br>${lines}</p>
-          <p><strong>Ürün toplamı (kargo hariç):</strong> ${esc(totalAmount)} TL (müşteriye gösterilen: ≈ $${Math.round(totalAmount / 50)}, kur 1 USD = 50 TL)</p>
-          <p><strong>Yapılacak:</strong> kargo ücretini belirleyip müşteriye e-postayla havale bilgileriyle bildirin. Form dili: ${esc(locale)}</p>
-        `,
-      })
-      await transporter.sendMail({
-        from: `"PN Parfüm" <${smtpUser}>`,
-        to: customer.email,
-        subject: MAIL[locale].subject,
-        html: MAIL[locale].body(orderNumber),
+      await sendTransferOrderMails({
+        kind: 'intl',
+        orderNumber,
+        locale,
+        totalAmount,
+        accounts,
+        customer,
+        note: customerNote,
+        itemsText: cart.map((i) => `${i.quantity} x ${productLabel(i.sku)} — ${i.price} TL`).join('<br>'),
       })
     } catch (mailErr) {
       console.error('Yurt dışı sipariş e-postası gönderilemedi:', mailErr)
@@ -174,7 +131,7 @@ export async function POST(req: Request) {
 
     await notifyN8n('international_order', { orderNumber, country: customer.country, email: customer.email, totalAmount, locale })
 
-    return NextResponse.json({ success: true, orderNumber, totalAmount })
+    return NextResponse.json({ success: true, orderNumber, totalAmount, accounts })
   } catch (error) {
     console.error('Yurt dışı sipariş hatası:', error)
     return NextResponse.json({ error: 'Something went wrong. Please try again later.' }, { status: 500 })

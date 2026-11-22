@@ -16,7 +16,10 @@ export default function CartPage() {
   const t = useT()
   const money = useMoney()
   const lang = useLang()
-  const [intlOrderNo, setIntlOrderNo] = useState<string | null>(null)
+  // Havale siparişi tamamlandığında (Türkiye veya yurt dışı) gösterilen banka hesabı bilgisi
+  const [transferInfo, setTransferInfo] = useState<{ orderNumber: string; totalAmount: number; accounts: any[]; intl: boolean } | null>(null)
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'transfer'>('card')
+  const [orderNote, setOrderNote] = useState('')
   const [foreignMode, setForeignMode] = useState(false)
   const [couponCode, setCouponCode] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState<{code: string, type: string, value: number} | null>(null)
@@ -202,11 +205,12 @@ export default function CartPage() {
             'Content-Type': 'application/json',
             ...(sessionTokenIntl ? { Authorization: `Bearer ${sessionTokenIntl}` } : {})
           },
-          body: JSON.stringify({ customer: checkoutForm, cart: items, totalAmount: total, locale: lang })
+          body: JSON.stringify({ customer: checkoutForm, cart: items, totalAmount: total, locale: lang, note: orderNote })
         })
         const dataIntl = await resIntl.json()
         if (resIntl.ok && dataIntl.success) {
-          setIntlOrderNo(dataIntl.orderNumber)
+          setTransferInfo({ orderNumber: dataIntl.orderNumber, totalAmount: Number(dataIntl.totalAmount) || total, accounts: dataIntl.accounts || [], intl: true })
+          setOrderNote('')
           clearCart()
         } else if (resIntl.status === 409) {
           if (dataIntl.code === 'PRICE_CHANGED' && dataIntl.prices) syncRetailPrices(dataIntl.prices)
@@ -234,12 +238,19 @@ export default function CartPage() {
           shippingFee: shippingFee,
           couponCode: appliedCoupon?.code,
           friendOrderCode: shippingDiscountApplied ? friendOrderCode : null,
-          referralCode: localStorage.getItem('pn_referral_code') || appliedCoupon?.code || null
+          referralCode: localStorage.getItem('pn_referral_code') || appliedCoupon?.code || null,
+          paymentMethod: paymentMethod === 'transfer' ? 'bank_transfer' : 'card',
+          note: orderNote,
+          locale: lang
         })
       })
 
       const data = await res.json()
-      if (data.token) {
+      if (data.transfer) {
+        setTransferInfo({ orderNumber: data.orderNumber, totalAmount: Number(data.totalAmount) || total, accounts: data.accounts || [], intl: false })
+        setOrderNote('')
+        clearCart()
+      } else if (data.token) {
         setPaytrToken(data.token)
       } else if (res.status === 409) {
         // Sunucu sepeti farklı fiyatladı: sepeti güncelle, müşteri yeni tutarı görüp tekrar ödesin.
@@ -286,7 +297,7 @@ export default function CartPage() {
     }
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && !transferInfo) {
     return (
       <div className="min-h-screen bg-background pt-32 pb-20 px-6 text-center">
         <h1 className="text-3xl font-light mb-4 text-foreground">{t("Sepetiniz Boş", "Your Cart is Empty", "سلتك فارغة")}</h1>
@@ -535,6 +546,7 @@ export default function CartPage() {
                 onClick={() => {
                   setIsCheckoutModalOpen(false)
                   setPaytrToken(null)
+                  setTransferInfo(null)
                 }}
                 className="p-2 text-foreground/50 hover:text-foreground transition-colors"
               >
@@ -555,13 +567,57 @@ export default function CartPage() {
                   ></iframe>
                 </div>
               ) : (
-                intlOrderNo ? (
-                  <div className="py-10 px-4 text-center space-y-4">
+                transferInfo ? (
+                  <div className="py-8 px-2 sm:px-4 text-center space-y-4">
                     <div className="mx-auto w-14 h-14 rounded-full bg-accent-gold/15 flex items-center justify-center"><Check size={28} className="text-accent-gold" /></div>
                     <h3 className="text-2xl font-light">{t("Siparişiniz alındı", "Your order has been received", "تم استلام طلبك")}</h3>
-                    <p className="text-sm text-foreground/70">{t("Sipariş no:", "Order no:", "رقم الطلب:")} <strong>{intlOrderNo}</strong></p>
-                    <p className="text-sm text-foreground/70 max-w-md mx-auto leading-relaxed">{t("Ödeme havale ile yapılır. Yurt dışı gönderilerde kargo ücreti talebiniz üzerine belirlenir ve tarafınıza en kısa sürede e-posta gönderilir.", "Payment is made by bank transfer. For shipments abroad, the shipping cost is determined on request and we will email you as soon as possible.", "يتم الدفع بالتحويل البنكي. في الشحنات الدولية تُحدَّد تكلفة الشحن بناءً على طلبك وسنرسل لك بريدًا إلكترونيًا في أقرب وقت.")}</p>
-                    <Link href="/katalog" onClick={() => { setIsCheckoutModalOpen(false); setIntlOrderNo(null) }} className="inline-block bg-foreground text-background px-6 py-3 rounded-lg text-sm hover:bg-accent-gold transition-colors">{t("Alışverişe devam et", "Continue shopping", "متابعة التسوق")}</Link>
+                    <p className="text-sm text-foreground/70">{t("Sipariş no:", "Order no:", "رقم الطلب:")} <strong>{transferInfo.orderNumber}</strong></p>
+                    <p className="text-sm text-foreground/70">
+                      {transferInfo.intl
+                        ? t("Ürün toplamı (kargo hariç):", "Products total (excluding shipping):", "إجمالي المنتجات (بدون الشحن):")
+                        : t("Ödenecek tutar:", "Amount due:", "المبلغ المطلوب:")}{' '}
+                      <strong>{transferInfo.intl ? money(transferInfo.totalAmount) : `${transferInfo.totalAmount} TL`}</strong>
+                    </p>
+                    <p className="text-sm text-foreground/70 max-w-md mx-auto leading-relaxed">
+                      {transferInfo.intl
+                        ? t("Ödeme havale ile yapılır. Yurt dışı gönderilerde kargo ücreti talebiniz üzerine belirlenir ve tarafınıza en kısa sürede e-posta gönderilir.", "Payment is made by bank transfer. For shipments abroad, the shipping cost is determined on request and we will email you as soon as possible.", "يتم الدفع بالتحويل البنكي. في الشحنات الدولية تُحدَّد تكلفة الشحن بناءً على طلبك وسنرسل لك بريدًا إلكترونيًا في أقرب وقت.")
+                        : t("Aşağıdaki hesaba havale/EFT yapın. Ödemeniz hesabımıza ulaşınca siparişiniz hazırlanır ve kargoya verilir.", "Please make a bank transfer to the account below. Your order is prepared and shipped once the payment reaches our account.", "يرجى التحويل إلى الحساب أدناه. يتم تجهيز طلبك وشحنه عند وصول الدفعة إلى حسابنا.")}
+                    </p>
+                    {transferInfo.accounts.length > 0 ? (
+                      <div className="space-y-3 text-left max-w-md mx-auto" dir="ltr">
+                        {transferInfo.accounts.map((a: any, idx: number) => (
+                          <div key={idx} className="border border-foreground/10 rounded-xl p-4 bg-foreground/[0.02] text-sm space-y-1">
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium">{a.bankName}</span>
+                              <span className="text-xs bg-accent-gold/15 text-accent-gold px-2 py-0.5 rounded-full font-semibold">{a.currency}</span>
+                            </div>
+                            <div className="text-foreground/70"><span dir="auto">{t("Hesap sahibi", "Account holder", "اسم صاحب الحساب")}:</span> {a.accountHolder}</div>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-mono text-[13px] break-all select-all">{String(a.iban).replace(/(.{4})/g, '$1 ').trim()}</span>
+                              <button
+                                type="button"
+                                onClick={() => { try { navigator.clipboard.writeText(String(a.iban)) } catch {} }}
+                                className="text-xs text-accent-gold hover:underline flex-shrink-0"
+                              >
+                                {t("Kopyala", "Copy", "نسخ")}
+                              </button>
+                            </div>
+                            {a.swift && <div className="text-foreground/70">SWIFT/BIC: {a.swift}</div>}
+                            {a.branch && <div className="text-foreground/70"><span dir="auto">{t("Şube", "Branch", "الفرع")}:</span> {a.branch}</div>}
+                            {a.note && <div className="text-xs text-foreground/60">{a.note}</div>}
+                          </div>
+                        ))}
+                        <p className="text-xs text-foreground/60 text-center">
+                          {t("Havale açıklamasına sipariş numaranızı yazmayı unutmayın:", "Please include your order number in the transfer description:", "يرجى كتابة رقم طلبك في وصف التحويل:")} <strong>{transferInfo.orderNumber}</strong>
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-foreground/60 max-w-md mx-auto">
+                        {t("Banka hesap bilgileri e-posta ile size iletilecektir.", "Our bank account details will be sent to you by email.", "سنرسل لك بيانات الحساب البنكي عبر البريد الإلكتروني.")}
+                      </p>
+                    )}
+                    <p className="text-xs text-foreground/50">{t("Bu bilgiler e-posta adresinize de gönderildi.", "These details were also sent to your email address.", "تم إرسال هذه البيانات أيضًا إلى بريدك الإلكتروني.")}</p>
+                    <Link href="/katalog" onClick={() => { setIsCheckoutModalOpen(false); setTransferInfo(null) }} className="inline-block bg-foreground text-background px-6 py-3 rounded-lg text-sm hover:bg-accent-gold transition-colors">{t("Alışverişe devam et", "Continue shopping", "متابعة التسوق")}</Link>
                   </div>
                 ) : (
                 <form onSubmit={handleCheckoutSubmit} className="space-y-4">
@@ -735,6 +791,41 @@ export default function CartPage() {
                     />
                   </div>
 
+                  {!isForeign && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">{t("Ödeme Yöntemi", "Payment Method", "طريقة الدفع")}</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {([
+                          ['card', t("Kredi / Banka Kartı", "Credit / Debit Card", "بطاقة ائتمان / خصم")],
+                          ['transfer', t("Banka Havalesi / EFT", "Bank Transfer / EFT", "تحويل بنكي / EFT")],
+                        ] as const).map(([key, label]) => (
+                          <label key={key} className={`flex items-center gap-2 border rounded-lg p-3 text-sm cursor-pointer transition-colors ${paymentMethod === key ? 'border-accent-gold bg-accent-gold/10' : 'border-foreground/10 hover:border-foreground/30'}`}>
+                            <input type="radio" name="paymentMethod" checked={paymentMethod === key} onChange={() => setPaymentMethod(key)} className="accent-[var(--color-accent-gold,#c9a45c)]" />
+                            {label}
+                          </label>
+                        ))}
+                      </div>
+                      {paymentMethod === 'transfer' && (
+                        <p className="text-xs text-foreground/60 leading-relaxed">
+                          {t("Siparişi tamamladıktan sonra banka hesap bilgileri ekranda gösterilir ve e-posta adresinize gönderilir. Ödemeniz hesabımıza ulaşınca siparişiniz hazırlanır.", "After placing the order, the bank account details are shown on screen and emailed to you. Your order is prepared once the payment reaches our account.", "بعد إتمام الطلب تظهر بيانات الحساب البنكي على الشاشة وتُرسل إلى بريدك الإلكتروني. يتم تجهيز طلبك عند وصول الدفعة إلى حسابنا.")}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">{t("Sipariş Açıklaması (isteğe bağlı)", "Order Notes (optional)", "ملاحظات الطلب (اختياري)")}</label>
+                    <textarea
+                      rows={4}
+                      maxLength={1000}
+                      value={orderNote}
+                      onChange={e => setOrderNote(e.target.value)}
+                      placeholder={t("Teslimat, fatura veya özel isteklerinizi buraya yazabilirsiniz (ör. teslimat saati, fatura notu, hediye paketi).", "You can write your delivery, invoice or special requests here (e.g. delivery time, invoice note, gift wrapping).", "يمكنك كتابة طلبات التسليم أو الفاتورة أو أي طلبات خاصة هنا (مثل وقت التسليم أو ملاحظة الفاتورة أو تغليف الهدايا).")}
+                      className="w-full bg-foreground/[0.02] border border-foreground/10 rounded-lg p-3 text-sm focus:border-accent-gold outline-none resize-none"
+                    />
+                    <div className="text-[11px] text-foreground/40 text-right">{orderNote.length}/1000</div>
+                  </div>
+
                   <div className="pt-2">
                     <label className="flex items-start gap-3 cursor-pointer group">
                       <input 
@@ -754,7 +845,7 @@ export default function CartPage() {
                       disabled={isSubmitting}
                       className="w-full bg-accent-gold text-background py-4 uppercase tracking-widest text-sm font-medium rounded-lg hover:bg-accent-gold/90 transition-colors disabled:opacity-50"
                     >
-                      {isSubmitting ? t("Hazırlanıyor...", "Processing...", "جارٍ التحضير...") : isForeign ? t(`Siparişi Tamamla (${total} TL)`, `Place Order (${money(total)})`, `إتمام الطلب (${money(total)})`) : t(`Ödemeye Geç (${total} TL)`, `Proceed to Payment (${money(total)})`, `المتابعة إلى الدفع (${money(total)})`)}
+                      {isSubmitting ? t("Hazırlanıyor...", "Processing...", "جارٍ التحضير...") : isForeign ? t(`Siparişi Tamamla (${total} TL)`, `Place Order (${money(total)})`, `إتمام الطلب (${money(total)})`) : paymentMethod === 'transfer' ? t(`Siparişi Tamamla (${total} TL)`, `Place Order (${total} TL)`, `إتمام الطلب (${total} ليرة)`) : t(`Ödemeye Geç (${total} TL)`, `Proceed to Payment (${money(total)})`, `المتابعة إلى الدفع (${money(total)})`)}
                     </button>
                   </div>
                 </form>

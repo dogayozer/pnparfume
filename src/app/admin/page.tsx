@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { productLabel } from '@/lib/collections'
 import { 
   Settings, Save, AlertCircle, RefreshCw, Box, Users, TrendingUp, 
   Sparkles, Server, PackagePlus, UploadCloud, Percent, Truck, 
@@ -8,10 +9,11 @@ import {
   EyeOff, Search, Filter, MapPin, User, Phone, Mail, Calendar, ChevronRight, 
   X, Package, Check, Copy, ArrowRight, ShoppingCart, Award, Gift, 
   CreditCard, Tag, Edit3, ShieldCheck, Key, Lock, History, Info, 
-  CheckSquare, Square, Bell, Send, MessageSquare, Calculator, Star, Trash2, Menu
+  CheckSquare, Square, Bell, Send, MessageSquare, Calculator, Star, Trash2, Menu, Landmark
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import DealerPricesTab from './DealerPricesTab'
+import BankAccountsTab from './BankAccountsTab'
 
 type ScenarioRule = { id: string; rule_key: string; rule_value: number; description: string; is_active: boolean }
 type AiConfig = { id: string; system_prompt: string; active_campaign: string | null; can_give_discount: boolean; discount_limit: number }
@@ -29,6 +31,8 @@ type Order = {
   cargoCompany?: string | null
   trackingCode?: string | null
   paymentNote?: string | null
+  paymentMethod?: string | null
+  customerNote?: string | null
   combinedWithOrderId?: string | null
   shippingCostDiscount?: number
   ai_assisted?: boolean
@@ -253,7 +257,7 @@ const CHANGELOG = [
 ]
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<'scenarios' | 'ai' | 'orders' | 'customers' | 'notifications' | 'reports' | 'api' | 'products' | 'growth-sim' | 'coupons' | 'integrations' | 'reviews'>('orders')
+  const [activeTab, setActiveTab] = useState<'scenarios' | 'ai' | 'orders' | 'customers' | 'notifications' | 'reports' | 'api' | 'products' | 'growth-sim' | 'coupons' | 'integrations' | 'reviews' | 'bank-accounts'>('orders')
   const [loading, setLoading] = useState(false)
   const [savingId, setSavingId] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
@@ -1160,6 +1164,7 @@ export default function AdminDashboard() {
     return {
       all: orders.length,
       pending: orders.filter(o => o.status === 'pending').length,
+      awaiting_transfer: orders.filter(o => o.status === 'awaiting_transfer').length,
       paid: orders.filter(o => o.status === 'paid').length,
       shipped: orders.filter(o => o.status === 'shipped').length,
       delivered: orders.filter(o => o.status === 'delivered').length,
@@ -1213,7 +1218,8 @@ export default function AdminDashboard() {
   // Ödeme durumu açıklaması: PayTR hata mesajı varsa o; ödeme 30 dk'dan uzun süredir
   // bekliyorsa PayTR'dan hiç yanıt gelmemiş demektir (müşteri ödeme ekranını yarıda bırakmış olabilir).
   const getPaymentInfo = (o: Order): { text: string; tone: 'error' | 'warn' } | null => {
-    if (o.paymentNote) return { text: o.paymentNote, tone: 'error' }
+    if (o.status === 'awaiting_transfer' && !o.paymentNote) return { text: 'Havale/EFT bekleniyor — ödeme hesaba ulaşınca "Ödeme Alındı" yapın', tone: 'warn' }
+    if (o.paymentNote) return { text: o.paymentNote, tone: o.status === 'awaiting_transfer' ? 'warn' : 'error' }
     if (o.status === 'failed') return { text: 'Ödeme başarısız (neden kaydedilmemiş)', tone: 'error' }
     if (o.status === 'pending' && Date.now() - new Date(o.createdAt).getTime() > 30 * 60 * 1000) {
       return { text: 'PayTR yanıtı 30 dakikadan uzun süredir gelmedi — ödeme tamamlanmamış', tone: 'warn' }
@@ -1225,6 +1231,8 @@ export default function AdminDashboard() {
     switch(status) {
       case 'pending':
         return <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-full text-xs font-semibold"><Clock size={12} /> Ödeme Bekliyor</span>
+      case 'awaiting_transfer':
+        return <span className="inline-flex items-center gap-1 bg-orange-50 text-orange-700 border border-orange-200 px-2.5 py-1 rounded-full text-xs font-semibold"><Landmark size={12} /> Havale Bekliyor</span>
       case 'paid':
         return <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-full text-xs font-semibold"><Settings size={12} /> Hazırlanıyor / İşlemde</span>
       case 'shipped':
@@ -1490,6 +1498,13 @@ export default function AdminDashboard() {
             </button>
 
             <button
+              onClick={() => setActiveTab('bank-accounts')}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors ${activeTab === 'bank-accounts' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
+            >
+              <Landmark size={18} /> Banka Hesapları
+            </button>
+
+            <button
               onClick={() => setActiveTab('integrations')}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors ${activeTab === 'integrations' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
             >
@@ -1581,6 +1596,7 @@ export default function AdminDashboard() {
               {activeTab === 'growth-sim' && 'Kârlılık Simülatörü'}
               {activeTab === 'coupons' && 'Kupon Yönetimi'}
               {activeTab === 'integrations' && 'SMS & E-posta Entegrasyonları'}
+              {activeTab === 'bank-accounts' && 'Banka Hesapları (Havale / EFT)'}
               {activeTab === 'products' && 'Toplu Fiyat & Excel Ürün Yönetimi'}
               {activeTab === 'reviews' && 'Müşteri Yorumları & UGC Değerlendirmeleri'}
               {activeTab === 'ai' && 'Nöropazarlama & Yapay Zeka'}
@@ -1673,6 +1689,7 @@ export default function AdminDashboard() {
                         { key: 'all', label: 'Tüm Siparişler', count: orderCounts.all },
                         { key: 'paid', label: 'Hazırlanıyor / İşlemde', count: orderCounts.paid, color: 'text-blue-700 bg-blue-50 border-blue-200' },
                         { key: 'shipped', label: 'Kargoda', count: orderCounts.shipped, color: 'text-purple-700 bg-purple-50 border-purple-200' },
+                        { key: 'awaiting_transfer', label: 'Havale Bekliyor', count: orderCounts.awaiting_transfer, color: 'text-orange-700 bg-orange-50 border-orange-200' },
                         { key: 'pending', label: 'Ödeme Bekliyor', count: orderCounts.pending, color: 'text-amber-700 bg-amber-50 border-amber-200' },
                         { key: 'delivered', label: 'Teslim Edildi', count: orderCounts.delivered, color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
                         { key: 'cancelled', label: 'İptal', count: orderCounts.cancelled, color: 'text-rose-700 bg-rose-50 border-rose-200' },
@@ -1745,7 +1762,7 @@ export default function AdminDashboard() {
                                       {itemCount > 0 ? `${itemCount} Parfüm` : 'Özel Sipariş'}
                                     </div>
                                     <div className="text-[11px] text-gray-400 truncate max-w-[180px]">
-                                      {itemsList.map((it: any) => `${it.quantity || 1}x PN ${it.sku}`).join(', ')}
+                                      {itemsList.map((it: any) => `${it.quantity || 1}x ${productLabel(it.sku)}`).join(', ')}
                                     </div>
                                   </td>
                                   <td className="px-6 py-4">
@@ -1756,6 +1773,7 @@ export default function AdminDashboard() {
                                   </td>
                                   <td className="px-6 py-4">
                                     {getStatusBadge(o.status)}
+                                    {o.customerNote && <div className="mt-1.5 text-[11px] font-semibold text-amber-700" title={o.customerNote}>📝 Müşteri notu var</div>}
                                     {(() => { const info = getPaymentInfo(o); return info ? (
                                       <div className={`mt-1.5 max-w-[220px] text-[11px] leading-snug ${info.tone === 'error' ? 'text-red-600' : 'text-amber-700'}`}>{info.text}</div>
                                     ) : null })()}
@@ -1775,6 +1793,16 @@ export default function AdminDashboard() {
                                   </td>
                                   <td className="px-6 py-4 text-right whitespace-nowrap sticky right-0 bg-white shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">
                                     <div className="flex items-center justify-end gap-1.5">
+                                      {o.status === 'awaiting_transfer' && (
+                                        <button
+                                          onClick={() => { if (confirm(`${o.orderNumber} siparişi için havale/EFT ödemesini hesabınızda gördünüz mü? Onaylarsanız sipariş "Hazırlanıyor" olur ve müşteriye SMS gider.`)) handleUpdateOrderStatus(o.id, 'paid') }}
+                                          disabled={savingId === `order_${o.id}`}
+                                          className="px-2.5 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-xs font-medium transition-colors shadow-sm"
+                                          title="Havale geldi, ödemeyi onayla"
+                                        >
+                                          Ödeme Alındı
+                                        </button>
+                                      )}
                                       {o.status === 'pending' && (
                                         <button
                                           onClick={() => handleUpdateOrderStatus(o.id, 'paid')}
@@ -2733,6 +2761,13 @@ export default function AdminDashboard() {
                       </table>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* ===================== BANKA HESAPLARI (HAVALE / EFT) ===================== */}
+              {activeTab === 'bank-accounts' && (
+                <div className="max-w-3xl">
+                  <BankAccountsTab adminFetch={adminFetch} showMsg={showMsg} />
                 </div>
               )}
 
@@ -3697,7 +3732,16 @@ export default function AdminDashboard() {
                 ) : null })()}
                 <p className="text-xs text-gray-500 mt-1">
                   Sipariş Tarihi: {new Date(selectedOrder.createdAt).toLocaleString('tr-TR')}
+                  {selectedOrder.paymentMethod && <> · Ödeme: {selectedOrder.paymentMethod === 'card' ? 'Kredi/Banka Kartı' : selectedOrder.paymentMethod === 'bank_transfer_intl' ? 'Havale/EFT (yurt dışı)' : 'Havale/EFT (Türkiye)'}</>}
                 </p>
+                {selectedOrder.status === 'awaiting_transfer' && (
+                  <button
+                    onClick={() => { if (confirm(`${selectedOrder.orderNumber} siparişi için havale/EFT ödemesini hesabınızda gördünüz mü? Onaylarsanız sipariş "Hazırlanıyor" olur ve müşteriye SMS gider.`)) handleUpdateOrderStatus(selectedOrder.id, 'paid') }}
+                    className="mt-2 px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-xs font-semibold"
+                  >
+                    Ödeme Alındı
+                  </button>
+                )}
               </div>
               <button 
                 onClick={() => setSelectedOrder(null)} 
@@ -3708,6 +3752,12 @@ export default function AdminDashboard() {
             </div>
 
             <div className="p-8 overflow-y-auto space-y-6 flex-1">
+              {selectedOrder.customerNote && (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl">
+                  <div className="text-xs font-semibold text-amber-800 mb-1">Müşteri Sipariş Açıklaması</div>
+                  <p className="text-sm text-amber-900 whitespace-pre-wrap break-words">{selectedOrder.customerNote}</p>
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Müşteri Bilgileri */}
                 <div className="bg-gray-50/80 rounded-2xl p-5 border border-gray-100 space-y-4">

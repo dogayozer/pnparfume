@@ -5,17 +5,32 @@ import { getCartCostTotal } from '@/lib/cartCost'
 import { requireCustomer } from '@/lib/customerAuth'
 import { productLabel } from '@/lib/collections'
 import { priceCart, evaluateCoupon, isValidFriendOrder, computeTotals, computeShippingFee } from '@/lib/checkoutPricing'
+import { getTransferAccounts } from '@/lib/bankAccounts'
+import { sendTransferOrderMails } from '@/lib/transferMail'
 
 export async function POST(req: Request) {
   try {
     const body = await req.json()
     const { customer, cart: clientCart, totalAmount: clientTotal, couponCode, friendOrderCode, userId, referralCode } = body
 
+    // Banka havalesi (Türkiye): aynı fiyat/kupon/kargo hesabı, ama PayTR oturumu açılmaz;
+    // sipariş "awaiting_transfer" olur, stok düşmez, admin ödemeyi görünce "Ödeme Alındı" yapar.
+    const isTransfer = body.paymentMethod === 'bank_transfer'
+    const customerNote = String(body.note ?? '').trim().slice(0, 1000) || null
+    const locale: 'tr' | 'en' | 'ar' = ['tr', 'en', 'ar'].includes(body.locale) ? body.locale : 'tr'
+
     const merchant_id = process.env.PAYTR_MERCHANT_ID
     const merchant_key = process.env.PAYTR_MERCHANT_KEY
     const merchant_salt = process.env.PAYTR_MERCHANT_SALT
 
-    if (!merchant_id || !merchant_key || !merchant_salt) {
+    if (isTransfer) {
+      const c = customer || {}
+      if (!String(c.name || '').trim() || !String(c.phone || '').trim() || !String(c.address || '').trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(c.email || '').trim())) {
+        return NextResponse.json({ error: 'Lütfen ad soyad, telefon, e-posta ve adres alanlarını eksiksiz doldurun.' }, { status: 400 })
+      }
+    }
+
+    if (!isTransfer && (!merchant_id || !merchant_key || !merchant_salt)) {
       console.error("PayTR credentials missing in .env")
       return NextResponse.json({ error: "Ödeme altyapısı yapılandırma hatası" }, { status: 500 })
     }
@@ -150,7 +165,9 @@ export async function POST(req: Request) {
         orderNumber: merchant_oid,
         totalAmount: totalAmount,
         discountApplied,
-        status: 'pending',
+        status: isTransfer ? 'awaiting_transfer' : 'pending',
+        paymentMethod: isTransfer ? 'bank_transfer' : 'card',
+        customerNote,
         items: cart,
         customerName: customer.name,
         customerEmail: customer.email,
@@ -169,7 +186,30 @@ export async function POST(req: Request) {
       }
     })
 
-    let user_ip = req.headers.get('x-forwarded-for') || '1.1.1.1' 
+    if (isTransfer) {
+      const accounts = await getTransferAccounts('tr')
+      try {
+        await sendTransferOrderMails({
+          kind: 'tr',
+          orderNumber: merchant_oid,
+          locale,
+          totalAmount,
+          accounts,
+          customer: { name: customer.name, email: customer.email, phone: customer.phone, address: customer.address },
+          note: customerNote,
+          itemsText: cart.map((i: any) => `${i.quantity} x ${productLabel(i.sku)} — ${i.price} TL`).join('<br>'),
+        })
+      } catch (mailErr) {
+        console.error('Havale siparişi e-postası gönderilemedi:', mailErr)
+      }
+      return NextResponse.json({ transfer: true, orderNumber: merchant_oid, totalAmount, accounts })
+    }
+
+    if (!merchant_id || !merchant_key || !merchant_salt) {
+      return NextResponse.json({ error: 'Ödeme altyapısı yapılandırma hatası' }, { status: 500 })
+    }
+
+    let user_ip = req.headers.get('x-forwarded-for') || '1.1.1.1'
     if (user_ip.includes(',')) {
       user_ip = user_ip.split(',')[0].trim()
     }
