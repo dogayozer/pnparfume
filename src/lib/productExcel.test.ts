@@ -113,3 +113,80 @@ test('planChanges: publish_status ACTIVE|DRAFT|PASSIVE dışı → issue', () =>
   assert.equal(bad.updates.length, 0)
   assert.equal(bad.issues.length, 1)
 })
+
+// ---- İnceleme düzeltmeleri ----
+import { blockedFormulaSkus, enforceShowcaseLimit, mergeImages, formulaKey } from './productExcel'
+
+function cellSheet(cells: Record<string, { v: unknown; t: 'n' | 's'; z?: string }>, name = 'Ürünler') {
+  const ws: XLSX.WorkSheet = {}
+  let maxC = 0, maxR = 0
+  for (const [addr, c] of Object.entries(cells)) {
+    ws[addr] = c as XLSX.CellObject
+    const d = XLSX.utils.decode_cell(addr); maxC = Math.max(maxC, d.c); maxR = Math.max(maxR, d.r)
+  }
+  ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: maxR, c: maxC } })
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, name)
+  return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer
+}
+
+test('parse: #,##0 biçimli 1250 hücresi 1250 okunur (1,25 değil)', () => {
+  const buf = cellSheet({ A1: { v: 'sku', t: 's' }, B1: { v: 'fiyat', t: 's' }, A2: { v: 'PN M 1', t: 's' }, B2: { v: 1250, t: 'n', z: '#,##0' } })
+  assert.equal(parseWorkbook(buf).products[0].fiyat, 1250)
+})
+
+test('parse: sayı tipli barkod hücresi reddedilir', () => {
+  const buf = cellSheet({ A1: { v: 'sku', t: 's' }, B1: { v: 'barkod', t: 's' }, A2: { v: 'PN M 1', t: 's' }, B2: { v: 12345678901, t: 'n' } })
+  const p = parseWorkbook(buf)
+  assert.equal(p.products.length, 0)
+  assert.match(p.issues[0].message, /metin/)
+})
+
+test('parse: fiyat 0 reddedilir, base_cost 0 kabul', () => {
+  const p = parseWorkbook(sheetOf([['sku', 'fiyat', 'base_cost'], ['A', '0', '0'], ['B', '5', '0']]))
+  assert.equal(p.issues.length, 1)
+  assert.equal(p.issues[0].sku, 'A')
+  assert.equal(p.products.find((r) => r.sku === 'B')?.base_cost, 0)
+})
+
+test('parse: cinsiyet Erkek/Kadın/Unisex/UNISEX dışı reddedilir', () => {
+  const p = parseWorkbook(sheetOf([['sku', 'gender'], ['A', 'Male'], ['B', 'Kadın'], ['C', 'UNISEX']]))
+  assert.deepEqual(p.issues.map((i) => i.sku), ['A'])
+  assert.equal(p.products.length, 2)
+})
+
+test('parse: çıplak görsel adı kasap-image yoluna çevrilir', () => {
+  const p = parseWorkbook(sheetOf([['sku', 'gorsel_1', 'gorsel_2'], ['A', '201.jpg', 'http://x.com/a.jpg']]))
+  assert.equal(p.products[0].gorsel_1, '/api/kasap-image/201.jpg')
+  assert.equal(p.products[0].gorsel_2, 'http://x.com/a.jpg')
+})
+
+test('planChanges: 1e-6 altı sayı farkı değişiklik sayılmaz', () => {
+  const r = planChanges({ rows: [{ sku: 'A', base_cost: 0.3333333333 }], existing: new Map([['A', existing('A', { base_cost: 1 / 3 })]]), barcodeOwners: new Map() })
+  assert.equal(r.updates.length, 0)
+})
+
+test('formulaKey: 1/3 ile 0.333333333 aynı anahtar', () => {
+  const a = formulaKey({ hammadde: 'X', katman: 'Üst', katman_yuzde: 1 / 3, mutlak_yuzde: 10 })
+  const b = formulaKey({ hammadde: 'X', katman: 'Üst', katman_yuzde: 0.333333333, mutlak_yuzde: 10 })
+  assert.equal(a, b)
+})
+
+test('blockedFormulaSkus: sku boş hatalı formül satırı tüm formülü durdurur', () => {
+  assert.deepEqual(blockedFormulaSkus([{ sheet: 'Formül', row: 5, message: 'x' }]), { all: true, skus: new Set() })
+  const r = blockedFormulaSkus([{ sheet: 'Formül', row: 5, sku: 'A', message: 'x' }, { sheet: 'Ürünler', row: 2, message: 'y' }])
+  assert.equal(r.all, false)
+  assert.deepEqual([...r.skus], ['A'])
+})
+
+test('enforceShowcaseLimit: vitrin 10 ürünü geçemez', () => {
+  const ups = ['A', 'B', 'C'].map((sku) => ({ sku, changes: { is_featured: [false, true] as [unknown, unknown] } }))
+  const r = enforceShowcaseLimit(ups, { featured: 8, onSale: 0 })
+  assert.deepEqual(r.updates.map((u) => u.sku), ['A', 'B'])
+  assert.equal(r.issues.length, 1)
+  assert.equal(r.issues[0].sku, 'C')
+})
+
+test('mergeImages: boşluklu görsel dizisi reddedilir, sıralı kabul', () => {
+  assert.deepEqual(mergeImages(['a'], { gorsel_2: 'b' }), { images: ['a', 'b'] })
+  assert.ok('error' in mergeImages([], { gorsel_3: 'c' }))
+})

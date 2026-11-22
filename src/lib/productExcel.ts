@@ -81,6 +81,9 @@ function cleanText(v: unknown): string | undefined {
   return s === '' ? undefined : s
 }
 
+const VALID_GENDERS = ['Erkek', 'Kadın', 'Unisex', 'UNISEX']
+const normalizeImage = (v: string) => (/^(https?:)?\/\//.test(v) || v.startsWith('/') ? v : `/api/kasap-image/${encodeURIComponent(v)}`)
+
 // "1250.5", "1250,5" ve "1.250,50" kabul; "abc" → NaN. "1.250" (nokta + tam 3 hane) bin ayracıdır.
 export function parseNumber(raw: string): number {
   const s = raw.trim().replace(/\s/g, '')
@@ -99,7 +102,7 @@ function parseBool(raw: string): boolean | undefined {
 function readSheet(wb: XLSX.WorkBook, name: string): { header: string[]; rows: { n: number; cells: unknown[] }[] } | null {
   const ws = wb.Sheets[name]
   if (!ws) return null
-  const aoa = XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, raw: false, defval: '', blankrows: false })
+  const aoa = XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, raw: true, defval: '', blankrows: false })
   if (aoa.length === 0) return { header: [], rows: [] }
   const header = (aoa[0] as unknown[]).map((h) => String(h ?? '').trim().toLowerCase())
   const rows = aoa.slice(1).map((cells, i) => ({ n: i + 2, cells: cells as unknown[] }))
@@ -120,7 +123,8 @@ export function parseWorkbook(buf: Buffer): { products: ProductRow[]; formulas: 
     if (col('sku') < 0) issues.push({ sheet: 'Ürünler', row: 1, message: '"sku" sütunu bulunamadı' })
     else {
       for (const { n, cells } of ps.rows) {
-        const get = (name: string) => (col(name) >= 0 ? cleanText(cells[col(name)]) : undefined)
+        const raw = (name: string) => (col(name) >= 0 ? cells[col(name)] : undefined)
+        const get = (name: string) => cleanText(raw(name))
         const sku = get('sku')
         if (!sku) { issues.push({ sheet: 'Ürünler', row: n, message: 'sku boş' }); continue }
         const out: Record<string, unknown> = { row: n, sku }
@@ -129,14 +133,18 @@ export function parseWorkbook(buf: Buffer): { products: ProductRow[]; formulas: 
         for (const f of TEXT_FIELDS) {
           const v = get(f)
           if (v === undefined) continue
+          if (f === 'barkod' && typeof raw('barkod') === 'number') { fail('barkod sayı olarak kaydedilmiş: Excel baştaki sıfırı ve haneleri bozabilir. Hücreyi metin yapıp yeniden yazın'); continue }
+          if (f === 'gender' && !VALID_GENDERS.includes(v)) { fail(`gender Erkek/Kadın/Unisex olmalı ("${v}")`); continue }
           if (f === 'barkod' && !BARCODE_RE.test(v)) { fail(`barkod geçersiz ("${v}"): 8-14 haneli düz rakam olmalı (Excel'de hücreyi metin yapın)`); continue }
-          out[f] = f === 'publish_status' ? v.toUpperCase() : v
+          out[f] = f === 'publish_status' ? v.toUpperCase() : f.startsWith('gorsel_') ? normalizeImage(v) : v
         }
         for (const f of NUM_FIELDS) {
           const v = get(f)
           if (v === undefined) continue
-          const num = parseNumber(v)
+          const rawVal = raw(f)
+          const num = typeof rawVal === 'number' ? rawVal : parseNumber(v)
           if (!Number.isFinite(num) || num < 0) { fail(`${f} sayı olmalı ("${v}")`); continue }
+          if (f === 'fiyat' && num === 0) { fail('fiyat 0 olamaz'); continue }
           if (f === 'stok' && !Number.isInteger(num)) { fail(`stok tam sayı olmalı ("${v}")`); continue }
           out[f] = num
         }
@@ -156,7 +164,8 @@ export function parseWorkbook(buf: Buffer): { products: ProductRow[]; formulas: 
   if (fs) {
     const col = (name: string) => fs.header.indexOf(name)
     for (const { n, cells } of fs.rows) {
-      const get = (name: string) => (col(name) >= 0 ? cleanText(cells[col(name)]) : undefined)
+      const rawF = (name: string) => (col(name) >= 0 ? cells[col(name)] : undefined)
+      const get = (name: string) => cleanText(rawF(name))
       const sku = get('sku')
       const fail = (message: string) => issues.push({ sheet: 'Formül', row: n, sku, message })
       const hammadde = get('hammadde')
@@ -166,8 +175,8 @@ export function parseWorkbook(buf: Buffer): { products: ProductRow[]; formulas: 
       const m = get('mutlak_yuzde')
       if (!sku || !hammadde) { fail('sku ve hammadde zorunlu'); continue }
       if (!katman) { fail(`katman Üst/Kalp/Dip olmalı ("${katmanRaw ?? ''}")`); continue }
-      const kn = k === undefined ? NaN : parseNumber(k)
-      const mn = m === undefined ? NaN : parseNumber(m)
+      const kn = k === undefined ? NaN : typeof rawF('katman_yuzde') === 'number' ? (rawF('katman_yuzde') as number) : parseNumber(k)
+      const mn = m === undefined ? NaN : typeof rawF('mutlak_yuzde') === 'number' ? (rawF('mutlak_yuzde') as number) : parseNumber(m)
       if (!Number.isFinite(kn) || !Number.isFinite(mn) || kn < 0 || mn < 0) { fail('katman_yuzde ve mutlak_yuzde sayı olmalı'); continue }
       formulas.push({ sku, hammadde, katman, katman_yuzde: kn, mutlak_yuzde: mn })
     }
@@ -178,7 +187,10 @@ export function parseWorkbook(buf: Buffer): { products: ProductRow[]; formulas: 
 
 // ---------- Fark çıkarma ----------
 
-const same = (a: unknown, b: unknown) => (a ?? undefined) === (b ?? undefined)
+const same = (a: unknown, b: unknown) => {
+  if (typeof a === 'number' && typeof b === 'number') return Math.abs(a - b) < 1e-6
+  return (a ?? undefined) === (b ?? undefined)
+}
 
 export function planChanges(input: {
   rows: ProductRow[]
@@ -214,4 +226,47 @@ export function planChanges(input: {
     if (Object.keys(changes).length > 0) updates.push({ sku: r.sku, changes })
   }
   return { updates, issues }
+}
+
+// ---------- Formül / vitrin / görsel yardımcıları ----------
+
+const r6 = (n: number) => Math.round(n * 1e6) / 1e6
+export const formulaKey = (f: { hammadde: string; katman: string; katman_yuzde: number; mutlak_yuzde: number }) =>
+  `${f.hammadde}|${f.katman}|${r6(f.katman_yuzde)}|${r6(f.mutlak_yuzde)}`
+
+// Formül sayfasındaki hatalı satırlar: sku'su olan ürünün formülü korunur; sku'suz hatalı satır varsa tüm formül güncellemesi durur.
+export function blockedFormulaSkus(issues: RowIssue[]): { all: boolean; skus: Set<string> } {
+  const f = issues.filter((i) => i.sheet === 'Formül')
+  return { all: f.some((i) => !i.sku), skus: new Set(f.filter((i) => i.sku).map((i) => i.sku!)) }
+}
+
+// "Çok Satanlar" ve "İndirimde" vitrinleri en fazla `max` ürün (admin PUT kuralıyla aynı).
+export function enforceShowcaseLimit(
+  updates: { sku: string; changes: Record<string, [unknown, unknown]> }[],
+  current: { featured: number; onSale: number },
+  max = 10,
+): { updates: { sku: string; changes: Record<string, [unknown, unknown]> }[]; issues: RowIssue[] } {
+  const count = { is_featured: current.featured, is_on_sale: current.onSale }
+  const issues: RowIssue[] = []
+  const out: typeof updates = []
+  for (const u of updates) {
+    let reject = false
+    for (const f of ['is_featured', 'is_on_sale'] as const) {
+      const ch = u.changes[f]
+      if (!ch) continue
+      if (ch[1] === true) { if (count[f] >= max) { reject = true; issues.push({ sheet: 'Ürünler', row: 0, sku: u.sku, message: `${f === 'is_featured' ? '"Çok Satanlar"' : '"İndirimde"'} vitrini ${max} ürünle sınırlı` }) } else count[f]++ }
+      else if (ch[1] === false) count[f]--
+    }
+    if (!reject) out.push(u)
+  }
+  return { updates: out, issues }
+}
+
+// gorsel_1..3 değişikliklerini mevcut diziye uygular; aradaki boşluk (gorsel_3 var, gorsel_2 yok) hatadır.
+export function mergeImages(existing: string[], changes: Partial<Record<'gorsel_1' | 'gorsel_2' | 'gorsel_3', string>>): { images: string[] } | { error: string } {
+  const arr: (string | undefined)[] = [existing[0], existing[1], existing[2]]
+  for (const k of ['gorsel_1', 'gorsel_2', 'gorsel_3'] as const) if (changes[k] !== undefined) arr[Number(k.slice(-1)) - 1] = changes[k]
+  const lastIdx = arr.reduce((m, v, i) => (v ? i : m), -1)
+  for (let i = 0; i <= lastIdx; i++) if (!arr[i]) return { error: `gorsel_${i + 1} boş olamaz (sonraki görsel dolu)` }
+  return { images: arr.slice(0, lastIdx + 1) as string[] }
 }

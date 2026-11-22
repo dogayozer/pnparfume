@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/adminAuth'
-import { parseWorkbook, planChanges, type ExistingProduct, type FormulaRow, type RowIssue } from '@/lib/productExcel'
+import { parseWorkbook, planChanges, blockedFormulaSkus, enforceShowcaseLimit, mergeImages, formulaKey, type ExistingProduct, type FormulaRow, type RowIssue } from '@/lib/productExcel'
 
 const STOREFRONT_PLATFORM = 'trendyol'
 const MAX_BYTES = 4 * 1024 * 1024
@@ -12,8 +12,6 @@ const PRODUCT_FIELD_MAP: Record<string, string> = {
   is_featured: 'is_featured', is_on_sale: 'is_on_sale', top_notes: 'top_notes', heart_notes: 'heart_notes',
   base_notes: 'base_notes', base_cost: 'base_cost', dealer_price: 'dealer_price',
 }
-const formulaKey = (f: { hammadde: string; katman: string; katman_yuzde: number; mutlak_yuzde: number }) =>
-  `${f.hammadde}|${f.katman}|${f.katman_yuzde}|${f.mutlak_yuzde}`
 
 // POST (FormData: file, apply='0'|'1'). apply=0 yalnız önizleme döner, hiçbir şey yazmaz.
 export async function POST(req: Request) {
@@ -67,13 +65,34 @@ export async function POST(req: Request) {
         issues.push({ sheet: 'Ürünler', row: row?.row ?? 0, sku: u.sku, message: 'Mağaza ilanı yok: fiyat sütunu doldurulmalı' })
         return false
       }
+      const imgChanges: Record<string, string> = {}
+      for (const [f, [, next]] of Object.entries(u.changes)) if (f.startsWith('gorsel_')) imgChanges[f] = String(next)
+      if (Object.keys(imgChanges).length) {
+        const m = mergeImages(listings.get(u.sku)?.images ?? [], imgChanges)
+        if ('error' in m) {
+          const row = parsed.products.find((p) => p.sku === u.sku)
+          issues.push({ sheet: 'Ürünler', row: row?.row ?? 0, sku: u.sku, message: m.error }); return false
+        }
+      }
       return true
     })
 
+    // Vitrin sınırı (Çok Satanlar / İndirimde en fazla 10)
+    const showcaseTouched = updates.some((u) => 'is_featured' in u.changes || 'is_on_sale' in u.changes)
+    let finalUpdates = updates
+    if (showcaseTouched) {
+      const [featured, onSale] = await Promise.all([prisma.product.count({ where: { is_featured: true } }), prisma.product.count({ where: { is_on_sale: true } })])
+      const lim = enforceShowcaseLimit(updates, { featured, onSale })
+      finalUpdates = lim.updates
+      for (const i of lim.issues) issues.push({ ...i, row: parsed.products.find((p) => p.sku === i.sku)?.row ?? 0 })
+    }
+
     // --- Formül (satır numarası bilinmiyorsa 0) ---
-    const formulaSkusWithIssues = new Set(parsed.issues.filter((i) => i.sheet === 'Formül' && i.sku).map((i) => i.sku!))
+    const blocked = blockedFormulaSkus(parsed.issues)
+    const formulaSkusWithIssues = blocked.skus
     const bySku = new Map<string, FormulaRow[]>()
-    if (parsed.hasFormulaSheet) for (const f of parsed.formulas) bySku.set(f.sku, [...(bySku.get(f.sku) ?? []), f])
+    if (blocked.all) issues.push({ sheet: 'Formül', row: 0, message: 'Formül sayfasında sku hücresi boş hatalı satır var: hiçbir ürünün formülü değiştirilmeyecek' })
+    if (parsed.hasFormulaSheet && !blocked.all) for (const f of parsed.formulas) bySku.set(f.sku, [...(bySku.get(f.sku) ?? []), f])
     for (const s of formulaSkusWithIssues) bySku.delete(s) // hatalı satırı olan ürünün formülüne dokunulmaz
     const formulaPlans: { sku: string; before: number; after: number; rows: { ingredientId: string; f: FormulaRow }[] }[] = []
     if (bySku.size) {
@@ -101,16 +120,16 @@ export async function POST(req: Request) {
     }
 
     const rejected = issues.filter((i) => !i.message.startsWith('Uyarı')).length
-    const summary = { updated: updates.length + formulaPlans.length, unchanged: parsed.products.length - plan.updates.length - plan.issues.length, rejected }
+    const summary = { updated: finalUpdates.length + formulaPlans.length, unchanged: parsed.products.length - plan.updates.length - plan.issues.length, rejected }
     const result = {
-      applied: false, summary, updates,
+      applied: false, summary, updates: finalUpdates,
       formulaUpdates: formulaPlans.map(({ sku, before, after }) => ({ sku, before, after })),
       issues,
     }
     if (!apply) return NextResponse.json(result)
 
     await prisma.$transaction(async (tx) => {
-      for (const u of updates) {
+      for (const u of finalUpdates) {
         const data: Record<string, unknown> = {}
         const listingData: Record<string, unknown> = {}
         for (const [f, [, next]] of Object.entries(u.changes)) {
@@ -122,9 +141,8 @@ export async function POST(req: Request) {
         if (Object.keys(data).length) await tx.product.update({ where: { sku: u.sku }, data })
         const imageChanges = Object.entries(u.changes).filter(([f]) => f.startsWith('gorsel_'))
         if (imageChanges.length) {
-          const images = [...(listings.get(u.sku)?.images ?? [])]
-          for (const [f, [, next]] of imageChanges) images[Number(f.slice(-1)) - 1] = String(next)
-          listingData.images = images.filter(Boolean)
+          const m = mergeImages(listings.get(u.sku)?.images ?? [], Object.fromEntries(imageChanges.map(([f, [, next]]) => [f, String(next)])))
+          if ('images' in m) listingData.images = m.images
         }
         if (Object.keys(listingData).length) {
           await tx.marketplaceListing.upsert({

@@ -50,9 +50,11 @@ export async function GET(req: Request) {
       gorsel_2: l?.images?.[1],
       gorsel_3: l?.images?.[2],
     })
+    // Standart dışı katmanlı (Üst/Kalp/Dip dışı) satırı olan ürünün formülü dosyaya yazılmaz:
+    // eksik satırla geri yüklenip kalıcı silinmesin diye o ürünün formülü Excel'den yönetilmez.
+    if (p.ingredients.some((pi) => pi.layer !== 'Üst' && pi.layer !== 'Kalp' && pi.layer !== 'Dip')) continue
     for (const pi of p.ingredients) {
-      const katman = pi.layer === 'Üst' || pi.layer === 'Kalp' || pi.layer === 'Dip' ? pi.layer : undefined
-      if (!katman) continue
+      const katman = pi.layer as FormulaRow['katman']
       formulas.push({ sku: p.sku, hammadde: pi.ingredient.name, katman, katman_yuzde: pi.layer_weight_pct, mutlak_yuzde: pi.absolute_weight_pct })
     }
   }

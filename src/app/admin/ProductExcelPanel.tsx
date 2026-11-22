@@ -39,7 +39,7 @@ export default function ProductExcelPanel({
       a.href = URL.createObjectURL(blob)
       a.download = `urunler-${collection}-${new Date().toISOString().slice(0, 10)}.xlsx`
       a.click()
-      URL.revokeObjectURL(a.href)
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000)
     } catch (e: any) {
       setMsg({ kind: 'err', text: e.message || 'İndirilemedi' })
     } finally { setBusy(null) }
