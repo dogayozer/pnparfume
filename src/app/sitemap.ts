@@ -34,7 +34,7 @@ for (const g of Object.values(GROUPS)) {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const products = await prisma.product.findMany({
     where: { publish_status: { not: 'DRAFT' } },
-    select: { sku: true, updatedAt: true }
+    select: { sku: true, updatedAt: true, marketplaceListings: { where: { platform: 'trendyol' }, select: { images: true } } }
   })
 
   // "erkek parfüm", "yaz parfümü" gibi hedeflenen anahtar kelime sayfaları — her biri
@@ -50,12 +50,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // sitemap'e ham boşlukla yazılıyordu (geçersiz XML/URL). Google Search Console
   // bu yüzden 300+ ürün URL'sini "geçersiz" diye reddediyor, hiç indekslemiyor
   // olabilir — muhtemelen "sitemiz bulunamıyor" şikayetinin ana sebeplerinden biri.
-  const productUrls = products.map((p: any) => ({
-    url: `https://pnparfume.com/urun/${encodeURIComponent(p.sku)}`,
-    lastModified: p.updatedAt,
-    changeFrequency: 'weekly' as const,
-    priority: 0.8,
-  }))
+  // Görsel sitemap'i: sayfadaki ile aynı adresler (parfumtasarla.com görselleri sitenin kendi
+  // /api/media-proxy yolundan sunulur; bkz. ProductCard.toSecureUrl). Google Görseller için.
+  const toImageUrl = (u: string): string | null => {
+    if (!u || u.includes('placehold.co')) return null
+    if (u.startsWith('http://parfumtasarla.com') || u.startsWith('http://kasaptanetyiyelim.com')) {
+      return `${SITE}/api/media-proxy?url=${encodeURIComponent(u)}`
+    }
+    if (u.startsWith('/')) return `${SITE}${u}`
+    return /^https:\/\//.test(u) ? u : null
+  }
+  const productUrls = products.map((p: any) => {
+    const images = (p.marketplaceListings?.[0]?.images ?? []).map(toImageUrl).filter((x: string | null): x is string => !!x)
+    return {
+      url: `https://pnparfume.com/urun/${encodeURIComponent(p.sku)}`,
+      lastModified: p.updatedAt,
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+      ...(images.length ? { images } : {}),
+    }
+  })
 
   // "Koku Rehberi" (/kesfet) blog makaleleri — src/data/articles.ts'te tanımlı,
   // generateStaticParams ile statik üretiliyor ama sitemap'te hiç yer almıyordu.
