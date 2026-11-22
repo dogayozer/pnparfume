@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next'
 import { prisma } from '@/lib/prisma'
 import { SEO_LANDING_PAGES } from '@/lib/seoLandingPages'
 import { articles } from '@/data/articles'
+import { COLLECTIONS } from '@/lib/collections'
 
 const SITE = 'https://pnparfume.com'
 
@@ -70,7 +71,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/katalog',
     '/kesfet',
     '/koleksiyonlar/kolonya-ve-kitler',
-    '/koleksiyonlar/pien-creative',
+    ...COLLECTIONS.map((c) => `/koleksiyonlar/${c.slug}`),
     '/kurumsal/girisimcilere-ozel',
     '/kurumsal/iletisim',
     '/kurumsal/kurumsal-kimlik',
@@ -103,8 +104,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ].map((route) => ({
     url: `https://pnparfume.com${route}`,
     lastModified: new Date(),
-    changeFrequency: route === '' || route === '/katalog' ? 'daily' as const : 'weekly' as const,
-    priority: route === '' ? 1 : route === '/katalog' ? 0.9 : B2B_ROUTES.has(route) ? 0.8 : 0.7,
+    changeFrequency: route === '' || route === '/katalog' || route.startsWith('/koleksiyonlar/') ? 'daily' as const : 'weekly' as const,
+    priority: route === '' ? 1 : route === '/katalog' ? 0.9 : route.startsWith('/koleksiyonlar/') ? 0.85 : B2B_ROUTES.has(route) ? 0.8 : 0.7,
     // Aynı içeriğin TR/EN/AR karşılıkları: arama motorlarına dil eşleşmesi (hreflang)
     ...(ALT_GROUPS[route] ? { alternates: { languages: ALT_GROUPS[route] } } : {}),
   }))

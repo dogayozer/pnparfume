@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Minus, Plus, ShoppingBag, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import PerksBanner from '@/components/PerksBanner'
+import { productLabel } from '@/lib/collections'
 import { useT, useMoney } from '@/lib/i18n'
 
 export default function CartModal() {
@@ -90,7 +91,7 @@ export default function CartModal() {
                       <div className="flex-1 flex flex-col justify-between py-1">
                         <div>
                           <div className="flex justify-between items-start">
-                            <h3 className="font-medium">PN {item.sku}</h3>
+                            <h3 className="font-medium">{productLabel(item.sku)}</h3>
                             <button onClick={() => removeFromCart(item.sku)} className="text-foreground/40 hover:text-accent-rose">
                               <X size={16} />
                             </button>

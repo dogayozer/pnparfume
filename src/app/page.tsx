@@ -9,6 +9,8 @@ import PerksBanner from '@/components/PerksBanner'
 import QrHashRedirect from '@/components/QrHashRedirect'
 import SpecialDayBanner from '@/components/SpecialDayBanner'
 import { COLLECTIONS, mixByCollection } from '@/lib/collections'
+import HomeFaq from '@/components/home/HomeFaq'
+import { HOME_FAQ } from '@/lib/homeFaq'
 
 export default async function Home({
   searchParams,
@@ -94,6 +96,20 @@ export default async function Home({
 
   return (
     <div className="flex flex-col min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: HOME_FAQ.map((f) => ({
+              '@type': 'Question',
+              name: f.tr.q,
+              acceptedAnswer: { '@type': 'Answer', text: f.tr.a },
+            })),
+          }),
+        }}
+      />
       <QrHashRedirect />
       <SpecialDayBanner />
 
@@ -174,6 +190,10 @@ export default async function Home({
       </div>
 
       <HomeHighlights />
+
+      <div className="pt-12">
+        <HomeFaq />
+      </div>
 
     </div>
   )

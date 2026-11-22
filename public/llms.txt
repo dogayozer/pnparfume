@@ -4,6 +4,7 @@
 
 Key facts
 - Brands and lines: Pien Series (everyday, affordable, 20% fragrance concentration), Pien Intense (specially designed scents, higher concentration), Aşık Parfüm (special-occasion series, high concentration), Pien Luxury (100 ml luxury collection), PN (everyday, first-class essence, special series), PN Special Series (100 ml).
+- Online store collections: PN (main collection, product codes like "PN M 12" for men and "PN W 37" for women), Pien (275 fragrances, codes like "Pien M 1" / "Pien W 37") and Pien Creative (25 special fragrances, codes like "Pien Creative CS-E-ARO-01"). Each collection page has filters for gender, season, fragrance family, character and occasion. Product pages: https://pnparfume.com/urun/<code>. Payment by card (PayTR); prices are shown in TRY on product pages.
 - Services for entrepreneurs: fragrance design, trademark registration guidance, logo design, bottle selection, box design (through partner printers), label design, contract manufacturing, and a series under the PN umbrella (e.g. example series MIX and AGORA) with lower cost and more flexible quantities. Scope, quantities and terms are agreed per project.
 - Distributor applications are preliminary requests and do not include regional exclusivity or a contract guarantee.
 - Contact: info@pnparfume.com, +90 212 736 09 90, Mon–Fri 09:00–18:00 (Türkiye time).
@@ -20,6 +21,11 @@ Key facts
 
 ## Türkçe
 - [Mağaza ve tüm parfümler](https://pnparfume.com/katalog)
+- [PN koleksiyonu](https://pnparfume.com/koleksiyonlar/pn)
+- [Pien koleksiyonu (275 koku)](https://pnparfume.com/koleksiyonlar/pien)
+- [Pien Creative koleksiyonu (25 özel koku)](https://pnparfume.com/koleksiyonlar/pien-creative)
+- [Koku testi](https://pnparfume.com/quiz)
+- [Aura yapay zekâ koku danışmanı](https://pnparfume.com/asistan)
 - [Markalarımız ve ürün serilerimiz](https://pnparfume.com/kurumsal/markalarimiz)
 - [Kendi parfüm markanı kur (Girişimcilere Özel)](https://pnparfume.com/kurumsal/girisimcilere-ozel)
 - [Bayilik başvurusu (tanıtım filmiyle)](https://pnparfume.com/kurumsal/bayilik)

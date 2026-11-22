@@ -7,6 +7,7 @@ import { ArrowLeft, Trash2, Tag, Truck, Info, Users, ShieldCheck, Check, Clock, 
 import { useCart } from '@/contexts/CartContext'
 import { useDealer } from '@/contexts/DealerContext'
 import { SECOND_ITEM_DISCOUNT } from '@/lib/pricingConstants'
+import { productLabel } from '@/lib/collections'
 import { useT, useLang, useMoney, USD_RATE } from '@/lib/i18n'
 
 export default function CartPage() {
@@ -184,7 +185,7 @@ export default function CartPage() {
 
   // WhatsApp Manuel Sipariş Hazırlığı (Yedek olarak durabilir)
   const whatsappNumber = "902127360990"
-  const cartText = items.map(i => `- ${i.quantity}x PN ${i.sku} (${i.name}) : ${i.price * i.quantity} TL`).join('%0A')
+  const cartText = items.map(i => `- ${i.quantity}x ${productLabel(i.sku)} (${i.name}) : ${i.price * i.quantity} TL`).join('%0A')
   const whatsappMessage = `Merhaba, PN Parfüm'den sipariş vermek istiyorum.%0A%0ASepetim:%0A${cartText}%0A%0A🎁 İndirimler & Kargo: -${multiItemDiscount + couponDiscount - shippingFee} TL%0A💳 Toplam Tutar: ${total} TL`
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`
 
@@ -335,7 +336,7 @@ export default function CartPage() {
                 <div className="flex-1 flex flex-col justify-center">
                   <div className="flex justify-between items-start mb-1">
                     <h3 className="text-xl font-medium text-foreground">
-                      {item.sku.startsWith('DISCOVERY') ? item.name : `PN ${item.sku}`}
+                      {item.sku.startsWith('DISCOVERY') ? item.name : productLabel(item.sku)}
                     </h3>
                     <button onClick={() => removeFromCart(item.sku)} className="text-foreground/40 hover:text-accent-rose transition-colors">
                       <Trash2 size={18} />

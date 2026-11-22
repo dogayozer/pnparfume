@@ -10,6 +10,10 @@ export interface Collection {
   // Ön ekli koleksiyonlar SKU ön ekiyle bağlanır; ön eksiz (varsayılan) koleksiyon, diğer
   // koleksiyonlara ait olmayan tüm ürünleri kapsar (PN).
   skuPrefix?: string
+  // Ürün kodunun müşteriye görünen biçimi: labelPrefix + sku (örn. "PN " + "M 12", "" + "Pien M 1")
+  labelPrefix: string
+  // schema.org marka adı
+  brand: string
   image?: string
 }
 
@@ -19,14 +23,18 @@ export const COLLECTIONS: Collection[] = [
     name: 'PN',
     tagline: 'PN Parfüm ana koleksiyonu',
     description: 'PN Parfüm ana koleksiyonu; erkek, kadın ve unisex kokuları PN koduyla sunar. Filtrelerle sana en uygun kokuyu bul.',
+    labelPrefix: 'PN ',
+    brand: 'PN Parfüm',
   },
   {
     slug: 'pien-creative',
     name: 'Pien Creative',
     tagline: 'Yeni nesil karakter kokular',
     description:
-      'Pien Creative koleksiyonu; kutusu, şişesi ve notalarıyla ayrı bir çizgide tasarlanan 25 özel kokudan oluşur. Her biri PN koduyla sunulur.',
+      'Pien Creative koleksiyonu; kutusu, şişesi ve notalarıyla ayrı bir çizgide tasarlanan 25 özel kokudan oluşur. Her biri kendi koduyla sunulur.',
     skuPrefix: 'CS-',
+    labelPrefix: 'Pien Creative ',
+    brand: 'Pien Parfum',
   },
   {
     slug: 'pien',
@@ -35,6 +43,8 @@ export const COLLECTIONS: Collection[] = [
     description:
       'Pien serisi; aynı koku karakterini ve nota yapısını Pien şişesi, kutusu ve görselleriyle sunan 275 kokudan oluşur. Her biri Pien koduyla sunulur.',
     skuPrefix: 'Pien ',
+    labelPrefix: '',
+    brand: 'Pien Parfum',
   },
 ]
 
@@ -44,6 +54,17 @@ export function getCollection(slug: string): Collection | undefined {
 
 export function getCollectionBySku(sku: string): Collection | undefined {
   return COLLECTIONS.find((c) => c.skuPrefix && sku.startsWith(c.skuPrefix))
+}
+
+// Müşteriye görünen ürün kodu: "PN M 12", "Pien M 1", "Pien Creative CS-E-ARO-01".
+export function productLabel(sku: string): string {
+  const c = getCollectionBySku(sku) ?? COLLECTIONS.find((x) => !x.skuPrefix)
+  return (c?.labelPrefix ?? 'PN ') + sku
+}
+
+// schema.org marka adı (PN Parfüm / Pien Parfum)
+export function productBrand(sku: string): string {
+  return (getCollectionBySku(sku) ?? COLLECTIONS.find((x) => !x.skuPrefix))?.brand ?? 'PN Parfüm'
 }
 
 // Klasik ürünler ve her koleksiyonu dönüşümlü dizer (vitrin/katalogda karışık görünüm için).

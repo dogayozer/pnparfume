@@ -28,9 +28,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const collection = getCollection(slug)
   if (!collection) return {}
   return {
-    title: `${collection.name} Koleksiyonu | PN Parfüm`,
+    title: `${collection.name} Parfüm Koleksiyonu | Erkek, Kadın, Unisex | PN Parfüm`,
     description: collection.description,
     alternates: { canonical: `https://pnparfume.com/koleksiyonlar/${collection.slug}` },
+    openGraph: {
+      title: `${collection.name} Parfüm Koleksiyonu | PN Parfüm`,
+      description: collection.description,
+      url: `https://pnparfume.com/koleksiyonlar/${collection.slug}`,
+      siteName: 'PN Parfüm',
+      locale: 'tr_TR',
+      type: 'website',
+    },
   }
 }
 
@@ -78,8 +86,45 @@ export default async function CollectionPage({
   const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE)
   const pageItems = products.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
 
+  const pageUrl = `https://pnparfume.com/koleksiyonlar/${collection.slug}`
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: `${collection.name} Parfüm Koleksiyonu`,
+      description: collection.description,
+      url: pageUrl,
+      inLanguage: 'tr',
+      isPartOf: { '@type': 'WebSite', name: 'PN Parfüm', url: 'https://pnparfume.com' },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Ana Sayfa', item: 'https://pnparfume.com' },
+        { '@type': 'ListItem', position: 2, name: 'Parfümler', item: 'https://pnparfume.com/katalog' },
+        { '@type': 'ListItem', position: 3, name: collection.name, item: pageUrl },
+      ],
+    },
+    // Filtresiz ilk sayfadaki ürünler (yapay zekâ ve arama motorları için ürün listesi)
+    ...(currentPage === 1 && !season && !occasion && !gender && !persona && !family
+      ? [{
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          numberOfItems: products.length,
+          itemListElement: pageItems.map((p: any, i: number) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            url: `https://pnparfume.com/urun/${encodeURIComponent(p.sku)}`,
+            name: p.seo_name || p.sku,
+          })),
+        }]
+      : []),
+  ]
+
   return (
     <div className="min-h-screen px-6 py-12 md:px-12 max-w-7xl mx-auto">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="mb-12">
         <span className="text-accent-gold text-xs font-medium uppercase tracking-[0.3em] block mb-4">Koleksiyon</span>
         <h1 className="text-4xl md:text-5xl font-light mb-4">{collection.name}</h1>

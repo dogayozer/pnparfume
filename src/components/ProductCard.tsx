@@ -9,6 +9,7 @@ import { useDealer } from '@/contexts/DealerContext'
 import Image from 'next/image'
 import { useT, useLang, useMoney } from '@/lib/i18n'
 import { translateVocab } from '@/lib/vocab'
+import { productLabel } from '@/lib/collections'
 
 export interface ProductProps {
   sku: string;
@@ -42,7 +43,7 @@ export default function ProductCard({ product }: { product: ProductProps }) {
 
   const [hasError, setHasError] = useState(false)
   const isOutOfStock = product.publishStatus === 'OUT_OF_STOCK'
-  const title = product.seoName || `PN ${product.sku}`
+  const title = product.seoName || productLabel(product.sku)
   const { isDealer, dealerPrices } = useDealer()
   const dealerPrice = isDealer ? dealerPrices[product.sku] : undefined
   // Bayide: ana fiyat bayi fiyatı, üstü çizili olan güncel perakende satış fiyatı.
@@ -107,7 +108,7 @@ export default function ProductCard({ product }: { product: ProductProps }) {
         <div className="p-3 md:p-6 flex flex-col flex-grow">
           <div className="flex items-center justify-between mb-1 md:mb-2">
             <span className="text-[10px] md:text-[11px] font-bold text-foreground/40 uppercase tracking-[0.2em]">
-              PN {product.sku}
+              {productLabel(product.sku)}
             </span>
             <span className="text-[10px] md:text-[11px] font-bold text-accent-gold uppercase tracking-widest line-clamp-1 text-right ml-1 md:ml-2">
               {translateVocab(product.families?.[0] || 'Özel', lang).toLocaleUpperCase(lang === 'tr' ? 'tr-TR' : 'en-US')}

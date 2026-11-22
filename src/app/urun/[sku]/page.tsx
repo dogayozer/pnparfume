@@ -10,6 +10,7 @@ import ViewTracker from '@/components/ViewTracker'
 import { T, Money } from '@/lib/i18n'
 import { V_, N_ } from '@/lib/vocab'
 import { LocalizedDescription } from '@/components/ProductI18n'
+import { productLabel, productBrand } from '@/lib/collections'
 
 export const revalidate = 86400 // Cache for 24 hours (super fast loading)
 
@@ -24,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ sku: stri
   })
   if (!product) return {}
 
-  const displayTitle = product.seo_name || `PN ${product.sku}`
+  const displayTitle = product.seo_name || productLabel(product.sku)
   const familyText = product.fragrance_family?.[0] || ''
   const title = `${displayTitle} | ${product.gender} ${familyText} Parfüm | PN Parfüm`
   const description = `${displayTitle} — ${product.mood_tag || 'karakterli bir koku'}. Üst notalar: ${product.top_notes}. Kalıcı, ${familyText.toLowerCase()} bir ${product.gender?.toLowerCase()} parfümü.`.slice(0, 160)
@@ -157,7 +158,8 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
   `
 
   const isOutOfStock = product.publish_status === 'OUT_OF_STOCK'
-  const title = product.seo_name ? `${product.seo_name} - PN ${product.sku}` : `PN ${product.sku}`
+  const label = productLabel(product.sku)
+  const title = product.seo_name && product.seo_name !== label ? `${product.seo_name} - ${label}` : label
   // 🔴 sitemap.ts'teki ile aynı hata: SKU'da boşluk var ("M 17"), encode edilmeden
   // URL'e basılırsa geçersiz olur — burada da encodeURIComponent şart.
   const canonicalUrl = `https://pnparfume.com/urun/${encodeURIComponent(product.sku)}`
@@ -171,9 +173,9 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
     '@type': 'Product',
     name: title,
     sku: schemaSku,
-    description: (product.seo_name || `PN ${product.sku}`) + ' — ' + (product.mood_tag || 'karakterli bir koku'),
+    description: (product.seo_name || label) + ' — ' + (product.mood_tag || 'karakterli bir koku'),
     image: finalImageUrl ? [finalImageUrl] : undefined,
-    brand: { '@type': 'Brand', name: 'PN Parfüm' },
+    brand: { '@type': 'Brand', name: productBrand(product.sku) },
     offers: {
       '@type': 'Offer',
       url: canonicalUrl,
@@ -339,7 +341,7 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
               </div>
             </div>
             <h1 className="text-3xl md:text-5xl font-light text-foreground tracking-tight leading-snug">
-              PN {product.sku}
+              {label}
             </h1>
             {product.seo_name && (
               <h2 className="text-lg md:text-xl text-foreground/70 mt-1 md:mt-2 font-medium leading-relaxed">

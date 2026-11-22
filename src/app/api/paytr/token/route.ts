@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCartCostTotal } from '@/lib/cartCost'
 import { requireCustomer } from '@/lib/customerAuth'
+import { productLabel } from '@/lib/collections'
 import { priceCart, evaluateCoupon, isValidFriendOrder, computeTotals, computeShippingFee } from '@/lib/checkoutPricing'
 
 export async function POST(req: Request) {
@@ -138,7 +139,7 @@ export async function POST(req: Request) {
     // Save to Database with explicit OrderItem records
     const orderItemsData = Array.isArray(cart) ? cart.map((item: any) => ({
       sku: (item.sku || item.id || '').toString(),
-      name: item.name || `PN ${item.sku}`,
+      name: item.name || productLabel(item.sku),
       price: Number(item.price) || 0,
       quantity: Number(item.quantity) || 1,
       size: item.size || '50ml'
@@ -179,7 +180,7 @@ export async function POST(req: Request) {
 
     // Format basket for PayTR: Array of [ItemName, ItemPrice (String), ItemQuantity]
     const paytrBasket = cart.map((item: any) => [
-      `PN ${item.sku} - ${item.name}`,
+      `${productLabel(item.sku)} - ${item.name}`,
       item.price.toString(),
       item.quantity
     ])

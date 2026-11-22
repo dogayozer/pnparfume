@@ -18,7 +18,28 @@ const organizationJsonLd = {
   '@type': 'Organization',
   name: 'PN Parfüm',
   url: 'https://pnparfume.com',
+  alternateName: ['Pien Parfum', 'PN Parfume'],
   logo: 'https://pnparfume.com/icon.png',
+  description: "PN Parfüm (Pien Parfum), 2002'den beri İstanbul Silivri'de parfüm üreten, 400 farklı koku seçeneği sunan, kendi marka ve private label parfüm üretimi yapan Türk parfüm üreticisidir.",
+  foundingDate: '2002',
+  email: 'info@pnparfume.com',
+  telephone: '+902127360990',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: 'Yeni Sanayi Sit. E-Blok 9. Cad. No:8',
+    addressLocality: 'Silivri',
+    addressRegion: 'İstanbul',
+    addressCountry: 'TR'
+  },
+  contactPoint: [{
+    '@type': 'ContactPoint',
+    telephone: '+902127360990',
+    email: 'info@pnparfume.com',
+    contactType: 'customer service',
+    areaServed: ['TR', 'Worldwide'],
+    availableLanguage: ['Turkish', 'English', 'Arabic']
+  }],
+  knowsAbout: ['parfüm üretimi', 'private label parfüm', 'fason parfüm üretimi', 'niş parfüm', 'esans parfüm'],
   sameAs: [] as string[]
 }
 // Not: SearchAction (sitelinks arama kutusu) eklenmedi — /katalog şu an URL
@@ -29,7 +50,10 @@ const websiteJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: 'PN Parfüm',
-  url: 'https://pnparfume.com'
+  alternateName: 'Pien Parfum',
+  url: 'https://pnparfume.com',
+  inLanguage: ['tr', 'en', 'ar'],
+  publisher: { '@type': 'Organization', name: 'PN Parfüm', url: 'https://pnparfume.com' }
 }
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
