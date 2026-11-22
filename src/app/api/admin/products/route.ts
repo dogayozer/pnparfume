@@ -192,7 +192,8 @@ export async function PUT(req: Request) {
       image,
       is_featured,
       is_on_sale,
-      dealer_price
+      dealer_price,
+      barcode
     } = body
 
     if (!sku) {
@@ -200,6 +201,20 @@ export async function PUT(req: Request) {
     }
 
     const cleanSku = sku.trim().replace(/^PN\s*/i, '').toUpperCase()
+
+    // Barkod: boş → kaldır; aksi halde 8-14 rakam ve başka üründe olmamalı.
+    let barcodeValue: string | null | undefined
+    if (barcode !== undefined) {
+      const b = String(barcode ?? '').trim()
+      if (b === '') barcodeValue = null
+      else if (!/^\d{8,14}$/.test(b)) {
+        return NextResponse.json({ error: 'Barkod 8-14 haneli düz rakam olmalı' }, { status: 400 })
+      } else {
+        const owner = await prisma.product.findFirst({ where: { barcode: b, sku: { not: cleanSku } }, select: { sku: true } })
+        if (owner) return NextResponse.json({ error: `Bu barkod başka bir üründe kayıtlı (${owner.sku})` }, { status: 409 })
+        barcodeValue = b
+      }
+    }
 
     // "Çok Satanlar" / "İndirimde" vitrinleri en fazla 10 ürünle sınırlı — sunucu
     // tarafında da doğrulanıyor (frontend'deki sayaç tek başına yeterli değil).
@@ -219,6 +234,7 @@ export async function PUT(req: Request) {
     const updateData: any = {}
     if (is_featured !== undefined) updateData.is_featured = is_featured
     if (is_on_sale !== undefined) updateData.is_on_sale = is_on_sale
+    if (barcodeValue !== undefined) updateData.barcode = barcodeValue
     if (original_name !== undefined) updateData.original_name = original_name.trim()
     if (gender !== undefined) updateData.gender = gender
     if (fragrance_family !== undefined) updateData.fragrance_family = Array.isArray(fragrance_family) ? fragrance_family : [fragrance_family]

@@ -384,7 +384,8 @@ export default function AdminDashboard() {
     stock: 50,
     base_cost: 250,
     publish_status: 'ACTIVE',
-    image: ''
+    image: '',
+    barcode: ''
   })
 
   // Product Bulk update states
@@ -909,7 +910,8 @@ export default function AdminDashboard() {
       stock: 50,
       base_cost: 250,
       publish_status: 'ACTIVE',
-      image: ''
+      image: '',
+      barcode: ''
     })
     setShowProductModal(true)
   }
@@ -935,7 +937,8 @@ export default function AdminDashboard() {
       stock: listing?.stock !== undefined ? listing.stock : 50,
       base_cost: prod.base_cost || 250,
       publish_status: prod.publish_status || 'ACTIVE',
-      image: listing?.images?.[0] || ''
+      image: listing?.images?.[0] || '',
+      barcode: prod.barcode || ''
     })
     setShowProductModal(true)
   }
@@ -4387,7 +4390,7 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-900">
-                    {productModalMode === 'create' ? 'Yeni Parfüm Ekle' : `Parfüm Düzenle: PN ${productForm.sku}`}
+                    {productModalMode === 'create' ? 'Yeni Parfüm Ekle' : `Parfüm Düzenle: ${productLabel(productForm.sku)}`}
                   </h3>
                   <p className="text-xs text-gray-500">Koku piramidi, notalar, fiyat ve stok bilgilerini yapılandırın</p>
                 </div>
@@ -4427,6 +4430,20 @@ export default function AdminDashboard() {
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
+
+                {productModalMode === 'edit' && (
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Barkod (8-14 rakam, boş = barkodu kaldır)</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="Örn: 8680000000012"
+                      value={productForm.barcode}
+                      onChange={e => setProductForm({ ...productForm, barcode: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">Cinsiyet</label>
