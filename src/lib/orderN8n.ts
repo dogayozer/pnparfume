@@ -40,5 +40,5 @@ export function orderEventData(o: OrderEventInput) {
 }
 
 export async function notifyOrderN8n(event: OrderEventName, o: OrderEventInput): Promise<void> {
-  await notifyN8n(event, orderEventData(o))
+  await notifyN8n(event, orderEventData(o), 'order')
 }

@@ -129,7 +129,7 @@ export async function POST(req: Request) {
       console.error('Yurt dışı sipariş e-postası gönderilemedi:', mailErr)
     }
 
-    await notifyN8n('international_order', { orderNumber, country: customer.country, email: customer.email, totalAmount, locale })
+    await notifyN8n('international_order', { orderNumber, country: customer.country, email: customer.email, totalAmount, locale }, 'order')
 
     return NextResponse.json({ success: true, orderNumber, totalAmount, accounts })
   } catch (error) {
