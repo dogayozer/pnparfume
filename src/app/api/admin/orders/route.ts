@@ -7,6 +7,7 @@ import {
   sendAffiliateCommissionNotification 
 } from '@/lib/notifications/notificationEngine'
 import { requireAdmin } from '@/lib/adminAuth'
+import { notifyOrderN8n } from '@/lib/orderN8n'
 
 export async function GET(req: Request) {
   try {
@@ -153,6 +154,17 @@ export async function PUT(req: Request) {
       } catch (e) {
         console.error('Transfer paid notification error:', e)
       }
+      await notifyOrderN8n('order_paid', {
+        orderNumber: currentOrder.orderNumber,
+        totalAmount: currentOrder.totalAmount,
+        paymentMethod: 'bank_transfer',
+        customerName: currentOrder.customerName,
+        customerPhone: currentOrder.customerPhone,
+        customerEmail: currentOrder.customerEmail,
+        customerAddress: currentOrder.customerAddress,
+        customerNote: currentOrder.customerNote,
+        items: currentOrder.items,
+      })
     }
 
     // 2. Delivered trigger

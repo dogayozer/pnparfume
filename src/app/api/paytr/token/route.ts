@@ -7,6 +7,7 @@ import { productLabel } from '@/lib/collections'
 import { priceCart, evaluateCoupon, isValidFriendOrder, computeTotals, computeShippingFee } from '@/lib/checkoutPricing'
 import { getTransferAccounts } from '@/lib/bankAccounts'
 import { sendTransferOrderMails } from '@/lib/transferMail'
+import { notifyOrderN8n } from '@/lib/orderN8n'
 
 export async function POST(req: Request) {
   try {
@@ -202,6 +203,17 @@ export async function POST(req: Request) {
       } catch (mailErr) {
         console.error('Havale siparişi e-postası gönderilemedi:', mailErr)
       }
+      await notifyOrderN8n('order_awaiting_transfer', {
+        orderNumber: merchant_oid,
+        totalAmount,
+        paymentMethod: 'bank_transfer',
+        customerName: customer.name,
+        customerPhone: customer.phone,
+        customerEmail: customer.email,
+        customerAddress: customer.address,
+        customerNote,
+        items: cart,
+      })
       return NextResponse.json({ transfer: true, orderNumber: merchant_oid, totalAmount, accounts })
     }
 

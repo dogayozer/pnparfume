@@ -2,6 +2,7 @@ import crypto from 'crypto'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendOrderCreatedNotification, sendAdminOrderEmail } from '@/lib/notifications/notificationEngine'
+import { notifyOrderN8n } from '@/lib/orderN8n'
 
 export async function POST(req: Request) {
   try {
@@ -124,6 +125,19 @@ export async function POST(req: Request) {
           console.error('Purchase reward coupon error in PayTR callback:', rewardErr)
         }
       }
+
+      // Muhasebe WhatsApp bildirimi için n8n'e olay (hata siparişi etkilemez; notifyN8n hatayı yutar).
+      await notifyOrderN8n('order_paid', {
+        orderNumber: merchant_oid,
+        totalAmount: existingOrder.totalAmount,
+        paymentMethod: 'card',
+        customerName: existingOrder.customerName,
+        customerPhone: existingOrder.customerPhone,
+        customerEmail: existingOrder.customerEmail,
+        customerAddress: existingOrder.customerAddress,
+        customerNote: existingOrder.customerNote,
+        items: existingOrder.items,
+      })
 
       // Muhasebeye "yeni siparişiniz var" e-postası — ayrı bir try/catch'te, bu
       // başarısız olsa bile siparişin kendisi ve müşteri SMS'i asla etkilenmesin.
