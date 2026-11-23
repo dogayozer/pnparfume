@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { ArrowLeft, Trash2, Tag, Truck, Info, Users, ShieldCheck, Check, Clock, X, CreditCard, LogIn, UserCheck, AlertCircle } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
 import { useDealer } from '@/contexts/DealerContext'
-import { secondItemDiscount } from '@/lib/pricingConstants'
+import { cartDiscounts } from '@/lib/pricingConstants'
 import { productLabel } from '@/lib/collections'
 import { FREE_SHIPPING_FOR_ALL } from '@/lib/shippingCampaign'
 import { useT, useLang, useMoney, USD_RATE } from '@/lib/i18n'
@@ -149,13 +149,14 @@ export default function CartPage() {
   const subtotal = totalAmount
 
   // 2. Ürün İndirimi — bayi fiyatı zaten toptan fiyat olduğu için bayilere uygulanmaz.
-  const multiItemDiscount = !isDealer ? secondItemDiscount(items.map((i) => ({ price: i.price, quantity: i.quantity }))) : 0
-
   // Kupon İndirimi — yüzdelik kupon her zaman GÜNCEL ara toplamdan hesaplanır
   // (önceden kupon uygulandığı andaki tutarda donuyordu; ödeme ucu da böyle hesaplıyor).
-  const couponDiscount = !appliedCoupon ? 0
-    : appliedCoupon.type === 'percentage' ? Math.floor(subtotal * (appliedCoupon.value / 100))
-    : appliedCoupon.value
+  // 'bogo' (1 alana 1 bedava) kuponu otomatik 2. ürün %50'nin YERİNE geçer. Ödeme ucuyla aynı fonksiyon.
+  const { multiItemDiscount, couponDiscount } = cartDiscounts({
+    lines: items.map((i) => ({ price: i.price, quantity: i.quantity })),
+    isDealer,
+    coupon: appliedCoupon,
+  })
 
   // Kargo indirimleri/kuponlar sonrası kalan tutara göre yeniden hesaplanmalı —
   // sepet, indirim veya kupon her değiştiğinde sunucudan güncel karar isteniyor.
@@ -421,9 +422,12 @@ export default function CartPage() {
                 
                 {couponDiscount > 0 && (
                   <div className="flex justify-between text-accent-rose font-medium animate-in fade-in">
-                    <span className="flex items-center gap-2"><Tag size={14} /> {t("Kupon", "Coupon", "قسيمة")} ({appliedCoupon?.code})</span>
+                    <span className="flex items-center gap-2"><Tag size={14} /> {appliedCoupon?.type === 'bogo' ? t("1 Alana 1 Bedava", "Buy 1 Get 1 Free", "اشترِ 1 واحصل على 1 مجانًا") : t("Kupon", "Coupon", "قسيمة")} ({appliedCoupon?.code})</span>
                     <span>-{money(couponDiscount)}</span>
                   </div>
+                )}
+                {appliedCoupon?.type === 'bogo' && couponDiscount === 0 && (
+                  <p className="text-xs text-accent-gold font-medium">{t("1 alana 1 bedava kuponunuz hazır: sepetinize bir ürün daha ekleyin, ucuz olan ürün bedava olsun.", "Your buy 1 get 1 free coupon is ready: add one more item and the cheaper one is free.", "قسيمتك جاهزة: أضف منتجًا آخر ويصبح الأرخص مجانًا.")}</p>
                 )}
 
                 <div>

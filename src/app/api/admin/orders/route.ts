@@ -8,6 +8,7 @@ import {
 } from '@/lib/notifications/notificationEngine'
 import { requireAdmin } from '@/lib/adminAuth'
 import { notifyOrderN8n } from '@/lib/orderN8n'
+import { consumeCoupon } from '@/lib/couponUse'
 
 export async function GET(req: Request) {
   try {
@@ -153,6 +154,9 @@ export async function PUT(req: Request) {
         })
       } catch (e) {
         console.error('Transfer paid notification error:', e)
+      }
+      if (currentOrder.couponId) {
+        try { await consumeCoupon(currentOrder.couponId) } catch (e) { console.error('Transfer paid coupon consume error:', e) }
       }
       await notifyOrderN8n('order_paid', {
         orderNumber: currentOrder.orderNumber,

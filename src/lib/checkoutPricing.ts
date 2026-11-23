@@ -5,7 +5,7 @@ import { getDealerDiscountPercent } from '@/lib/dealerPricing'
 import { computeDynamicShipping } from '@/lib/dynamicShipping'
 import {
   EXTRAIT_SURCHARGE, DISCOVERY_BOX_SKU, DISCOVERY_BOX_PRICE,
-  BLEND_SAMPLE_10ML_PRICE, secondItemDiscount
+  BLEND_SAMPLE_10ML_PRICE, secondItemDiscount, BOGO_COUPON_TYPE
 } from '@/lib/pricingConstants'
 
 // Ödeme ucunda sepetin sunucu tarafında yeniden fiyatlandırılması. Tarayıcıdan gelen
@@ -136,7 +136,7 @@ export async function priceCart(cart: any[], isDealer: boolean): Promise<{ lines
   return { lines }
 }
 
-export type CouponResult = { ok: true; discount: number; couponId: string } | { ok: false }
+export type CouponResult = { ok: true; discount: number; couponId: string; type: string; value: number } | { ok: false }
 
 // /api/checkout/coupon ile aynı geçerlilik kuralları; indirim her zaman GÜNCEL ara toplamdan hesaplanır.
 export async function evaluateCoupon(code: string, subtotal: number): Promise<CouponResult> {
@@ -147,7 +147,8 @@ export async function evaluateCoupon(code: string, subtotal: number): Promise<Co
   const discount = coupon.discount_type === 'percentage'
     ? Math.floor(subtotal * (coupon.value / 100))
     : coupon.value
-  return { ok: true, discount, couponId: coupon.id }
+  // 'bogo' (1 alana 1 bedava) için tutar sepet satırlarına bağlıdır: cartDiscounts hesaplar; discount burada bilgi amaçlıdır.
+  return { ok: true, discount: coupon.discount_type === BOGO_COUPON_TYPE ? 0 : discount, couponId: coupon.id, type: coupon.discount_type, value: coupon.value }
 }
 
 // "Paydaş Ekonomisi": ücretsiz kargo sadece gerçekten var olan, iptal edilmemiş bir

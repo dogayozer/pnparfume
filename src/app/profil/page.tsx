@@ -797,7 +797,7 @@ export default function ProfilePage() {
                     <div key={idx} className="bg-foreground/5 border border-foreground/10 rounded-2xl p-6 relative flex flex-col justify-between">
                       <div>
                         <span className="text-xs uppercase tracking-widest text-accent-gold block mb-1">
-                          {coupon.discount_type === 'percentage' ? `%${coupon.value} İndirim` : `${coupon.value} TL İndirim`}
+                          {coupon.discount_type === 'bogo' ? '1 Alana 1 Bedava' : coupon.discount_type === 'percentage' ? `%${coupon.value} İndirim` : `${coupon.value} TL İndirim`}
                         </span>
                         <h4 className="text-lg font-light text-foreground mb-4">{t("Özel Kupon", "Special Coupon", "قسيمة خاصة")}</h4>
                       </div>

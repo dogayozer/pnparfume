@@ -8,6 +8,7 @@ import { priceCart, evaluateCoupon, isValidFriendOrder, computeTotals, computeSh
 import { getTransferAccounts } from '@/lib/bankAccounts'
 import { sendTransferOrderMails } from '@/lib/transferMail'
 import { notifyOrderN8n } from '@/lib/orderN8n'
+import { cartDiscounts } from '@/lib/pricingConstants'
 
 export async function POST(req: Request) {
   try {
@@ -58,16 +59,25 @@ export async function POST(req: Request) {
       }, { status: 409 })
     }
     const lines = priced.lines
-    const { subtotal, multiItemDiscount } = computeTotals(lines, isDealer)
+    const { subtotal } = computeTotals(lines, isDealer)
 
-    let couponDiscount = 0
+    // Kupon + otomatik "2. ürün %50": sepet sayfasıyla aynı hesap (cartDiscounts). 'bogo' kuponu otomatik %50'nin yerine geçer.
+    let appliedCoupon: { type: string; value: number; couponId: string } | null = null
     if (couponCode) {
       const coupon = await evaluateCoupon(String(couponCode), subtotal)
       if (!coupon.ok) {
         return NextResponse.json({ code: 'INVALID_COUPON', error: 'Kuponunuz artık geçerli değil. Kupon kaldırıldı, lütfen tutarı kontrol edip tekrar deneyin.' }, { status: 409 })
       }
-      couponDiscount = coupon.discount
+      appliedCoupon = { type: coupon.type, value: coupon.value, couponId: coupon.couponId }
     }
+    const discounts = cartDiscounts({
+      lines: lines.map((l) => ({ price: l.unitPrice, quantity: l.quantity })),
+      isDealer,
+      coupon: appliedCoupon,
+    })
+    const multiItemDiscount = discounts.multiItemDiscount
+    const couponDiscount = discounts.couponDiscount
+    const appliedCouponId = appliedCoupon && discounts.couponApplies ? appliedCoupon.couponId : null
 
     const friendOrderValid = friendOrderCode ? await isValidFriendOrder(String(friendOrderCode)) : false
     if (friendOrderCode && !friendOrderValid) {
@@ -166,6 +176,7 @@ export async function POST(req: Request) {
         orderNumber: merchant_oid,
         totalAmount: totalAmount,
         discountApplied,
+        couponId: appliedCouponId,
         status: isTransfer ? 'awaiting_transfer' : 'pending',
         paymentMethod: isTransfer ? 'bank_transfer' : 'card',
         customerNote,

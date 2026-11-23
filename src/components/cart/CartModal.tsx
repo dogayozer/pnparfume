@@ -9,7 +9,7 @@ import Link from 'next/link'
 import { productLabel } from '@/lib/collections'
 import { useT, useMoney, useLang } from '@/lib/i18n'
 import { useDealer } from '@/contexts/DealerContext'
-import { secondItemDiscount } from '@/lib/pricingConstants'
+import { cartDiscounts } from '@/lib/pricingConstants'
 import { FREE_SHIPPING_FOR_ALL } from '@/lib/shippingCampaign'
 
 export default function CartModal() {
@@ -19,7 +19,7 @@ export default function CartModal() {
   const money = useMoney()
   const { isCartOpen, setIsCartOpen, items, removeFromCart, addToCart, totalAmount, clearCart } = useCart()
   const [couponCode, setCouponCode] = useState('')
-  const [discount, setDiscount] = useState(0)
+  const [coupon, setCoupon] = useState<{ type: string; value: number } | null>(null)
   const [error, setError] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
 
@@ -33,7 +33,7 @@ export default function CartModal() {
       })
       const data = await res.json()
       if (res.ok) {
-        setDiscount(data.value)
+        setCoupon({ type: data.type, value: data.value })
       } else {
         setError(data.error)
       }
@@ -48,8 +48,12 @@ export default function CartModal() {
   }
 
   // 2. ürün %50 (sepet sayfası ve ödeme ucuyla aynı kural: bkz. secondItemDiscount) ve ücretsiz kargo.
-  const multiItemDiscount = !isDealer ? secondItemDiscount(items.map((i) => ({ price: i.price, quantity: i.quantity }))) : 0
-  const couponAmount = totalAmount * discount / 100
+  // 'bogo' (1 alana 1 bedava) kuponu otomatik %50'nin yerine geçer; hesap sepet sayfası/ödeme ucuyla aynı fonksiyondan.
+  const { multiItemDiscount, couponDiscount: couponAmount } = cartDiscounts({
+    lines: items.map((i) => ({ price: i.price, quantity: i.quantity })),
+    isDealer,
+    coupon,
+  })
   const finalAmount = Math.max(0, totalAmount - multiItemDiscount - couponAmount)
   // Sepette tek birim varsa: ikinci ürünle kazanılabilecek EN FAZLA tutar (ikinci ürün daha pahalıysa mevcut ürünün yarısı).
   const unitCount = items.reduce((n, i) => n + i.quantity, 0)
@@ -191,9 +195,9 @@ export default function CartModal() {
                         <span className="text-accent-gold font-medium flex items-center gap-1"><Truck size={14} /> {t("ÜCRETSİZ", "FREE", "مجاني")}</span>
                       </div>
                     )}
-                    {discount > 0 && (
+                    {couponAmount > 0 && (
                       <div className="flex justify-between text-accent-rose font-medium">
-                        <span>{t('İndirim', 'Discount', 'خصم')} (%{discount})</span>
+                        <span>{coupon?.type === 'bogo' ? t('1 Alana 1 Bedava', 'Buy 1 Get 1 Free', 'اشترِ 1 واحصل على 1 مجانًا') : coupon?.type === 'percentage' ? `${t('İndirim', 'Discount', 'خصم')} (%${coupon.value})` : t('İndirim', 'Discount', 'خصم')}</span>
                         <span>-{money(couponAmount)}</span>
                       </div>
                     )}

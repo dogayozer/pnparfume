@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendOrderCreatedNotification, sendAdminOrderEmail } from '@/lib/notifications/notificationEngine'
 import { notifyOrderN8n } from '@/lib/orderN8n'
+import { consumeCoupon } from '@/lib/couponUse'
 
 export async function POST(req: Request) {
   try {
@@ -86,6 +87,16 @@ export async function POST(req: Request) {
       })
 
       console.log(`Order ${merchant_oid} marked as paid and stock decremented.`)
+
+      // Kupon ödeme onaylanınca "kullanıldı" sayılır (önceden hiç düşmüyordu: tek kullanımlık kuponlar sınırsız kullanılabiliyordu).
+      if (existingOrder.couponId) {
+        try {
+          const ok = await consumeCoupon(existingOrder.couponId)
+          if (!ok) console.error(`Coupon ${existingOrder.couponId} limit dolu; sipariş ${merchant_oid} yine de geçerli.`)
+        } catch (couponErr) {
+          console.error('Coupon consume error in PayTR callback:', couponErr)
+        }
+      }
 
       // Trigger Automated SMS / WhatsApp Notification (Only once!)
       try {
