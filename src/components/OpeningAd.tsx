@@ -10,10 +10,13 @@ import { FREE_SHIPPING_FOR_ALL } from '@/lib/shippingCampaign'
 // Açılış reklamı (2. ürün %50 + ücretsiz kargo). Kurallar:
 // - Oturum başına BİR kez (sessionStorage); kapatınca ya da tıklayınca tekrar çıkmaz.
 // - Yalnız Türkçe ziyaretçilere: görsel Türkçe ve kargo kampanyası Türkiye içi.
-// - Satın alma/yönetim sayfalarında çıkmaz. Sayfa açıldıktan ~1,5 sn sonra gelir (içeriği hemen kapatmaz).
+// - Yalnız oturuma ANA SAYFADAN girenlere (alışveriş niyetiyle siteye gelen) ve yalnız ana sayfada gösterilir.
+//   Bir bağlantıyla doğrudan ürün/kurumsal/B2B sayfasına gelenlere, kurumsal siteyi gezenlere ve
+//   arkadaş/elçi davet bağlantısıyla (?ref=) gelenlere hiç çıkmaz.
+// - Sayfa açıldıktan ~1,5 sn sonra gelir (içeriği hemen kapatmaz).
 // - Masaüstünde 16:9, mobilde 9:16 görsel. Kapatma: X, Esc ya da arka plana tık.
 const SEEN_KEY = 'pn_opening_ad_seen'
-const HIDDEN_PREFIXES = ['/admin', '/sepet', '/basarili', '/basarisiz', '/hesap', '/profil', '/api']
+const LANDING_KEY = 'pn_session_landing'
 const DELAY_MS = 1500
 
 export default function OpeningAd() {
@@ -23,10 +26,14 @@ export default function OpeningAd() {
 
   useEffect(() => {
     if (!FREE_SHIPPING_FOR_ALL || lang !== 'tr') return
-    if (HIDDEN_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'))) return
     try {
+      // Oturumun İLK sayfası kaydedilir; ana sayfa değilse bu oturumda reklam hiç çıkmaz.
+      let landing = sessionStorage.getItem(LANDING_KEY)
+      if (!landing) { landing = pathname; sessionStorage.setItem(LANDING_KEY, landing) }
+      if (landing !== '/' || pathname !== '/') return
       if (sessionStorage.getItem(SEEN_KEY)) return
-    } catch {}
+    } catch { return }
+    if (/[?&]ref=/i.test(window.location.search)) return
     const timer = setTimeout(() => {
       try { sessionStorage.setItem(SEEN_KEY, '1') } catch {}
       setOpen(true)

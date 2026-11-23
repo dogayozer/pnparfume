@@ -2,14 +2,20 @@
 
 import { useCart } from '@/contexts/CartContext'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Minus, Plus, ShoppingBag, Sparkles } from 'lucide-react'
+import { X, Minus, Plus, ShoppingBag, Sparkles, Truck, Percent } from 'lucide-react'
 import { useState } from 'react'
 import PerksBanner from '@/components/PerksBanner'
+import Link from 'next/link'
 import { productLabel } from '@/lib/collections'
-import { useT, useMoney } from '@/lib/i18n'
+import { useT, useMoney, useLang } from '@/lib/i18n'
+import { useDealer } from '@/contexts/DealerContext'
+import { secondItemDiscount } from '@/lib/pricingConstants'
+import { FREE_SHIPPING_FOR_ALL } from '@/lib/shippingCampaign'
 
 export default function CartModal() {
   const t = useT()
+  const lang = useLang()
+  const { isDealer } = useDealer()
   const money = useMoney()
   const { isCartOpen, setIsCartOpen, items, removeFromCart, addToCart, totalAmount, clearCart } = useCart()
   const [couponCode, setCouponCode] = useState('')
@@ -41,7 +47,13 @@ export default function CartModal() {
     window.location.href = '/sepet'
   }
 
-  const finalAmount = Math.max(0, totalAmount - (totalAmount * discount / 100))
+  // 2. ürün %50 (sepet sayfası ve ödeme ucuyla aynı kural: bkz. secondItemDiscount) ve ücretsiz kargo.
+  const multiItemDiscount = !isDealer ? secondItemDiscount(items.map((i) => ({ price: i.price, quantity: i.quantity }))) : 0
+  const couponAmount = totalAmount * discount / 100
+  const finalAmount = Math.max(0, totalAmount - multiItemDiscount - couponAmount)
+  // Sepette tek birim varsa: ikinci ürünle kazanılabilecek EN FAZLA tutar (ikinci ürün daha pahalıysa mevcut ürünün yarısı).
+  const unitCount = items.reduce((n, i) => n + i.quantity, 0)
+  const maxPotentialSaving = !isDealer && unitCount === 1 ? Math.floor((items[0]?.price ?? 0) / 2) : 0
 
   return (
     <AnimatePresence>
@@ -148,21 +160,50 @@ export default function CartModal() {
                     <PerksBanner compact />
                   </div>
 
+                  {maxPotentialSaving > 0 && (
+                    <Link
+                      href="/katalog"
+                      onClick={() => setIsCartOpen(false)}
+                      className="mb-4 flex items-center gap-3 rounded-xl border border-accent-gold/50 bg-accent-gold/10 px-4 py-3 hover:bg-accent-gold/20 transition-colors"
+                    >
+                      <Percent size={18} className="text-accent-gold flex-shrink-0" />
+                      <span className="text-xs leading-snug text-foreground">
+                        <strong>{t("2. ürün %50 indirimli!", "2nd item 50% off!", "المنتج الثاني بخصم 50%!")}</strong>{' '}
+                        {t(`Sepetinize bir ürün daha ekleyin, en fazla ${money(maxPotentialSaving)} tasarruf edin.`, `Add one more item and save up to ${money(maxPotentialSaving)}.`, `أضف منتجًا آخر ووفّر حتى ${money(maxPotentialSaving)}.`)}
+                      </span>
+                    </Link>
+                  )}
+
                   <div className="space-y-2 mb-6">
                     <div className="flex justify-between text-foreground/60">
                       <span>{t("Ara Toplam", "Subtotal", "المجموع الفرعي")}</span>
                       <span>{money(totalAmount)}</span>
                     </div>
+                    {multiItemDiscount > 0 && (
+                      <div className="flex justify-between text-green-600 font-medium">
+                        <span className="flex items-center gap-2"><Percent size={14} /> {t("2. Ürün %50 İndirim", "2nd item 50% off", "خصم 50% على المنتج الثاني")}</span>
+                        <span>-{money(multiItemDiscount)}</span>
+                      </div>
+                    )}
+                    {FREE_SHIPPING_FOR_ALL && lang === 'tr' && (
+                      <div className="flex justify-between text-foreground/60">
+                        <span>{t("Kargo", "Shipping", "الشحن")}</span>
+                        <span className="text-accent-gold font-medium flex items-center gap-1"><Truck size={14} /> {t("ÜCRETSİZ", "FREE", "مجاني")}</span>
+                      </div>
+                    )}
                     {discount > 0 && (
                       <div className="flex justify-between text-accent-rose font-medium">
                         <span>{t('İndirim', 'Discount', 'خصم')} (%{discount})</span>
-                        <span>-{money(totalAmount * discount / 100)}</span>
+                        <span>-{money(couponAmount)}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-lg font-medium pt-2 border-t border-foreground/10">
                       <span>{t("Toplam", "Total", "الإجمالي")}</span>
                       <span>{money(finalAmount)}</span>
                     </div>
+                    {multiItemDiscount > 0 && (
+                      <p className="text-xs text-green-600 font-medium text-right">{t(`Bu siparişte ${money(multiItemDiscount)} tasarruf ediyorsunuz`, `You save ${money(multiItemDiscount)} on this order`, `توفّر ${money(multiItemDiscount)} في هذا الطلب`)}</p>
+                    )}
                   </div>
 
                   <button 
