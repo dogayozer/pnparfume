@@ -168,7 +168,7 @@ export default function RootLayout({
           <Navbar />
           {/* pt-[88px]: Navbar'ın sabit nav satırı (h-20 = 80px) + alt çizgi. Kampanya duyuru barı
               yeniden eklenirse (≈28px) bu değer 116px olmalı ki içerik altında kalmasın. */}
-          <main className="min-h-screen pt-[88px]">
+          <main className="min-h-screen pt-[116px]">
             {children}
           </main>
           <Footer />

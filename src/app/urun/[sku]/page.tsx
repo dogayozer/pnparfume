@@ -11,6 +11,7 @@ import { T, Money } from '@/lib/i18n'
 import { V_, N_ } from '@/lib/vocab'
 import { LocalizedDescription } from '@/components/ProductI18n'
 import { productLabel, productBrand } from '@/lib/collections'
+import { FREE_SHIPPING_FOR_ALL } from '@/lib/shippingCampaign'
 
 export const revalidate = 86400 // Cache for 24 hours (super fast loading)
 
@@ -131,7 +132,7 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
   // OfferShippingDetails tek bir sabit değer istiyor; burada müşteriden varsayılan
   // olarak alınan standart ücret temsili değer olarak kullanılıyor.
   const shippingRule = await prisma.scenarioRule.findUnique({ where: { rule_key: 'SHIPPING_COST' } })
-  const shippingCost = shippingRule && shippingRule.is_active ? shippingRule.rule_value : 120
+  const shippingCost = FREE_SHIPPING_FOR_ALL ? 0 : shippingRule && shippingRule.is_active ? shippingRule.rule_value : 120
 
   const trendyolListing = product.marketplaceListings?.find((l: any) => l.platform === 'trendyol')
   const finalImageUrl = trendyolListing?.images?.[0] || null

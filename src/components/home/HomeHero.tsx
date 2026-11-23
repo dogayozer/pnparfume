@@ -1,7 +1,8 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles } from 'lucide-react'
+import { Truck, Percent } from 'lucide-react'
+import { FREE_SHIPPING_FOR_ALL } from '@/lib/shippingCampaign'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useLang } from '@/lib/i18n'
@@ -93,6 +94,28 @@ export default function HomeHero() {
               </motion.p>
             </AnimatePresence>
           </div>
+
+          {/* Kampanya: 2. ürün %50 + ücretsiz kargo */}
+          <motion.div variants={fadeUp} transition={{ duration: 0.8, ease: 'easeOut' }}>
+            <Link
+              href="/katalog"
+              className="inline-flex flex-col sm:flex-row items-center gap-2 sm:gap-4 rounded-2xl border border-accent-gold/50 bg-accent-gold/10 hover:bg-accent-gold/20 transition-colors px-5 py-3 md:px-8 md:py-4"
+            >
+              <span className="flex items-center gap-2 text-sm md:text-base font-semibold text-foreground">
+                <Percent size={18} className="text-accent-gold" />
+                {lang === 'en' ? '2nd perfume 50% OFF' : lang === 'ar' ? 'العطر الثاني بخصم 50%' : '2. ürün %50 İNDİRİMDE'}
+              </span>
+              {FREE_SHIPPING_FOR_ALL && (
+                <span className="flex items-center gap-2 text-sm md:text-base font-semibold text-foreground">
+                  <Truck size={18} className="text-accent-gold" />
+                  {lang === 'en' ? 'Free shipping within Türkiye' : lang === 'ar' ? 'شحن مجاني داخل تركيا' : 'Türkiye içi ÜCRETSİZ KARGO'}
+                </span>
+              )}
+              <span className="text-xs md:text-sm font-medium text-accent-gold underline underline-offset-4">
+                {lang === 'en' ? 'Shop now →' : lang === 'ar' ? 'تسوّق الآن ←' : 'Alışverişe başla →'}
+              </span>
+            </Link>
+          </motion.div>
         </motion.div>
       </div>
     </section>

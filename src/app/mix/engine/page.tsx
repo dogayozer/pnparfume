@@ -586,7 +586,7 @@ function BlendEngineContent() {
                 )}
 
                 {/* Selection Sidebar */}
-                <div className="bg-white rounded-3xl p-8 border border-[#4A3527]/10 h-fit sticky top-24">
+                <div className="bg-white rounded-3xl p-8 border border-[#4A3527]/10 h-fit sticky top-32">
                   <h3 className="font-serif text-2xl mb-6">Senin Harmanın</h3>
                   <div className="space-y-4 mb-8">
                     {[0, 1, 2].map(i => (

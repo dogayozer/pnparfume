@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCartCostTotal } from '@/lib/cartCost'
 import { computeDynamicShipping } from '@/lib/dynamicShipping'
+import { FREE_SHIPPING_FOR_ALL } from '@/lib/shippingCampaign'
 
 // Sepet sayfasının okuyacağı, girişsiz/herkese açık uç — sadece kargo ücreti ve
 // ücretsiz kargo barajını döner (admin panelinden "Senaryo Kuralları"nda ayarlanır).
@@ -13,6 +14,7 @@ export async function GET() {
       where: { rule_key: { in: ['SHIPPING_COST', 'FREE_SHIPPING_LIMIT'] } }
     })
     const byKey = Object.fromEntries(rules.map(r => [r.rule_key, r.rule_value]))
+    if (FREE_SHIPPING_FOR_ALL) return NextResponse.json({ shippingCost: 0, freeShippingLimit: 0 })
     return NextResponse.json({
       shippingCost: byKey.SHIPPING_COST ?? 120,
       freeShippingLimit: byKey.FREE_SHIPPING_LIMIT ?? 1000
@@ -20,7 +22,7 @@ export async function GET() {
   } catch (error) {
     console.error('Shipping rules fetch error:', error)
     // Hata durumunda önceki sabit kodlanmış değerlere düş — sepet sayfası asla kırılmasın.
-    return NextResponse.json({ shippingCost: 120, freeShippingLimit: 1000 })
+    return NextResponse.json(FREE_SHIPPING_FOR_ALL ? { shippingCost: 0, freeShippingLimit: 0 } : { shippingCost: 120, freeShippingLimit: 1000 })
   }
 }
 
@@ -46,6 +48,6 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error('Dynamic shipping compute error:', error)
     // Hata durumunda normal (indirimsiz) kargo ücretine düş — sepet asla kırılmasın.
-    return NextResponse.json({ freeShippingEligible: false, shippingFee: 120 })
+    return NextResponse.json({ freeShippingEligible: FREE_SHIPPING_FOR_ALL, shippingFee: FREE_SHIPPING_FOR_ALL ? 0 : 120 })
   }
 }

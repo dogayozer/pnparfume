@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { FREE_SHIPPING_FOR_ALL } from '@/lib/shippingCampaign'
 
 // Kargo kuralı: sabit, tanıtılabilir bir TL barajı — Senaryo Kuralları →
 // FREE_SHIPPING_LIMIT ve SHIPPING_COST üzerinden yönetilir (admin panelinden
@@ -7,6 +8,9 @@ import { prisma } from '@/lib/prisma'
 // tutarı hiçbir zaman gerçek ürün maliyetinin altına düşemez) — bu yüzden
 // kargo eşiği burada basit tutulabiliyor, ayrıca marj hesabı yapmasına gerek yok.
 export async function computeDynamicShipping(cartCostTotal: number, discountedSubtotal: number) {
+  if (FREE_SHIPPING_FOR_ALL) {
+    return { freeShippingEligible: true, shippingFee: 0, shippingFeeIfCharged: 0, freeShippingLimit: 0 }
+  }
   const rules = await prisma.scenarioRule.findMany({
     where: { rule_key: { in: ['FREE_SHIPPING_LIMIT', 'SHIPPING_COST'] } }
   })

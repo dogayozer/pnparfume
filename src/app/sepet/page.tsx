@@ -6,8 +6,9 @@ import Link from 'next/link'
 import { ArrowLeft, Trash2, Tag, Truck, Info, Users, ShieldCheck, Check, Clock, X, CreditCard, LogIn, UserCheck, AlertCircle } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
 import { useDealer } from '@/contexts/DealerContext'
-import { SECOND_ITEM_DISCOUNT } from '@/lib/pricingConstants'
+import { secondItemDiscount } from '@/lib/pricingConstants'
 import { productLabel } from '@/lib/collections'
+import { FREE_SHIPPING_FOR_ALL } from '@/lib/shippingCampaign'
 import { useT, useLang, useMoney, USD_RATE } from '@/lib/i18n'
 
 export default function CartPage() {
@@ -38,7 +39,7 @@ export default function CartPage() {
   // (bkz. /api/shipping-rules POST, src/lib/dynamicShipping.ts) — kargoyu işletme
   // üstlense bile marj korunuyorsa ücretsiz, korunmuyorsa normal ücret alınır. Hem
   // birikmiş kupon kullanan hem sıradan alışverişler için aynı kural işler.
-  const [dynamicShipping, setDynamicShipping] = useState({ freeShippingEligible: false, shippingFee: 120 })
+  const [dynamicShipping, setDynamicShipping] = useState({ freeShippingEligible: FREE_SHIPPING_FOR_ALL, shippingFee: FREE_SHIPPING_FOR_ALL ? 0 : 120 })
   const [shippingLoading, setShippingLoading] = useState(false)
 
   // Auth & Checkout State
@@ -148,7 +149,7 @@ export default function CartPage() {
   const subtotal = totalAmount
 
   // 2. Ürün İndirimi — bayi fiyatı zaten toptan fiyat olduğu için bayilere uygulanmaz.
-  const multiItemDiscount = items.length >= 2 && !isDealer ? SECOND_ITEM_DISCOUNT : 0
+  const multiItemDiscount = !isDealer ? secondItemDiscount(items.map((i) => ({ price: i.price, quantity: i.quantity }))) : 0
 
   // Kupon İndirimi — yüzdelik kupon her zaman GÜNCEL ara toplamdan hesaplanır
   // (önceden kupon uygulandığı andaki tutarda donuyordu; ödeme ucu da böyle hesaplıyor).
@@ -401,7 +402,7 @@ export default function CartPage() {
 
           {/* Sağ Kolon: Özet & Paydaş Ekonomisi */}
           <div className="w-full lg:w-[400px] flex-shrink-0">
-            <div className="bg-foreground/[0.02] border border-foreground/10 rounded-2xl p-6 lg:p-8 sticky top-24">
+            <div className="bg-foreground/[0.02] border border-foreground/10 rounded-2xl p-6 lg:p-8 sticky top-32">
               <h2 className="text-xl font-medium mb-6 text-foreground">{t("Sipariş Özeti", "Order Summary", "ملخص الطلب")}</h2>
               
               {/* Hesaplamalar */}
@@ -413,7 +414,7 @@ export default function CartPage() {
                 
                 {multiItemDiscount > 0 && (
                   <div className="flex justify-between text-accent-rose font-medium animate-in fade-in">
-                    <span className="flex items-center gap-2"><Tag size={14} /> {t("Çoklu Alım İndirimi (2. Ürün)", "Multi-item Discount (2nd item)", "خصم الشراء المتعدد (المنتج الثاني)")}</span>
+                    <span className="flex items-center gap-2"><Tag size={14} /> {t("2. Ürün %50 İndirim", "2nd item 50% off", "خصم 50% على المنتج الثاني")}</span>
                     <span>-{money(multiItemDiscount)}</span>
                   </div>
                 )}

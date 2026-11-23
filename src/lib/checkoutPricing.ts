@@ -5,7 +5,7 @@ import { getDealerDiscountPercent } from '@/lib/dealerPricing'
 import { computeDynamicShipping } from '@/lib/dynamicShipping'
 import {
   EXTRAIT_SURCHARGE, DISCOVERY_BOX_SKU, DISCOVERY_BOX_PRICE,
-  BLEND_SAMPLE_10ML_PRICE, SECOND_ITEM_DISCOUNT
+  BLEND_SAMPLE_10ML_PRICE, secondItemDiscount
 } from '@/lib/pricingConstants'
 
 // Ödeme ucunda sepetin sunucu tarafında yeniden fiyatlandırılması. Tarayıcıdan gelen
@@ -162,7 +162,7 @@ export async function isValidFriendOrder(code: string): Promise<boolean> {
 
 export function computeTotals(lines: PricedLine[], isDealer: boolean) {
   const subtotal = lines.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0)
-  const multiItemDiscount = lines.length >= 2 && !isDealer ? SECOND_ITEM_DISCOUNT : 0
+  const multiItemDiscount = !isDealer ? secondItemDiscount(lines.map((l) => ({ price: l.unitPrice, quantity: l.quantity }))) : 0
   return { subtotal, multiItemDiscount }
 }
 

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, User, Sparkles, ShoppingBag, Menu, X, Gift, Store } from 'lucide-react'
+import { Search, User, Sparkles, ShoppingBag, Menu, X, Gift, Store, Truck } from 'lucide-react'
+import { FREE_SHIPPING_FOR_ALL } from '@/lib/shippingCampaign'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import SearchModal from '@/components/SearchModal'
@@ -74,6 +75,12 @@ export default function Navbar() {
       animate={{ y: 0 }}
       className="fixed top-0 left-0 right-0 z-40 bg-background/50 backdrop-blur-md border-b border-foreground/5"
     >
+      {FREE_SHIPPING_FOR_ALL && (
+        <Link href="/katalog" className="flex items-center justify-center gap-2 h-7 bg-accent-gold/90 hover:bg-accent-gold text-background text-[11px] md:text-xs font-medium tracking-wide transition-colors">
+          <Truck size={13} />
+          {t('ÜCRETSİZ KARGO (Türkiye içi) · 2. ÜRÜN %50 İNDİRİMDE', 'FREE SHIPPING within Türkiye · 2nd item 50% OFF', 'شحن مجاني داخل تركيا · المنتج الثاني بخصم 50%')}
+        </Link>
+      )}
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <Link href="/" className="group inline-flex flex-col items-center justify-center border border-foreground/20 rounded-lg px-3 py-1 hover:border-accent-gold transition-colors">
           <span className="text-xl font-light tracking-widest leading-none text-foreground group-hover:text-accent-gold transition-colors">PN</span>

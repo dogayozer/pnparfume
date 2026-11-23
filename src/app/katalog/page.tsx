@@ -136,7 +136,7 @@ export default async function KatalogPage({
       <div className="flex flex-col md:flex-row gap-10">
         <MobileFilterSort />
         <aside className="hidden md:block w-64 flex-shrink-0">
-          <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pr-2 pb-6">
+          <div className="sticky top-32 max-h-[calc(100vh-9rem)] overflow-y-auto pr-2 pb-6">
             <FilterSidebar />
           </div>
         </aside>
