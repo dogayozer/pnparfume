@@ -28,8 +28,9 @@ async function main() {
   const aoa = xlsx.utils.sheet_to_json<unknown[]>(ws, { header: 1, defval: '', raw: false })
   const header = (aoa[0] as unknown[]).map(headerKey)
   const col = (n: string) => header.indexOf(n)
-  const iName = col('isim'), iSurname = col('soyisim'), iPhone = col('telefon')
+  const iName = col('isim'), iSurname = col('soyisim'), iPhone = col('telefon'), iStatus = col('statü')
   if (iPhone < 0) throw new Error('"Telefon" sütunu bulunamadı')
+  if (iStatus < 0) throw new Error('"Statü" sütunu bulunamadı')
 
   const rows: Row[] = []
   aoa.slice(1).forEach((cells, i) => {
@@ -39,18 +40,22 @@ async function main() {
     rows.push({ index: i + 2, cells: c, phone: phoneKey(c[iPhone]), name })
   })
 
-  const invalid = rows.filter((r) => !r.phone)
+  // Sahip kararı: statüsü "Bayi" olanlara kupon verilmez (bayi fiyatlarında zaten indirim kuralı farklı).
+  const isDealer = (r: Row) => headerKey(r.cells[iStatus]) === 'bayi'
+  const dealers = rows.filter(isDealer)
+  const invalid = rows.filter((r) => !r.phone && !isDealer(r))
   const seen = new Map<string, number>()
   const dupes: Row[] = []
   const eligible: Row[] = []
   for (const r of rows) {
+    if (isDealer(r)) continue
     if (!r.phone) continue
     if (seen.has(r.phone)) { dupes.push(r); continue }
     seen.set(r.phone, r.index)
     eligible.push(r)
   }
 
-  console.log(`Dosya: ${path.basename(file)} | satır: ${rows.length} | kupon verilecek: ${eligible.length} | geçersiz telefon: ${invalid.length} | tekrar eden telefon: ${dupes.length}`)
+  console.log(`Dosya: ${path.basename(file)} | satır: ${rows.length} | kupon verilecek: ${eligible.length} | bayi (atlandı): ${dealers.length} | geçersiz telefon: ${invalid.length} | tekrar eden telefon: ${dupes.length}`)
   invalid.slice(0, 20).forEach((r) => console.log(`  geçersiz telefon → satır ${r.index}: ${r.name || '(isimsiz)'}`))
   dupes.slice(0, 20).forEach((r) => console.log(`  tekrar → satır ${r.index} (ilk satır ${seen.get(r.phone!)})`))
   if (!apply) { console.log('Kuru çalıştırma: hiçbir şey yazılmadı. Yazmak için --apply ekleyin.'); return }
