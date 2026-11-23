@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { unstable_cache } from 'next/cache'
 import { T } from '@/lib/i18n'
 import HomeHero from '@/components/home/HomeHero'
 import HomeHighlights from '@/components/home/HomeHighlights'
@@ -11,6 +12,30 @@ import SpecialDayBanner from '@/components/SpecialDayBanner'
 import { COLLECTIONS, mixByCollection } from '@/lib/collections'
 import HomeFaq from '@/components/home/HomeFaq'
 import { HOME_FAQ } from '@/lib/homeFaq'
+
+// Ana sayfa `searchParams` okuduğu için her ziyarette (bot dahil) veritabanına gidiyor ve
+// Neon'u uyanık tutuyordu. Katalogla aynı şekilde 1 saatlik önbellek (etiket: 'katalog',
+// yönetici revalidateTag('katalog') ile anında temizleyebilir). Fiyat/stok değişimi en çok 1 saat gecikir.
+const getCachedFeatured = unstable_cache(
+  async () => prisma.product.findMany({
+    where: { publish_status: { not: 'DRAFT' }, is_featured: true },
+    orderBy: { sku: 'asc' },
+    include: { marketplaceListings: true }
+  }),
+  ['home-featured'],
+  { revalidate: 3600, tags: ['katalog'] }
+)
+
+const getCachedHomeProducts = unstable_cache(
+  async (whereClause: any) => prisma.product.findMany({
+    take: 48,
+    where: whereClause,
+    orderBy: { sku: 'asc' },
+    include: { marketplaceListings: true }
+  }),
+  ['home-products'],
+  { revalidate: 3600, tags: ['katalog'] }
+)
 
 export default async function Home({
   searchParams,
@@ -38,11 +63,7 @@ export default async function Home({
   // vitrin anlamsız kalır, /katalog'la aynı where koşuluyla gerçek filtreli sonuç çekilir.
   let allProducts
   if (sort === 'best_sellers' && !hasFilters) {
-    const featured = await prisma.product.findMany({
-      where: { publish_status: { not: 'DRAFT' }, is_featured: true },
-      orderBy: { sku: 'asc' },
-      include: { marketplaceListings: true }
-    })
+    const featured = await getCachedFeatured()
     allProducts = featured.length > 0 ? featured : null
   }
   if (!allProducts) {
@@ -55,12 +76,7 @@ export default async function Home({
     if (persona) whereClause.persona_tag = persona
     if (family) whereClause.fragrance_family = { has: family }
 
-    allProducts = await prisma.product.findMany({
-      take: 48,
-      where: whereClause,
-      orderBy: { sku: 'asc' },
-      include: { marketplaceListings: true }
-    })
+    allProducts = await getCachedHomeProducts(whereClause)
   }
 
   let processedProducts = allProducts

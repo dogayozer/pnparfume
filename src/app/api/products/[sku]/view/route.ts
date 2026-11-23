@@ -13,6 +13,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ sku: st
   const { sku } = await params
   const decodedSku = decodeURIComponent(sku)
 
+  // Neon maliyeti: bot istekleri veritabanına yazmaz (ve onu uyandırmaz).
+  if (/bot|crawl|spider|slurp|headless|lighthouse|preview/i.test(req.headers.get('user-agent') || '')) {
+    return NextResponse.json({ ok: true })
+  }
+
   let type = 'view'
   try {
     const body = await req.json()
