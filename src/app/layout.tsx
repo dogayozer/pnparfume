@@ -63,6 +63,7 @@ import { DealerProvider } from '@/contexts/DealerContext'
 import CartModal from '@/components/cart/CartModal'
 import ChatWidget from '@/components/layout/ChatWidget'
 import { WhatsAppButton } from '@/components/layout/WhatsAppButton'
+import OpeningAd from '@/components/OpeningAd'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -175,6 +176,7 @@ export default function RootLayout({
           <CartModal />
           <ChatWidget />
           <WhatsAppButton />
+          <OpeningAd />
         </CartProvider>
         </DealerProvider>
         </LocaleProvider>
