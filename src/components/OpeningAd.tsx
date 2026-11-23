@@ -54,7 +54,7 @@ export default function OpeningAd() {
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Kampanya: 2. ürün %50 indirimli, ücretsiz kargo"
+      aria-label="Kampanya: tüm ürünlerde 2. ürün %50 indirimli, ücretsiz kargo"
       className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4 py-6"
       onClick={() => setOpen(false)}
     >
@@ -73,7 +73,7 @@ export default function OpeningAd() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/kampanya/acilis-mobil-9x16.jpg"
-              alt="2. ürün yüzde 50 indirimli ve ücretsiz kargo: Pien Luxury parfüm kampanyası, pnparfume.com"
+              alt="Tüm ürünlerde 2. ürün yüzde 50 indirimli ve ücretsiz kargo: Pien Luxury parfüm kampanyası, pnparfume.com"
               className="block w-auto h-auto max-w-full max-h-[85vh] md:max-w-[min(90vw,1100px)]"
             />
           </picture>
