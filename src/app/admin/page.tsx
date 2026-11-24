@@ -314,6 +314,11 @@ export default function AdminDashboard() {
   const [orderSearch, setOrderSearch] = useState('')
   const [orderStatusFilter, setOrderStatusFilter] = useState('all')
   const [shippingModalOrder, setShippingModalOrder] = useState<Order | null>(null)
+  // HepsiJET: gönderi penceresi (il/ilçe adresten önyüklenir, admin düzeltip onaylar)
+  const [hepsijetOrder, setHepsijetOrder] = useState<Order | null>(null)
+  const [hjCity, setHjCity] = useState('')
+  const [hjDistrict, setHjDistrict] = useState('')
+  const [hjBusy, setHjBusy] = useState(false)
   const [cargoCompanyInput, setCargoCompanyInput] = useState('Yurtiçi Kargo')
   const [trackingCodeInput, setTrackingCodeInput] = useState('')
   const [copiedAddr, setCopiedAddr] = useState(false)
@@ -680,6 +685,78 @@ export default function AdminDashboard() {
         showMsg('error', 'Silinemedi')
       }
     } catch { showMsg('error', 'Hata oluştu') }
+  }
+
+  const applyOrderCargo = (orderId: string, cargoCompany: string | null, trackingCode: string | null) => {
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, cargoCompany, trackingCode } : o))
+    setSelectedOrder(prev => prev && prev.id === orderId ? { ...prev, cargoCompany, trackingCode } : prev)
+  }
+
+  const openHepsijet = async (order: Order) => {
+    setHepsijetOrder(order)
+    setHjCity('')
+    setHjDistrict('')
+    try {
+      const res = await adminFetch(`/api/admin/orders/hepsijet?id=${encodeURIComponent(order.id)}`)
+      const data = await res.json()
+      if (res.ok) { setHjCity(data.city || ''); setHjDistrict(data.district || '') }
+    } catch { /* tahmin alınamazsa admin elle girer */ }
+  }
+
+  const sendToHepsijet = async () => {
+    if (!hepsijetOrder) return
+    setHjBusy(true)
+    try {
+      const res = await adminFetch('/api/admin/orders/hepsijet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: hepsijetOrder.id, city: hjCity, district: hjDistrict })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        applyOrderCargo(hepsijetOrder.id, 'HepsiJET', data.trackingCode)
+        showMsg('success', `HepsiJET gönderisi açıldı${data.test ? ' (TEST ortamı)' : ''}. Takip no: ${data.trackingCode}`)
+        setHepsijetOrder(null)
+      } else {
+        showMsg('error', data.error || 'HepsiJET hatası')
+      }
+    } catch { showMsg('error', 'Sunucu hatası') } finally { setHjBusy(false) }
+  }
+
+  const openHepsijetLabel = async (order: Order) => {
+    try {
+      const res = await adminFetch(`/api/admin/orders/hepsijet/label?id=${encodeURIComponent(order.id)}`)
+      if (!res.ok) { showMsg('error', await res.text()); return }
+      const url = URL.createObjectURL(await res.blob())
+      window.open(url, '_blank')
+    } catch { showMsg('error', 'Etiket alınamadı') }
+  }
+
+  const cancelHepsijet = async (order: Order) => {
+    if (!window.confirm(`#${order.orderNumber} siparişinin HepsiJET gönderisi iptal edilsin mi?`)) return
+    try {
+      const res = await adminFetch('/api/admin/orders/hepsijet/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: order.id })
+      })
+      const data = await res.json()
+      if (res.ok) { applyOrderCargo(order.id, null, null); showMsg('success', 'HepsiJET gönderisi iptal edildi.') }
+      else showMsg('error', data.error || 'İptal edilemedi')
+    } catch { showMsg('error', 'Sunucu hatası') }
+  }
+
+  const checkHepsijetStatus = async (order: Order) => {
+    try {
+      const res = await adminFetch('/api/admin/orders/hepsijet/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: order.id })
+      })
+      const data = await res.json()
+      if (res.ok) showMsg('success', `HepsiJET: ${data.label}${data.lastTransaction ? ` (${data.lastTransaction})` : ''}`)
+      else showMsg('error', data.error || 'Durum alınamadı')
+    } catch { showMsg('error', 'Sunucu hatası') }
   }
 
   const handleUpdateOrderStatus = async (orderId: string, status: string, cargoCompany?: string, trackingCode?: string) => {
@@ -3860,6 +3937,24 @@ export default function AdminDashboard() {
                     >
                       <Truck size={15} /> {selectedOrder.cargoCompany ? 'Kargo Bilgilerini Güncelle' : 'Kargoya Teslim Et & Takip Kodu Gir'}
                     </button>
+
+                    {/* HepsiJET entegrasyonu */}
+                    {selectedOrder.cargoCompany === 'HepsiJET' && selectedOrder.trackingCode ? (
+                      <div className="mt-3 grid grid-cols-3 gap-2">
+                        <button onClick={() => openHepsijetLabel(selectedOrder)} className="bg-white border border-orange-300 text-orange-700 hover:bg-orange-50 font-medium py-2 rounded-xl text-[11px]">Etiket (PDF)</button>
+                        <button onClick={() => checkHepsijetStatus(selectedOrder)} className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-2 rounded-xl text-[11px]">Durum Sorgula</button>
+                        <button onClick={() => cancelHepsijet(selectedOrder)} className="bg-white border border-red-300 text-red-600 hover:bg-red-50 font-medium py-2 rounded-xl text-[11px]">Gönderiyi İptal Et</button>
+                      </div>
+                    ) : (
+                      !['pending', 'awaiting_transfer', 'cancelled'].includes(selectedOrder.status) && (
+                        <button
+                          onClick={() => openHepsijet(selectedOrder)}
+                          className="mt-3 w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors"
+                        >
+                          <Truck size={15} /> HepsiJET'e Gönder
+                        </button>
+                      )
+                    )}
                   </div>
                 </div>
               </div>
@@ -4310,6 +4405,31 @@ export default function AdminDashboard() {
       )}
 
       {/* ===================== KARGOYA TESLIM ET MODALI ===================== */}
+      {hepsijetOrder && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4" onClick={() => !hjBusy && setHepsijetOrder(null)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4" onClick={e => e.stopPropagation()}>
+            <div>
+              <h3 className="font-bold text-gray-900">HepsiJET'e Gönder</h3>
+              <p className="text-xs text-gray-500">#{hepsijetOrder.orderNumber} — {hepsijetOrder.customerName || hepsijetOrder.customer?.name || 'Müşteri'}</p>
+            </div>
+            <div className="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-xl p-3 whitespace-pre-wrap">{hepsijetOrder.customerAddress || 'Adres yok'}</div>
+            <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">İl ve ilçe adresten tahmin edildi. HepsiJET adres kaydıyla uyuşması için lütfen kontrol edin.</p>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="text-xs text-gray-600">İl
+                <input value={hjCity} onChange={e => setHjCity(e.target.value)} className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900" placeholder="İstanbul" />
+              </label>
+              <label className="text-xs text-gray-600">İlçe
+                <input value={hjDistrict} onChange={e => setHjDistrict(e.target.value)} className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900" placeholder="Kadıköy" />
+              </label>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button onClick={() => setHepsijetOrder(null)} disabled={hjBusy} className="flex-1 border border-gray-300 text-gray-700 rounded-xl py-2.5 text-sm">Vazgeç</button>
+              <button onClick={sendToHepsijet} disabled={hjBusy || !hjCity.trim() || !hjDistrict.trim()} className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white rounded-xl py-2.5 text-sm font-medium">{hjBusy ? 'Gönderiliyor...' : 'Gönderiyi Aç'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {shippingModalOrder && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200">

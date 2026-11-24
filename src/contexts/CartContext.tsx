@@ -15,8 +15,17 @@ export interface CartItem {
   imageUrl?: string
 }
 
+export interface AppliedCoupon {
+  code: string
+  type: string
+  value: number
+}
+
 interface CartContextType {
   items: CartItem[]
+  // Yan sepette (veya sepet sayfasında) uygulanan kupon: iki yerde de aynı görünür, sayfa değişince taşınır.
+  appliedCoupon: AppliedCoupon | null
+  setAppliedCoupon: (c: AppliedCoupon | null) => void
   addToCart: (item: CartItem) => void
   removeFromCart: (sku: string) => void
   clearCart: () => void
@@ -31,6 +40,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const [appliedCoupon, setAppliedCouponState] = useState<AppliedCoupon | null>(null)
   // İlk yükleme tamamlanana kadar "kaydet" efekti localStorage'a yazmasın —
   // aksi halde başlangıçtaki boş items state'i, henüz işlenmemiş "yükle"
   // güncellemesinden önce localStorage'daki gerçek sepeti kalıcı olarak ezer
@@ -43,8 +53,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (saved) {
       try { setItems(JSON.parse(saved)) } catch (e) {}
     }
+    try {
+      const c = localStorage.getItem('pn_coupon')
+      if (c) setAppliedCouponState(JSON.parse(c))
+    } catch (e) {}
     setIsLoaded(true)
   }, [])
+
+  const setAppliedCoupon = (c: AppliedCoupon | null) => {
+    setAppliedCouponState(c)
+    try {
+      if (c) localStorage.setItem('pn_coupon', JSON.stringify(c))
+      else localStorage.removeItem('pn_coupon')
+    } catch (e) {}
+  }
 
   // Save to local storage and sync with account if logged in (Debounced 1500ms for Neon compute savings)
   useEffect(() => {
@@ -121,6 +143,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const clearCart = () => {
     setItems([])
+    setAppliedCoupon(null)
     try {
       localStorage.removeItem('pn_cart')
     } catch (e) {}
@@ -129,7 +152,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const totalAmount = items.reduce((acc, item) => acc + (item.price * item.quantity), 0)
 
   return (
-    <CartContext.Provider value={{ items, addToCart, removeFromCart, clearCart, syncRetailPrices, isCartOpen, setIsCartOpen, totalAmount }}>
+    <CartContext.Provider value={{ items, appliedCoupon, setAppliedCoupon, addToCart, removeFromCart, clearCart, syncRetailPrices, isCartOpen, setIsCartOpen, totalAmount }}>
       {children}
     </CartContext.Provider>
   )

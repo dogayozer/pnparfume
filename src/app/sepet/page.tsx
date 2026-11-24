@@ -12,7 +12,7 @@ import { FREE_SHIPPING_FOR_ALL } from '@/lib/shippingCampaign'
 import { useT, useLang, useMoney, USD_RATE } from '@/lib/i18n'
 
 export default function CartPage() {
-  const { items, removeFromCart, totalAmount, clearCart, syncRetailPrices } = useCart()
+  const { items, removeFromCart, totalAmount, clearCart, syncRetailPrices, appliedCoupon, setAppliedCoupon } = useCart()
   const { isDealer } = useDealer()
   const t = useT()
   const money = useMoney()
@@ -23,7 +23,6 @@ export default function CartPage() {
   const [orderNote, setOrderNote] = useState('')
   const [foreignMode, setForeignMode] = useState(false)
   const [couponCode, setCouponCode] = useState('')
-  const [appliedCoupon, setAppliedCoupon] = useState<{code: string, type: string, value: number} | null>(null)
   
   // Paydaş Ekonomisi State
   const [combinedShipping, setCombinedShipping] = useState(false)

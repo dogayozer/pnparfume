@@ -17,14 +17,14 @@ export default function CartModal() {
   const lang = useLang()
   const { isDealer } = useDealer()
   const money = useMoney()
-  const { isCartOpen, setIsCartOpen, items, removeFromCart, addToCart, totalAmount, clearCart } = useCart()
+  const { isCartOpen, setIsCartOpen, items, removeFromCart, addToCart, totalAmount, clearCart, appliedCoupon: coupon, setAppliedCoupon } = useCart()
   const [couponCode, setCouponCode] = useState('')
-  const [coupon, setCoupon] = useState<{ type: string; value: number } | null>(null)
   const [error, setError] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
 
   const applyCoupon = async () => {
     setError('')
+    if (!couponCode.trim()) { setError(t('Lütfen bir indirim kodu girin', 'Please enter a discount code', 'يرجى إدخال رمز الخصم')); return }
     try {
       const res = await fetch('/api/checkout/coupon', {
         method: 'POST',
@@ -33,9 +33,11 @@ export default function CartModal() {
       })
       const data = await res.json()
       if (res.ok) {
-        setCoupon({ type: data.type, value: data.value })
+        // Kod, sepet sayfasına da taşınır (CartContext + localStorage).
+        setAppliedCoupon({ code: couponCode.trim().toUpperCase(), type: data.type, value: data.value })
+        setCouponCode('')
       } else {
-        setError(data.error)
+        setError(data.error || t('Geçersiz kupon kodu', 'Invalid coupon code', 'رمز القسيمة غير صالح'))
       }
     } catch (e) {
       setError(t('Bir hata oluştu', 'Something went wrong', 'حدث خطأ'))
@@ -143,6 +145,29 @@ export default function CartModal() {
                 </div>
 
                 <div className="p-6 border-t border-foreground/10 bg-foreground/[0.02]">
+                  {coupon ? (
+                    <div className="mb-6">
+                      <div className="flex items-center justify-between gap-2 rounded-lg border border-green-600/40 bg-green-600/10 px-4 py-2 text-sm">
+                        <span className="text-green-700 font-medium">✓ {coupon.code} {t('uygulandı', 'applied', 'تم التطبيق')}</span>
+                        <button
+                          onClick={() => { setAppliedCoupon(null); setError('') }}
+                          className="text-xs text-foreground/60 underline hover:text-accent-rose"
+                        >
+                          {t('Vazgeç', 'Remove', 'إزالة')}
+                        </button>
+                      </div>
+                      {couponAmount === 0 && (
+                        <p className="text-xs text-accent-gold font-medium mt-2">
+                          {coupon.type === 'bogo'
+                            ? t('1 alana 1 bedava kodunuz hazır: sepetinize bir ürün daha ekleyin, ucuz olan ürün bedava olsun.', 'Your buy 1 get 1 free code is ready: add one more item and the cheaper one is free.', 'رمزك جاهز: أضف منتجًا آخر ويصبح الأرخص مجانًا.')
+                            : isDealer
+                              ? t('Bayi fiyatlarında indirim kodu uygulanmaz.', 'Discount codes do not apply to dealer prices.', 'لا تُطبَّق رموز الخصم على أسعار الوكلاء.')
+                              : t('Bu kod mevcut sepetinize indirim sağlamıyor.', 'This code gives no discount on your current cart.', 'هذا الرمز لا يمنح خصمًا على سلتك الحالية.')}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <>
                   <div className="flex gap-2 mb-6">
                     <input 
                       type="text" 
@@ -159,6 +184,8 @@ export default function CartModal() {
                     </button>
                   </div>
                   {error && <p className="text-accent-rose text-xs mt-[-16px] mb-4">{error}</p>}
+                    </>
+                  )}
 
                   <div className="mb-4">
                     <PerksBanner compact />
@@ -196,7 +223,7 @@ export default function CartModal() {
                       </div>
                     )}
                     {couponAmount > 0 && (
-                      <div className="flex justify-between text-accent-rose font-medium">
+                      <div className="flex justify-between text-green-600 font-medium">
                         <span>{coupon?.type === 'bogo' ? t('1 Alana 1 Bedava', 'Buy 1 Get 1 Free', 'اشترِ 1 واحصل على 1 مجانًا') : coupon?.type === 'percentage' ? `${t('İndirim', 'Discount', 'خصم')} (%${coupon.value})` : t('İndirim', 'Discount', 'خصم')}</span>
                         <span>-{money(couponAmount)}</span>
                       </div>
