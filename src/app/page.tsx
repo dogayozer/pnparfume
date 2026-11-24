@@ -22,7 +22,7 @@ const getCachedFeatured = unstable_cache(
     orderBy: { sku: 'asc' },
     include: { marketplaceListings: true }
   }),
-  ['home-featured'],
+  ['home-featured-v2'],
   { revalidate: 3600, tags: ['katalog'] }
 )
 
@@ -33,7 +33,7 @@ const getCachedHomeProducts = unstable_cache(
     orderBy: { sku: 'asc' },
     include: { marketplaceListings: true }
   }),
-  ['home-products'],
+  ['home-products-v2'],
   { revalidate: 3600, tags: ['katalog'] }
 )
 
