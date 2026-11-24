@@ -15,7 +15,7 @@ const getCachedProducts = unstable_cache(
     orderBy: { sku: 'asc' },
     include: { marketplaceListings: true },
   }),
-  ['koleksiyon-products'],
+  ['koleksiyon-products-v2'],
   { revalidate: 3600, tags: ['katalog'] }
 )
 

@@ -19,7 +19,7 @@ const getCachedProducts = unstable_cache(
     orderBy: { sku: 'asc' },
     include: { marketplaceListings: true }
   }),
-  ['katalog-products'],
+  ['katalog-products-v2'],
   { revalidate: 3600, tags: ['katalog'] }
 )
 
