@@ -1329,6 +1329,18 @@ export default function AdminDashboard() {
     }
   }
 
+  // PayTR ödeme durumu rozeti (muhasebe için). PayTR'da aranacak numara = sipariş numarası (merchant_oid).
+  const PAYTR_URL = 'https://www.paytr.com/magaza/kullanici-girisi'
+  const getPaytrBadge = (o: Order) => {
+    if (o.paymentMethod && o.paymentMethod !== 'card') return null
+    let label: string, cls: string
+    if (['paid', 'shipped', 'delivered'].includes(o.status)) { label = 'PayTR: Ödendi'; cls = 'bg-emerald-50 text-emerald-700 border-emerald-200' }
+    else if (o.status === 'failed') { label = 'PayTR: Başarısız'; cls = 'bg-red-50 text-red-700 border-red-200' }
+    else if (o.status === 'pending') { label = 'PayTR: Bekliyor'; cls = 'bg-amber-50 text-amber-700 border-amber-200' }
+    else return null
+    return <span className={`inline-flex items-center border px-2 py-0.5 rounded-full text-[10px] font-semibold ${cls}`}>{label}</span>
+  }
+
   const getPartnerBadge = (partner_type: string) => {
     switch(partner_type) {
       case 'influencer':
@@ -1759,8 +1771,9 @@ export default function AdminDashboard() {
                         )}
                       </div>
 
-                      <div className="text-xs text-gray-500">
-                        Toplam <span className="font-semibold text-gray-900">{filteredOrders.length}</span> sipariş listeleniyor
+                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                        <a href={PAYTR_URL} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100">PayTR Mağaza Paneli ↗</a>
+                        <span>Toplam <span className="font-semibold text-gray-900">{filteredOrders.length}</span> sipariş listeleniyor</span>
                       </div>
                     </div>
 
@@ -1854,6 +1867,7 @@ export default function AdminDashboard() {
                                   </td>
                                   <td className="px-6 py-4">
                                     {getStatusBadge(o.status)}
+                                    {getPaytrBadge(o) && <div className="mt-1.5">{getPaytrBadge(o)}</div>}
                                     {o.customerNote && <div className="mt-1.5 text-[11px] font-semibold text-amber-700" title={o.customerNote}>📝 Müşteri notu var</div>}
                                     {(() => { const info = getPaymentInfo(o); return info ? (
                                       <div className={`mt-1.5 max-w-[220px] text-[11px] leading-snug ${info.tone === 'error' ? 'text-red-600' : 'text-amber-700'}`}>{info.text}</div>
@@ -3812,6 +3826,10 @@ export default function AdminDashboard() {
                 <div className="flex items-center gap-3">
                   <h2 className="text-xl font-bold text-gray-900">Sipariş #{selectedOrder.orderNumber}</h2>
                   {getStatusBadge(selectedOrder.status)}
+                  {getPaytrBadge(selectedOrder)}
+                  {(!selectedOrder.paymentMethod || selectedOrder.paymentMethod === 'card') && (
+                    <a href={PAYTR_URL} target="_blank" rel="noopener noreferrer" title={`PayTR'da bu numarayla arayın: ${selectedOrder.orderNumber}`} className="text-[11px] font-semibold text-blue-600 hover:underline">PayTR'da aç ↗</a>
+                  )}
                 </div>
                 {(() => { const info = getPaymentInfo(selectedOrder); return info ? (
                   <p className={`mt-1.5 text-xs ${info.tone === 'error' ? 'text-red-600' : 'text-amber-700'}`}>{info.text}</p>
