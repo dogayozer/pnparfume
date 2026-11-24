@@ -1804,7 +1804,7 @@ export default function AdminDashboard() {
                             <th className="px-6 py-4">Ürünler</th>
                             <th className="px-6 py-4">Tutar</th>
                             <th className="px-6 py-4">Durum</th>
-                            <th className="px-6 py-4">Kargo Bilgisi</th>
+                            <th className="px-6 py-4 min-w-[220px]">Kargo Bilgisi / Takip No</th>
                             <th className="px-6 py-4">Tarih</th>
                             <th className="px-6 py-4 text-right sticky right-0 bg-gray-50 shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">İşlemler</th>
                           </tr>
@@ -1859,11 +1859,12 @@ export default function AdminDashboard() {
                                       <div className={`mt-1.5 max-w-[220px] text-[11px] leading-snug ${info.tone === 'error' ? 'text-red-600' : 'text-amber-700'}`}>{info.text}</div>
                                     ) : null })()}
                                   </td>
-                                  <td className="px-6 py-4 text-xs">
+                                  <td className="px-6 py-4 text-xs min-w-[220px] whitespace-nowrap">
                                     {o.cargoCompany ? (
                                       <div>
                                         <span className="font-medium text-gray-800">{o.cargoCompany}</span>
-                                        <div className="font-mono text-[11px] text-gray-500">{o.trackingCode || 'Takip No Yok'}</div>
+                                        {/* Takip kodu tam görünür (kesilmez); tek tıkla seçilir, kopyalanabilir. */}
+                                        <div className="font-mono text-[11px] text-gray-500 select-all" title="Takip kodunu seçmek için tıklayın">{o.trackingCode || 'Takip No Yok'}</div>
                                       </div>
                                     ) : (
                                       <span className="text-gray-400">-</span>
