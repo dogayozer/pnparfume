@@ -391,6 +391,7 @@ model IntegrationSettings {
   smtp_user         String?
   smtp_pass         String?
   admin_order_email String?  // Sipariş bildirimi gidecek adres (örn. muhasebe@...)
+  whatsapp_enabled  Boolean  @default(false) // Sitedeki WhatsApp butonu (admin'den aç/kapa)
 
   updatedAt         DateTime @updatedAt
 }

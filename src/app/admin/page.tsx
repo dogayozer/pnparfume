@@ -359,7 +359,7 @@ export default function AdminDashboard() {
   const [integrationForm, setIntegrationForm] = useState({
     netgsm_usercode: '', netgsm_password: '', netgsm_header: '',
     smtp_host: '', smtp_port: '', smtp_user: '', smtp_pass: '',
-    admin_order_email: ''
+    admin_order_email: '', whatsapp_enabled: false
   })
 
   // Product Management States
@@ -465,7 +465,8 @@ export default function AdminDashboard() {
           smtp_port: data.smtp_port ? String(data.smtp_port) : '',
           smtp_user: data.smtp_user || '',
           smtp_pass: '',
-          admin_order_email: data.admin_order_email || ''
+          admin_order_email: data.admin_order_email || '',
+          whatsapp_enabled: !!data.whatsapp_enabled
         })
       }
     } catch (err) { console.error(err) }
@@ -2963,6 +2964,17 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   </div>
+
+                  <label className="flex items-center gap-3 bg-white border border-gray-200 rounded-2xl p-4 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={integrationForm.whatsapp_enabled}
+                      onChange={e => setIntegrationForm({ ...integrationForm, whatsapp_enabled: e.target.checked })}
+                      className="h-4 w-4"
+                    />
+                    <span className="text-sm font-semibold text-gray-800">Sitede WhatsApp butonunu göster</span>
+                    <span className="text-xs text-gray-500">(değişiklik kaydedince ~5 dk içinde sitede yansır)</span>
+                  </label>
 
                   <button
                     type="submit"

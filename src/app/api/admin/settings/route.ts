@@ -30,7 +30,8 @@ export async function GET(req: Request) {
       smtp_port: settings.smtp_port || '',
       smtp_user: settings.smtp_user || '',
       hasSmtpPass: !!settings.smtp_pass,
-      admin_order_email: settings.admin_order_email || ''
+      admin_order_email: settings.admin_order_email || '',
+      whatsapp_enabled: settings.whatsapp_enabled
     })
   } catch (error) {
     console.error('Fetch integration settings error:', error)
@@ -55,6 +56,7 @@ export async function PUT(req: Request) {
     if (body.smtp_user !== undefined) updateData.smtp_user = body.smtp_user || null
     if (body.smtp_pass) updateData.smtp_pass = body.smtp_pass // boşsa dokunma
     if (body.admin_order_email !== undefined) updateData.admin_order_email = body.admin_order_email || null
+    if (body.whatsapp_enabled !== undefined) updateData.whatsapp_enabled = !!body.whatsapp_enabled
 
     const updated = await prisma.integrationSettings.update({
       where: { id: current.id },
@@ -71,7 +73,8 @@ export async function PUT(req: Request) {
         smtp_port: updated.smtp_port || '',
         smtp_user: updated.smtp_user || '',
         hasSmtpPass: !!updated.smtp_pass,
-        admin_order_email: updated.admin_order_email || ''
+        admin_order_email: updated.admin_order_email || '',
+        whatsapp_enabled: updated.whatsapp_enabled
       }
     })
   } catch (error: any) {
