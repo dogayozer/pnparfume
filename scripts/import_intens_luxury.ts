@@ -1,5 +1,5 @@
-// Pien Intens (81 ürün, 749 TL, 60 ml EDP) ve Pien Luxury (14 ürün, 2300 TL, 100 ml Extrait) içe aktarma.
-// SKU = müşteriye görünen ad: "Pien Intens RX54", "Pien LUX M 13" (Excel'deki "LUX 13 M" → "Pien LUX M 13").
+// Pien Intense (81 ürün, 749 TL, 60 ml EDP) ve Pien Luxury (14 ürün, 2300 TL, 100 ml Extrait) içe aktarma.
+// SKU = müşteriye görünen ad: "Pien Intense RX54", "Pien LUX M 13" (Excel'deki "LUX 13 M" → "Pien LUX M 13").
 // Kullanım (DATABASE_URL ortam değişkeni olarak verilmelidir; .env OKUNMAZ):
 //   npx tsx scripts/import_intens_luxury.ts            -> yalnız Excel kuru çalıştırma (DB'ye bağlanmaz)
 //   npx tsx scripts/import_intens_luxury.ts --check    -> DATABASE_URL ile salt-okunur çakışma kontrolü
@@ -42,7 +42,8 @@ async function main() {
     const barcode = String(row['Barkod'] || '').trim()
     let sku: string | null
     let price: number
-    if (coll === 'Intens') { sku = /^Pien Intens [A-Z0-9]+( [0-9]+)?$/.test(rawSku) ? rawSku : null; price = 749 }
+    // Excel'de "Pien Intens …" yazılmış; sahibi kararı (2026-11-24): doğru yazım "Intense" → "Pien Intense …"
+    if (coll === 'Intens') { sku = /^Pien Intens [A-Z0-9]+( [0-9]+)?$/.test(rawSku) ? rawSku.replace(/^Pien Intens /, 'Pien Intense ') : null; price = 749 }
     else if (coll === 'Luxury') { sku = luxurySku(rawSku); price = 2300 }
     else { problems.push(`bilinmeyen koleksiyon: "${coll}" (${rawSku})`); continue }
     if (!sku || !/^\d{13}$/.test(barcode)) { problems.push(`geçersiz SKU/barkod: ${rawSku} ${barcode}`); continue }
@@ -76,7 +77,7 @@ async function main() {
     })
   }
   const count = (c: string) => items.filter((x) => x.coll === c).length
-  console.log(`geçerli: ${items.length} (Intens ${count('Intens')}, Luxury ${count('Luxury')})`)
+  console.log(`geçerli: ${items.length} (Intense ${count('Intens')}, Luxury ${count('Luxury')})`)
   console.log(`örnek: ${items[0]?.sku} | ${items.find((x) => x.coll === 'Luxury')?.sku} | ${items[0]?.images[0]}`)
   if (problems.length) { console.log('SORUNLAR:\n' + problems.join('\n')); process.exit(1) }
   if (!CHECK) return

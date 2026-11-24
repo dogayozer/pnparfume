@@ -17,7 +17,7 @@ interface ProductActionsProps {
   trendyolUrl?: string | null
   isOutOfStock: boolean
   gender?: string
-  // Hazır, sabit hacimli koleksiyon (Intens/Luxury): özelleştirme paneli hiç gösterilmez.
+  // Hazır, sabit hacimli koleksiyon (Intense/Luxury): özelleştirme paneli hiç gösterilmez.
   fixedVolume?: string
 }
 

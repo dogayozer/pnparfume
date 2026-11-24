@@ -360,7 +360,7 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
               tek tek yazmak yerine burada, çünkü hepsi zaten aynı varsayılan 50ml
               kompakt şişeyle satılıyor (bkz. bottleOptions.ts). Böylece yeni eklenen
               ürünlerde de otomatik görünür, elle güncellenmesi gerekmez. */}
-          {/* Hazır, sabit hacimli koleksiyonlar (Intens 60 ml, Luxury 100 ml): "50 ml seyahat" cümlesi yanlış olur. */}
+          {/* Hazır, sabit hacimli koleksiyonlar (Intense 60 ml, Luxury 100 ml): "50 ml seyahat" cümlesi yanlış olur. */}
           {getCollectionBySku(product.sku)?.fixed ? (
             <p className="flex items-center gap-2 text-sm text-foreground/60">
               <Sparkles size={16} className="text-accent-gold flex-shrink-0" />

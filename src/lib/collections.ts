@@ -50,12 +50,12 @@ export const COLLECTIONS: Collection[] = [
     brand: 'Pien Parfum',
   },
   {
-    slug: 'pien-intens',
-    name: 'Pien Intens',
+    slug: 'pien-intense',
+    name: 'Pien Intense',
     tagline: 'Yoğun esanslı Pien kokuları',
     description:
-      "Pien Intens koleksiyonu; yoğun esansı (seçili özel kokularda %25), belli notaları ve duyguya göre seçilebilen karakteriyle 81 kokudan oluşur. Doğru an, doğru mekan için tasarlandı; güvenli üretim, Türkiye'de üretim.",
-    skuPrefix: 'Pien Intens ',
+      "Pien Intense koleksiyonu; yoğun esansı (seçili özel kokularda %25), belli notaları ve duyguya göre seçilebilen karakteriyle 81 kokudan oluşur. Doğru an, doğru mekan için tasarlandı; güvenli üretim, Türkiye'de üretim.",
+    skuPrefix: 'Pien Intense ',
     labelPrefix: '',
     brand: 'Pien Parfum',
     fixed: { volumeLabel: '60 ml • Eau de Parfum' },
@@ -78,7 +78,7 @@ export function getCollection(slug: string): Collection | undefined {
 }
 
 export function getCollectionBySku(sku: string): Collection | undefined {
-  // En uzun eşleşen önek kazanır: "Pien Intens 558" hem "Pien " hem "Pien Intens " ile başlar.
+  // En uzun eşleşen önek kazanır: "Pien Intense 558" hem "Pien " hem "Pien Intense " ile başlar.
   let best: Collection | undefined
   for (const c of COLLECTIONS) {
     if (c.skuPrefix && sku.startsWith(c.skuPrefix) && (!best || c.skuPrefix.length > best.skuPrefix!.length)) best = c
@@ -114,7 +114,7 @@ export function mixByCollection<T extends { sku: string }>(items: T[]): T[] {
 // Koleksiyonun ürün kapsamı (Prisma where parçası)
 export function collectionScope(c: Collection): Record<string, unknown> {
   if (c.skuPrefix) {
-    // Daha uzun ve bu önekle başlayan koleksiyonlar (örn. "Pien " içindeki "Pien Intens ") dışarıda kalır.
+    // Daha uzun ve bu önekle başlayan koleksiyonlar (örn. "Pien " içindeki "Pien Intense ") dışarıda kalır.
     const nested = COLLECTIONS.filter((o) => o.skuPrefix && o !== c && o.skuPrefix.startsWith(c.skuPrefix!)).map((o) => ({ sku: { startsWith: o.skuPrefix } }))
     return nested.length ? { sku: { startsWith: c.skuPrefix }, NOT: nested } : { sku: { startsWith: c.skuPrefix } }
   }
