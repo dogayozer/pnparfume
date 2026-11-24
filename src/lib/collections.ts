@@ -15,6 +15,9 @@ export interface Collection {
   // schema.org marka adı
   brand: string
   image?: string
+  // Hazır, sabit hacimli/ayarsız ürün koleksiyonu: ürün sayfasında özelleştirme paneli ve "mix'le"
+  // düğmesi gösterilmez, bu hacim etiketi gösterilir (örn. "60 ml • Eau de Parfum").
+  fixed?: { volumeLabel: string }
 }
 
 export const COLLECTIONS: Collection[] = [
@@ -46,6 +49,28 @@ export const COLLECTIONS: Collection[] = [
     labelPrefix: '',
     brand: 'Pien Parfum',
   },
+  {
+    slug: 'pien-intens',
+    name: 'Pien Intens',
+    tagline: 'Yoğun esanslı Pien kokuları',
+    description:
+      "Pien Intens koleksiyonu; yoğun esansı (seçili özel kokularda %25), belli notaları ve duyguya göre seçilebilen karakteriyle 81 kokudan oluşur. Doğru an, doğru mekan için tasarlandı; güvenli üretim, Türkiye'de üretim.",
+    skuPrefix: 'Pien Intens ',
+    labelPrefix: '',
+    brand: 'Pien Parfum',
+    fixed: { volumeLabel: '60 ml • Eau de Parfum' },
+  },
+  {
+    slug: 'pien-luxury',
+    name: 'Pien Luxury',
+    tagline: "Extrait de Parfum, %30'a kadar esans",
+    description:
+      "Pien Luxury koleksiyonu; %30'a kadar esans oranı ve özel formülüyle 14 Extrait de Parfum'dan oluşur. Özel günler için, notaları belli, 100 ml; güvenli üretim, Türkiye'de üretim.",
+    skuPrefix: 'Pien LUX ',
+    labelPrefix: '',
+    brand: 'Pien Parfum',
+    fixed: { volumeLabel: '100 ml • Extrait de Parfum' },
+  },
 ]
 
 export function getCollection(slug: string): Collection | undefined {
@@ -53,7 +78,12 @@ export function getCollection(slug: string): Collection | undefined {
 }
 
 export function getCollectionBySku(sku: string): Collection | undefined {
-  return COLLECTIONS.find((c) => c.skuPrefix && sku.startsWith(c.skuPrefix))
+  // En uzun eşleşen önek kazanır: "Pien Intens 558" hem "Pien " hem "Pien Intens " ile başlar.
+  let best: Collection | undefined
+  for (const c of COLLECTIONS) {
+    if (c.skuPrefix && sku.startsWith(c.skuPrefix) && (!best || c.skuPrefix.length > best.skuPrefix!.length)) best = c
+  }
+  return best
 }
 
 // Müşteriye görünen ürün kodu: "PN M 12", "Pien M 1", "Pien Creative CS-E-ARO-01".
@@ -83,7 +113,11 @@ export function mixByCollection<T extends { sku: string }>(items: T[]): T[] {
 
 // Koleksiyonun ürün kapsamı (Prisma where parçası)
 export function collectionScope(c: Collection): Record<string, unknown> {
-  if (c.skuPrefix) return { sku: { startsWith: c.skuPrefix } }
+  if (c.skuPrefix) {
+    // Daha uzun ve bu önekle başlayan koleksiyonlar (örn. "Pien " içindeki "Pien Intens ") dışarıda kalır.
+    const nested = COLLECTIONS.filter((o) => o.skuPrefix && o !== c && o.skuPrefix.startsWith(c.skuPrefix!)).map((o) => ({ sku: { startsWith: o.skuPrefix } }))
+    return nested.length ? { sku: { startsWith: c.skuPrefix }, NOT: nested } : { sku: { startsWith: c.skuPrefix } }
+  }
   const others = COLLECTIONS.filter((o) => o.skuPrefix).map((o) => ({ sku: { startsWith: o.skuPrefix } }))
   return { NOT: others }
 }

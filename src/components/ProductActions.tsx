@@ -17,13 +17,15 @@ interface ProductActionsProps {
   trendyolUrl?: string | null
   isOutOfStock: boolean
   gender?: string
+  // Hazır, sabit hacimli koleksiyon (Intens/Luxury): özelleştirme paneli hiç gösterilmez.
+  fixedVolume?: string
 }
 
 type Concentration = 'edp' | 'extrait'
 
 const CUSTOMIZE_ENABLED = false
 
-export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfStock }: ProductActionsProps) {
+export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfStock, fixedVolume }: ProductActionsProps) {
   const router = useRouter()
   const t = useT()
   const money = useMoney()
@@ -145,7 +147,7 @@ export default function ProductActions({ sku, name, price, trendyolUrl, isOutOfS
       )}
 
       {/* Benim İçin Özelleştir — şimdilik KAPALI (geri açmak için CUSTOMIZE_ENABLED'ı true yapın) */}
-      {CUSTOMIZE_ENABLED && !isOutOfStock && (
+      {CUSTOMIZE_ENABLED && !fixedVolume && !isOutOfStock && (
         <div className="text-center sm:text-left mt-6">
           <div className="inline-block">
             <div 

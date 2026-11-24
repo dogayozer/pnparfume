@@ -10,7 +10,7 @@ import ViewTracker from '@/components/ViewTracker'
 import { T, Money } from '@/lib/i18n'
 import { V_, N_ } from '@/lib/vocab'
 import { LocalizedDescription } from '@/components/ProductI18n'
-import { productLabel, productBrand } from '@/lib/collections'
+import { productLabel, productBrand, getCollectionBySku } from '@/lib/collections'
 import { FREE_SHIPPING_FOR_ALL } from '@/lib/shippingCampaign'
 
 export const revalidate = 86400 // Cache for 24 hours (super fast loading)
@@ -360,10 +360,18 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
               tek tek yazmak yerine burada, çünkü hepsi zaten aynı varsayılan 50ml
               kompakt şişeyle satılıyor (bkz. bottleOptions.ts). Böylece yeni eklenen
               ürünlerde de otomatik görünür, elle güncellenmesi gerekmez. */}
-          <p className="flex items-center gap-2 text-sm text-foreground/60">
-            <Plane size={16} className="text-accent-gold flex-shrink-0" />
-            <T tr="50 mililitrelik kompakt şişe boyutu sayesinde seyahat dostudur." en="Its compact 50 ml bottle makes it travel-friendly." ar="زجاجته المدمجة بحجم 50 مل تجعله مناسبًا للسفر." />
-          </p>
+          {/* Hazır, sabit hacimli koleksiyonlar (Intens 60 ml, Luxury 100 ml): "50 ml seyahat" cümlesi yanlış olur. */}
+          {getCollectionBySku(product.sku)?.fixed ? (
+            <p className="flex items-center gap-2 text-sm text-foreground/60">
+              <Sparkles size={16} className="text-accent-gold flex-shrink-0" />
+              {getCollectionBySku(product.sku)!.fixed!.volumeLabel}
+            </p>
+          ) : (
+            <p className="flex items-center gap-2 text-sm text-foreground/60">
+              <Plane size={16} className="text-accent-gold flex-shrink-0" />
+              <T tr="50 mililitrelik kompakt şişe boyutu sayesinde seyahat dostudur." en="Its compact 50 ml bottle makes it travel-friendly." ar="زجاجته المدمجة بحجم 50 مل تجعله مناسبًا للسفر." />
+            </p>
+          )}
 
           <ProductActions
             sku={product.sku}
@@ -372,6 +380,7 @@ export default async function ProductPage({ params }: { params: Promise<{ sku: s
             trendyolUrl={trendyolListing?.url}
             isOutOfStock={isOutOfStock}
             gender={product.gender}
+            fixedVolume={getCollectionBySku(product.sku)?.fixed?.volumeLabel}
           />
 
         </div>
