@@ -290,6 +290,13 @@ export default function ChatWidget() {
     } else if (action === 'Benzer Bir Koku Arıyorum') {
       setFlowMode('similar')
       setMessages(prev => [...prev, { id: genId(), role: 'assistant', content: 'Lütfen aradığınız kokuyu tarif edin veya sevdiğiniz bir parfüm adı yazın.' }])
+    } else if (action === 'Kurumsal Bilgi (Fason / Bayilik)') {
+      setFlowMode('chat')
+      setMessages(prev => [...prev, {
+        id: genId(),
+        role: 'assistant',
+        content: 'Elbette! Kendi parfüm markanızı kurma (fason üretim), bayilik, dijital bayilik veya toptan/distribütörlük konularında yardımcı olabilirim. Hangi alanla ilgilendiğinizi ve varsa tahmini adedinizi paylaşabilir misiniz?'
+      }])
     } else {
       setFlowMode('chat')
       handleSubmit(undefined, action)
@@ -541,6 +548,13 @@ export default function ChatWidget() {
                       className="w-full text-left px-4 py-3 bg-background border border-foreground/10 rounded-xl text-sm font-medium hover:border-accent-gold transition-colors flex items-center justify-between group"
                     >
                       <span>{lang === 'tr' ? 'Benzer Bir Koku Arıyorum' : lang === 'ar' ? 'أبحث عن عطر مشابه' : 'I am looking for a similar scent'}</span>
+                      <ArrowRight size={14} className="text-foreground/40 group-hover:text-accent-gold transition-colors" />
+                    </button>
+                    <button 
+                      onClick={() => handleInitialAction('Kurumsal Bilgi (Fason / Bayilik)')}
+                      className="w-full text-left px-4 py-3 bg-background border border-foreground/10 rounded-xl text-sm font-medium hover:border-accent-gold transition-colors flex items-center justify-between group"
+                    >
+                      <span>Kurumsal Bilgi (Fason / Bayilik)</span>
                       <ArrowRight size={14} className="text-foreground/40 group-hover:text-accent-gold transition-colors" />
                     </button>
                   </div>
